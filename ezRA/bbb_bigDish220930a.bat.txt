@@ -1,0 +1,209 @@
+@ECHO off
+REM  This is a Windows REMark line, a comment.
+REM  That top line hides these remarks from printing to the screen.
+
+REM  bbb_bigDish220930a.bat.txt    Ted Cline N0RQV
+
+
+
+REM  Below is a list of commands, followed by a function definition.
+REM
+REM  The commands set up, and then sequentially CALL the function.
+REM
+REM  That "process" function creates a subdirectory,
+REM  then steps inside that new subdirectory,
+REM  runs ezCon (creating many plots),
+REM  copies the created .ezb and .npz files up one directory level,
+REM  runs ezPlot and ezSky (creating more plots),
+REM  and then steps back up one level to the original directory.
+REM
+REM  More commands eventually run ezPlot, then ezSky, and then ezGal,
+REM  on all the collected .ezb and .npz files.
+
+
+
+REM  This handy command,
+REM        DIR /B /O data
+REM  provides a one-column list of the filenames in the "data" directory,
+REM  which is useful to collect all the YYMMDD_HH filenames we will need below.
+REM
+REM  To learn more about the DIR command, type
+REM        HELP DIR
+REM  into the command line, and tap the keyboard ENTER key.
+REM  The same is true for the other commands.
+
+
+
+REM #########################################################################
+
+
+
+REM  Print a blank line, print the date and time,
+REM  and save the date and time into a text file
+ECHO.
+ECHO %date%-%time%
+ECHO %date%-%time% > startTime.txt
+ECHO.
+
+
+
+REM  We want to process input filenames like these
+REM      ..\data\bigDish220521_11.txt
+REM      ..\data\bigDish220522_00.txt
+REM      ..\data\bigDish220523_00.txt
+REM
+REM      ..\data\bigDish220523_23c.txt
+REM      ..\data\bigDish220524_00.txt
+REM      ..\data\bigDish220525_00.txt
+REM      ..\data\bigDish220526_00.txt
+REM  Note that just the YYMMDD_HH date part changes.
+REM  Each filename starts with "bigDish", so assign that string
+REM  to a "filePrefix" variable.
+SET filePrefix=bigDish
+
+
+
+REM  To skip over some of the top "CALL" lines below, could move
+REM  this ":listStart" line into the middle of the "CALL" lines
+GOTO listStart
+:listStart
+
+
+
+REM  Optionally assign a string to an "everyEzCon" variable,
+REM  to be used with each ezCon line
+SET everyEzCon=-ezConPlotRangeL 0 199 -ezConAzimuth 168
+
+
+
+REM  Run the "process" function (defined below) with a YYMMDD_HH string,
+REM  and whatever other arguments are individually needed
+CALL :process 220521_11 -ezConElevation 20
+CALL :process 220522_00 -ezConElevation 20
+CALL :process 220523_00 -ezConElevation 20
+
+CALL :process 220523_23c -ezConElevation 45
+CALL :process 220524_00 -ezConElevation 45 -ezConAntSampleSnip 1994
+CALL :process 220525_00 -ezConElevation 45 -ezConAntSampleSnip 345 -ezConAntSampleSnip 2462
+CALL :process 220526_00 -ezConElevation 45
+
+
+
+REM  To skip over some of the bottom "CALL" lines above, could move
+REM  this "GOTO listEnd" line into the middle of the "CALL" lines
+GOTO listEnd
+:listEnd
+
+
+
+REM  Run ezPlot, ezSky, and ezGal, on all the .ezb and .npz files
+REM  collected in the current directory
+py ..\ezRA\ezPlot.py .
+
+py ..\ezRA\ezSky.py -ezSkyInput 14  .
+py ..\ezRA\ezSky.py -ezSkyInput 15  .
+py ..\ezRA\ezSky.py -ezSkyInput 16  .
+py ..\ezRA\ezSky.py -ezSkyInput 17  .
+py ..\ezRA\ezSky.py -ezSkyInput 18  .
+py ..\ezRA\ezSky.py -ezSkyInput 19  .
+
+py ..\ezRA\ezGal.py .
+
+
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@  All Done  @@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+ECHO.
+
+REM  Print the batch file starting and ending times on the screen
+ECHO.                              Now is ...
+ECHO %date%-%time%
+ECHO.                              This batchFile was started ...
+TYPE startTime.txt
+ECHO.
+REM  Add ending time to file
+ECHO %date%-%time% >> startTime.txt
+
+
+
+REM  Maybe display the first plot file you want to look at,
+REM  so uncomment the next line and let this batch file display it for you:
+REM     ezPlot191sigProg.png
+
+
+
+REM  This stops this batch file, but leaves the window open
+CMD /K
+
+
+
+REM #########################################################################
+
+
+
+REM  Define the "process" function.
+REM  This "process" function requires one argument, a "YYMMDD_HH" string,
+REM  and is referenced as "%~1".
+:process
+    REM  Print to the screen the first argument
+    ECHO %~1
+
+    REM  Make Directory using the first argument
+    REM  (the subdirectory may already exist)
+    MD %~1
+
+    REM  Change Directory into that subdirectory
+    CD %~1
+
+    REM  Print the long name of the current directory
+    CD
+    ECHO.
+
+    REM  DELete every old .png image file in the current directory
+    DEL *.png
+
+    REM  Run ezCon
+    REM  (some of the many arguments may be empty)
+    py ..\..\ezRA\ezCon.py ..\data\%filePrefix%%~1.txt %2 %3 %4 %5 %6 %7 %8 %9 %everyEzCon%
+
+    REM  COPY all the .ezb and .npz files up one directory level
+    COPY *.ezb ..
+    COPY *.npz ..
+
+    ECHO.
+    ECHO.
+    ECHO.
+
+    REM  Run ezPlot in this directory, on the new .ezb file
+    py ..\..\ezRA\ezPlot.py %filePrefix%%~1.ezb
+
+    REM  Run ezSky in this directory, with columns 14 through 19 of
+    REM  the new .ezb file
+    py ..\..\ezRA\ezSky.py %filePrefix%%~1.ezb -ezSkyInput 14
+    py ..\..\ezRA\ezSky.py %filePrefix%%~1.ezb -ezSkyInput 15
+    py ..\..\ezRA\ezSky.py %filePrefix%%~1.ezb -ezSkyInput 16
+    py ..\..\ezRA\ezSky.py %filePrefix%%~1.ezb -ezSkyInput 17
+    py ..\..\ezRA\ezSky.py %filePrefix%%~1.ezb -ezSkyInput 18
+    py ..\..\ezRA\ezSky.py %filePrefix%%~1.ezb -ezSkyInput 19
+
+    REM  Change Directory up one directory, back to the directory where
+    REM  we started
+    CD ..
+
+REM  With an errorcode of zero, return back to wherever we came
+REM  from in the program
+EXIT /B 0
+
+
+
+REM #########################################################################

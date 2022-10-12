@@ -1,0 +1,26 @@
+@ECHO off
+REM This a REMark line, a comment
+REM That top line hides these Windows remarks from view
+
+REM  aaa_bigDish220930a.bat.txt    Ted Cline N0RQV
+
+
+
+
+
+
+
+COPY  bbb_bigDish220930a.bat.txt  bbb_bigDish.bat
+
+
+
+
+
+
+
+
+
+REM Start the next batch file, but in a maximized window
+START /MAX  bbb_bigDish.bat
+
+REM This batch file's window closes now

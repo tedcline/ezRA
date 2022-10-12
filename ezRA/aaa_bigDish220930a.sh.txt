@@ -1,0 +1,204 @@
+#!/bin/bash
+#  This is a Linux comment line.
+#  That special top line instructs the operating system to use the
+#  bash shell as the command interpreter.
+
+#  aaa_bigDish220930a.sh.txt    Ted Cline N0RQV
+
+
+
+#  Below is a list of commands, with a function defined near the top.
+#
+#  The commands set up, and then sequentially call the function.
+#
+#  That "process" function creates a subdirectory,
+#  then steps inside that new subdirectory,
+#  runs ezCon (creating many plots),
+#  copies the created .ezb and .npz files up one directory level,
+#  runs ezPlot and ezSky (creating more plots),
+#  and then steps back up one level to the original directory.
+#
+#  The commands then eventually run ezPlot, then ezSky, and then ezGal,
+#  on all the collected .ezb and .npz files.
+
+
+
+#  This handy command,
+#        ls -1 data
+#  provides a one-column list of the filenames in the "data" directory,
+#  which is useful to collect all the YYMMDD_HH filenames we will need below.
+#
+#  To learn more about the "ls" command, type
+#        man ls
+#  into the command line, and tap the keyboard ENTER key
+#  (tap the keyboard Q key to quit).
+#  The same is true for the other commands.
+
+
+
+#############################################################################
+
+
+
+#  Print a blank line, print the date and time,
+#  and save the date and time into a text file
+echo
+date
+date > scriptFileStartTime.txt
+echo
+
+
+
+#  Define the "process" function, so it may be referenced below.
+#  This "process" function requires one argument, a "YYMMDD_HH" string,
+#  and is referenced as "$1".
+process() {
+    #  Print the first argument to the screen
+    echo $1
+
+    #  Make Directory using that first argument
+    #  (the subdirectory may already exist)
+    mkdir -p $1
+
+    #  Change Directory into that subdirectory
+    cd $1
+
+    #  Print the long name of the current directory
+    pwd
+    echo
+    
+    #  ReMove every old .png image file in the current directory
+    rm -f $1/*.png
+
+    #  Run ezCon, with low priority
+    #  (some of the many arguments may be empty)
+    nice nice python3 ../../ezRA/ezCon.py ../data/${filePrefix}${1}.txt $2 $3 $4 $5 $6 $7 $8 $9 $everyEzCon
+
+    #  Copy all the .ezb and .npz files up one directory level
+    cp -p *.ezb ..
+    cp -p *Gal.npz ..
+
+    echo
+    echo
+    echo
+
+    #  Run ezPlot in this directory, on the new .ezb file
+    nice nice python3 ../../ezRA/ezPlot.py ${filePrefix}${1}.ezb
+
+    #  Run ezSky in this directory, with columns 14 through 19 of
+    #  the new .ezb file
+    nice nice python3 ../../ezRA/ezSky.py ${filePrefix}${1}.ezb -ezSkyInput 14
+    nice nice python3 ../../ezRA/ezSky.py ${filePrefix}${1}.ezb -ezSkyInput 15
+    nice nice python3 ../../ezRA/ezSky.py ${filePrefix}${1}.ezb -ezSkyInput 16
+    nice nice python3 ../../ezRA/ezSky.py ${filePrefix}${1}.ezb -ezSkyInput 17
+    nice nice python3 ../../ezRA/ezSky.py ${filePrefix}${1}.ezb -ezSkyInput 18
+    nice nice python3 ../../ezRA/ezSky.py ${filePrefix}${1}.ezb -ezSkyInput 19
+
+    #  Change Directory up one directory,
+    #  back to the directory where we started
+    cd ..
+}
+
+
+
+#############################################################################
+
+
+
+#  We want to process input filenames in the data directory, like these
+#      ..\data\bigDish220521_11.txt
+#      ..\data\bigDish220522_00.txt
+#      ..\data\bigDish220523_00.txt
+#
+#      ..\data\bigDish220523_23c.txt
+#      ..\data\bigDish220524_00.txt
+#      ..\data\bigDish220525_00.txt
+#      ..\data\bigDish220526_00.txt
+#  Note that just the YYMMDD_HH date part changes.
+#  Each filename starts with "bigDish", so assign that string
+#  to a "filePrefix" variable.
+filePrefix="bigDish"
+
+
+
+#  Optionally assign a string to an "everyEzCon" variable,
+#  to be used with each ezCon line.
+everyEzCon="-ezConPlotRangeL 0 199 -ezConAzimuth 168"
+
+
+
+#  Run the "process" function (defined above) with a YYMMDD_HH string,
+#  and whatever other arguments are individually needed
+ process 220521_11 -ezConElevation 20
+ process 220522_00 -ezConElevation 20
+ process 220523_00 -ezConElevation 20
+
+ process 220523_23c -ezConElevation 45
+ process 220524_00 -ezConElevation 45 -ezConAntSampleSnip 1994
+ process 220525_00 -ezConElevation 45 -ezConAntSampleSnip 345 -ezConAntSampleSnip 2462
+ process 220526_00 -ezConElevation 45
+
+
+
+#  Run ezPlot, ezSky, and ezGal, on all the .ezb and .npz files
+#  collected in the current directory
+ nice nice python3 ../ezRA/ezPlot.py .
+
+ nice nice python3 ../ezRA/ezSky.py -ezSkyInput 14  .
+ nice nice python3 ../ezRA/ezSky.py -ezSkyInput 15  .
+ nice nice python3 ../ezRA/ezSky.py -ezSkyInput 16  .
+ nice nice python3 ../ezRA/ezSky.py -ezSkyInput 17  .
+ nice nice python3 ../ezRA/ezSky.py -ezSkyInput 18  .
+ nice nice python3 ../ezRA/ezSky.py -ezSkyInput 19  .
+
+ nice nice python3 ../ezRA/ezGal.py .
+
+
+
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@  All Done  @@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo
+echo "                                 Now is ..."
+date
+echo "                                 This script was started ..."
+cat scriptFileStartTime.txt
+echo
+#  Add ending time to file
+date >> scriptFileStartTime.txt
+
+
+
+#  Conveniently run a program to display all the .png images files
+#  in the current directory
+#  (the ending "&" allows this script to continue executing)
+# nice feh -g 1920x1080   *.png     &
+nice eog *.png     &
+
+#  Or maybe display just one kind of image file from each subdirectory
+# nice eog */ezCon191* &
+# nice eog */ezCon119* &
+# nice eog */ezCon198* &
+# nice eog */ezCon199* &
+# nice eog */ezSky401RBPF_19* &
+
+
+
+#  To exit early, copy and insert this exit line into the commands above
+exit
+
+
+
+#############################################################################
