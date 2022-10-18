@@ -9,10 +9,10 @@ The ezRA set of programs are still in development, but mostly work well.
 
        ezRA documentation has many images.
        Rather than duplicate those image bytes here in an online README.md file,
-       please read these introductory PDFs in the ezRA directory:
+       please scan these introductory PDFs in the ezRA directory:
 
            ezRA_00_Introduction.pdf  - Quick overview of programs and documentation
-           ezRA_01_Tour.pdf          - "sales brochure" showing what ezRA can do
+           ezRA_01_Tour.pdf          - "Sales brochure" showing what ezRA can do
 
        =============================================================================   
 
@@ -39,7 +39,7 @@ The ezRA set of programs are still in development, but mostly work well.
 
 
 
-## Documentation for ezRA, in the ezRA directory, includes:
+## Documentation for ezRA, in the ezRA directory, will include:
 
     ezRA_00_Introduction.pdf
     ezRA_01_Tour.pdf
@@ -76,13 +76,9 @@ These files need lots of cleanup, but should work or be helpful:
 
     ezFix.py
 
-These files need cleanup, and are coming soon:
-
-    ezGal.py
-
 Need to research multiple processes for ezCol.py, to improve dashboard responsiveness.
 
-Always need more documentation.
+Always need more documentation, starting with installation.
 
 ---
 

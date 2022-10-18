@@ -1,5 +1,4 @@
-
-programName = 'ezSky221012a.py'
+programName = 'ezSky221017a.py'
 #programRevision = programName + ' (N0RQV)'
 programRevision = programName
 
@@ -8,8 +7,14 @@ programRevision = programName
 #   and optionally create .png plot files.
 
 # TTD:
-#     remove many global in main() ?????????
-# 
+#       remove many global in main() ?????????
+#       plotCountdown, 'plotting' lines only if plotting
+
+# ezSky221017a.py, polishing
+# ezSky221015a.py, commas to prints
+# ezSky221014a.py, commas to prints
+# ezSky221013b.py, directoryListLen now an f-string, raHalfDeg now wraps around, commas to prints
+# ezSky221012b.py, gLonHalfDeg now wraps around
 # ezSky221012a.py, git prepare, plots renamed, ezSkyVOGain, raHalfDeg -= 720
 # ezSky221006b.py, rewrite for git, stole from ezPlot220930a.py
 # ezSky220914a.py, polished ezSky200RP_, color to ezSky010
@@ -547,8 +552,8 @@ def readDataDir():
                 fileReadNameFull = directory + os.path.sep + fileReadName
 
             # allow append to line
-            print(f'\r file = {fileCounter + 1} of {fileListLen} in dir {directoryCounter + 1}' \
-                + ' of {directoryListLen} = ' + directory + os.path.sep + fileReadName, end='')
+            print(f'\r file = {fileCounter + 1:,} of {fileListLen:,} in dir {directoryCounter + 1}' \
+                + f' of {directoryListLen} = ' + directory + os.path.sep + fileReadName, end='')
             fileRead = open(fileReadNameFull, 'r')
             if fileRead.mode == 'r':
 
@@ -759,7 +764,17 @@ def plotEzSky1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColor
     plt.grid(ezSkyDispGrid)
 
     plt.xlabel(f'Sample Number (last={antLenM1:,})')
-
+    if not len(xTickLocsAnt):
+        xTickLocsAnt, xTickLabelsAnt = plt.xticks()
+        # may remove silly values, and shorten lists, so best to process indices in decreasing order
+        for i in range(len(xTickLocsAnt) - 1)[::-1]:
+            xTickLocsAntIInt = int(xTickLocsAnt[i])
+            if 0 <= xTickLocsAntIInt and xTickLocsAntIInt <= antLen:
+                xTickLabelsAnt[i] = f'{xTickLocsAntIInt:,}'
+            else:       # remove silly values
+                xTickLocsAnt = np.delete(xTickLocsAnt, i)
+                xTickLabelsAnt = np.delete(xTickLabelsAnt, i)
+    plt.xticks(xTickLocsAnt, xTickLabelsAnt, rotation=45, ha='right', rotation_mode='anchor')
     plt.xlim(0, antLenM1)
 
     plt.ylabel(plotYLabel)
@@ -933,7 +948,7 @@ def ezSkyGridRadec():
 
     # integrate .ezb file data into grids,
     #   gridRadecCount and gridRadecPower for RaDec map    (in half-degree grid)
-    gridRadecRaHalfDegRange = 360 + 360                # Ra=0 up to 360 degrees,   or 0 thru 719 halfdeg
+    gridRadecRaHalfDegRange = 360 + 360 + 1            # Ra=0    thru 360 degrees, or 0 thru 720 halfdeg
     gridRadecDecHalfDegRange = 90 + 90 + 90 + 90 + 1   # Dec=-90 thru Lat=+90 deg, or 0 thru 360 halfdeg
     gridRadecCount = np.zeros([gridRadecRaHalfDegRange, gridRadecDecHalfDegRange], dtype = int)
     gridRadecPower = np.zeros([gridRadecRaHalfDegRange, gridRadecDecHalfDegRange], dtype = float)
@@ -949,6 +964,10 @@ def ezSkyGridRadec():
         decHalfDeg = int(decDeg[i] + decDeg[i] + 180.)      # integer halfDegree with offset
         gridRadecCount[raHalfDeg, decHalfDeg] += 1          # count     of gridBox
         gridRadecPower[raHalfDeg, decHalfDeg] += power[i]   # power sum of gridBox
+
+    # raHalfDeg wraps around, copy raHalfDeg=0 to raHalfDeg=720
+    gridRadecCount[720, :] = gridRadecCount[0, :]
+    gridRadecPower[720, :] = gridRadecPower[0, :]
 
     raH    = []         # free memory
     decDeg = []         # free memory
@@ -981,11 +1000,11 @@ def ezSkyGridRadec():
     radecDecHalfDeg  = np.array(radecDecHalfDegL)
     radecDecHalfDegL = []   # free memory
 
-    print('                         len(radecPower) =', len(radecPower))
+    print(f'                         len(radecPower) = {len(radecPower):,}')
 
 
 
-def plotEzSky200RBPVO():
+def plotEzSky200RBVO():
     # radio Sky Radec map with background, Power Vertical Offset
 
     global radecPower               # float   1d array
@@ -1010,7 +1029,7 @@ def plotEzSky200RBPVO():
         plotCountdown -= 1
         return(1)
 
-    plotName = 'ezSky200RBPVO_' + ezSkyInputS + '.png'
+    plotName = 'ezSky200RBVO_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
@@ -1074,7 +1093,7 @@ def plotEzSky200RBPVO():
     plt.xticks([i * imgaxesRatioX for i in range(720, -1, -60)],
         ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24'])
 
-    plt.ylabel('Power Vertical Offset in RaDec Coordinates')
+    plt.ylabel(f'{ezSkyInputS[2:]} Vertical Offset in RaDec Coordinates')
     plt.yticks([i * imgaxesRatioY for i in range(360, -1, -30)],
         ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
     imgaxes.tick_params(axis='both', labelsize=6)
@@ -1088,7 +1107,7 @@ def plotEzSky200RBPVO():
 
 
 
-def plotEzSky300RBP():
+def plotEzSky300RB():
     # radio Sky Radec map with background, Power color
 
     global radecPower               # float   1d array
@@ -1111,7 +1130,7 @@ def plotEzSky300RBP():
         plotCountdown -= 1
         return(1)
 
-    plotName = 'ezSky300RBP_' + ezSkyInputS + '.png'
+    plotName = 'ezSky300RB_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
@@ -1156,7 +1175,7 @@ def plotEzSky300RBP():
     plt.xticks([i * imgaxesRatioX for i in range(720, -1, -60)],
         ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24'])
 
-    plt.ylabel('Power Color in RaDec Coordinates')
+    plt.ylabel(f'{ezSkyInputS[2:]} Color in RaDec Coordinates')
     plt.yticks([i * imgaxesRatioY for i in range(360, -1, -30)],
         ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
     imgaxes.tick_params(axis='both', labelsize=6)
@@ -1170,7 +1189,7 @@ def plotEzSky300RBP():
 
 
 
-def plotEzSky301RBPT():
+def plotEzSky301RBT():
     # radio Sky Radec map with background, Power color Tall
 
     global radecPower               # float   1d array
@@ -1194,7 +1213,7 @@ def plotEzSky301RBPT():
         plotCountdown -= 1
         return(1)
 
-    plotName = 'ezSky301RBPT_' + ezSkyInputS + '.png'
+    plotName = 'ezSky301RBT_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
@@ -1247,7 +1266,7 @@ def plotEzSky301RBPT():
     plt.xticks([i * imgaxesRatioX for i in range(720, -1, -60)],
         ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24'])
 
-    plt.ylabel('Power Color Tall in RaDec Coordinates')
+    plt.ylabel(f'{ezSkyInputS[2:]} Color Tall in RaDec Coordinates')
     plt.yticks([i * imgaxesRatioY for i in range(360, -1, -30)],
         ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
     imgaxes.tick_params(axis='both', labelsize=6)
@@ -1261,7 +1280,7 @@ def plotEzSky301RBPT():
 
 
 
-def plotEzSky309RBCT():
+def plotEzSky309RBTC():
     # radio Sky Radec map with background, Count Tall
 
     global radecCount               # float   1d array
@@ -1284,7 +1303,7 @@ def plotEzSky309RBCT():
         plotCountdown -= 1
         return(1)
 
-    plotName = 'ezSky309RBCT.png'
+    plotName = 'ezSky309RBTC.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
@@ -1350,7 +1369,7 @@ def plotEzSky309RBCT():
     plt.close(fig)
 
 
-def plotEzSky400RIP():
+def plotEzSky400RI():
     # radio Sky Radec map of Interpolated Power
 
     global radecPower               # float   1d array
@@ -1369,7 +1388,7 @@ def plotEzSky400RIP():
         plotCountdown -= 1
         return(1)
 
-    plotName = 'ezSky400RIP_' + ezSkyInputS + '.png'
+    plotName = 'ezSky400RI_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
@@ -1462,8 +1481,7 @@ def plotEzSky400RIP():
     plt.xticks([ 0.,    60., 120., 180., 240., 300., 360., 420., 480., 540., 600., 660., 720.],
                [' 0  ', '2', '4',  '6',  '8',  '10', '12', '14', '16', '18', '20', '22', '24'])
 
-    plt.ylabel('Interpolated Power in RaDec Coordinates')
-
+    plt.ylabel(f'{ezSkyInputS[2:]} Interpolated in RaDec Coordinates')
     plt.ylim(-180, 180)
     plt.yticks( \
         [-180., -150., -120., -90.,  -60.,  -30.,  0.,  30.,  60.,  90.,  120., 150., 180.],
@@ -1548,14 +1566,14 @@ def ezSkyGridGalactic():
     galacticGLonHalfDeg  = np.array(galacticGLonHalfDegL)
     galacticGLonHalfDegL = []   # free memory
 
-    print('                         len(galacticPower) =', len(galacticPower))
+    print(f'                         len(galacticPower) = {len(galacticPower):,}')
 
     #galacticGLatHalfDeg = np.clip(galacticGLatHalfDeg, -180, 180)   # easy insurance
     #galacticGLonHalfDeg = np.clip(galacticGLonHalfDeg, -360, 359)   # easy insurance
 
 
 
-def plotEzSky500GMIP():
+def plotEzSky500GMI():
     # radio Sky Galactic Mercator projection map of Interpolated Power
 
     global galacticPower            # float   1d array
@@ -1575,7 +1593,7 @@ def plotEzSky500GMIP():
         plotCountdown -= 1
         return(1)
 
-    plotName = 'ezSky500GMIP_' + ezSkyInputS + '.png'
+    plotName = 'ezSky500GMI_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
@@ -1674,7 +1692,7 @@ def plotEzSky500GMIP():
     plt.xticks([ 720.,  660.,  600.,  540., 480., 420., 360., 300.,  240.,  180.,  120.,   60.,    0.],
                [ '180', '150', '120', '90', '60', '30', '0',  '-30', '-60', '-90', '-120', '-150', '-180'])
 
-    plt.ylabel('Interpolated Power in Mercator Galactic Coordinates')
+    plt.ylabel(f'{ezSkyInputS[2:]} Interpolated in Mercator Galactic Coordinates')
     # 0 through 360 represents -90 through +90 degrees, in half-degrees
     plt.ylim(0, 360)        # in half-degrees
     plt.yticks([0.,    30.,   60.,   90.,   120.,  150.,  180., 210., 240., 270., 300., 330., 360.],
@@ -1687,7 +1705,7 @@ def plotEzSky500GMIP():
 
 
 
-def plotEzSky501GSIP():
+def plotEzSky501GSI():
     # radio Sky Galactic Sinusoidal projection map of Interpolated Power
 
     global galacticPower            # float   1d array
@@ -1707,7 +1725,7 @@ def plotEzSky501GSIP():
         plotCountdown -= 1
         return(1)
 
-    plotName = 'ezSky501GSIP_' + ezSkyInputS + '.png'
+    plotName = 'ezSky501GSI_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
@@ -1823,7 +1841,7 @@ def plotEzSky501GSIP():
     plt.xticks([ 720.,  660.,  600.,  540., 480., 420., 360., 300.,  240.,  180.,  120.,   60.,    0.],
                [ '180', '150', '120', '90', '60', '30', '0',  '-30', '-60', '-90', '-120', '-150', '-180'])
 
-    plt.ylabel('Interpolated Power in Sinusoidal Galactic Coordinates')
+    plt.ylabel(f'{ezSkyInputS[2:]} Interpolated in Sinusoidal Galactic Coordinates')
     # 0 through 360 represents -90 through +90 degrees, in half-degrees
     plt.ylim(-5, 365)        # in half-degrees
     plt.yticks([0.,    30.,   60.,   90.,   120.,  150.,  180., 210., 240., 270., 300., 330., 360.],
@@ -1856,7 +1874,7 @@ def printGoodbye():
     print(f'\n       Last sample = {antLen - 1:,}\n')
     print('That Python command')
     print(f'  {commandString}')
-    print(f' took {int(stopTime-startTime)} seconds = {(stopTime-startTime)/60.:1.1f} minutes')
+    print(f' took {int(stopTime-startTime):,} seconds = {(stopTime-startTime)/60.:1.1f} minutes')
     print(f' Now = {stopTimeS[:-5]}\n')
     print(f' programRevision = {programRevision}')
     print()
@@ -1884,6 +1902,9 @@ def main():
     global radecPower               # float   1d array
     global radecRaHalfDeg           # integer 1d array
     global radecDecHalfDeg          # integer 1d array
+    
+    global xTickLocsAnt             # array
+
 
     startTime = time.time()
 
@@ -1898,7 +1919,7 @@ def main():
     if len(sys.argv) < 2:
         printUsage()
 
-    ##############xTickLocsAnt = []               # force new xTickLocsAnt
+    xTickLocsAnt = []               # force new xTickLocsAnt
 
     printHello()
 
@@ -1923,13 +1944,13 @@ def main():
     # if needed, creates radecCount, radecPower, radecRaHalfDeg, radecDecHalfDeg
     ezSkyGridRadec()
 
-    plotEzSky200RBPVO()
+    plotEzSky200RBVO()
 
-    plotEzSky300RBP()
-    plotEzSky301RBPT()
-    plotEzSky309RBCT()
+    plotEzSky300RB()
+    plotEzSky301RBT()
+    plotEzSky309RBTC()
 
-    plotEzSky400RIP()
+    plotEzSky400RI()
 
     # free radec memory
     radecCount      = []
@@ -1942,8 +1963,8 @@ def main():
     # if needed, creates galacticPower, galacticGLatHalfDeg, galacticGLonHalfDeg
     ezSkyGridGalactic()
 
-    plotEzSky500GMIP()
-    plotEzSky501GSIP()
+    plotEzSky500GMI()
+    plotEzSky501GSI()
 
     printGoodbye()
 

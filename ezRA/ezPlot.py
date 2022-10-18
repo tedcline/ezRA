@@ -1,4 +1,4 @@
-programName = 'ezPlot220930a.py'
+programName = 'ezPlot221017a.py'
 #programRevision = programName + ' (N0RQV)'
 programRevision = programName
 
@@ -6,8 +6,13 @@ programRevision = programName
 #   PLOT analysis from one or more .ezb data files.
 
 # TTD:
-#     remove many global in main() ?????????
-# 
+#       remove many global in main() ?????????
+#       plotCountdown, 'plotting' lines only if plotting
+
+# ezPlot221017a.py, polishing, ylabel
+# ezPlot221016a.py, 
+# ezPlot221015a.py, commas to prints, allow division by data1dSpanD100
+# ezPlot221013a.py, commas to prints
 # ezPlot220930a.py, prep for Git
 # ezPlot220917a, polishing, max of 19 thin black vertical lines to plotEzCon191sigProg
 
@@ -473,8 +478,9 @@ def readDataDir():
                 fileReadNameFull = directory + os.path.sep + fileReadName
 
             # allow append to line
-            print(f'\r file = {fileCounter + 1} of {fileListLen} in dir {directoryCounter + 1}' \
-                + ' of {directoryListLen} = ' + directory + os.path.sep + fileReadName, end='')
+            print(f'\r {ezbQty + 1:,}  file = {fileCounter + 1:,} of {fileListLen:,}',
+                f'in dir {directoryCounter + 1} of {directoryListLen} = ',
+                directory + os.path.sep + fileReadName, end='')
             studyOutString += f' file = {ezbQty:,} = ' + directory + os.path.sep + fileReadName
             fileRead = open(fileReadNameFull, 'r')
             if fileRead.mode == 'r':
@@ -751,13 +757,13 @@ def plotEzPlot1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColo
         plt.xlabel(plotXLabel)
         xTickLocsSorted, xTickLabelsSorted = plt.xticks()
         for i in range(len(xTickLocsSorted) - 1)[::-1]:
-            xTickLabelsSorted[i] = str(int(xTickLocsSorted[i]))
+            xTickLabelsSorted[i] = f'{int(xTickLocsSorted[i]):,}'
         xTickLocsSorted[-1] = antLenM1
         if 0.975 < xTickLocsSorted[-2] / antLenM1:   # if last label overlaps, blank it
             xTickLabelsSorted[-1] = ''
         else:
-            xTickLabelsSorted[-1] = str(antLenM1)
-        plt.xticks(xTickLocsSorted, xTickLabelsSorted, rotation=90)
+            xTickLabelsSorted[-1] = f'{antLenM1:,}'
+        plt.xticks(xTickLocsSorted, xTickLabelsSorted, rotation=45, ha='right', rotation_mode='anchor')
     else:
         if not len(xTickLocsAnt):
             xTickLocsAnt, xTickLabelsAnt = plt.xticks()
@@ -769,9 +775,8 @@ def plotEzPlot1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColo
             for i in range(len(xTickLocsAnt) - 1)[::-1]:
                 xTickLocsAntIInt = int(xTickLocsAnt[i])
                 if 0 <= xTickLocsAntIInt and xTickLocsAntIInt <= antLenM1:
-                    xTickLabelsAnt[i] = str(xTickLocsAntIInt) + ' ' \
+                    xTickLabelsAnt[i] = f'{xTickLocsAntIInt:,}  ' \
                         + Time(ezPlotIn[xTickLocsAntIInt, 0], format='mjd', scale='utc').iso[11:16]
-                    #    + dataTimeUtc[xTickLocsAntIInt].iso[11:16]
                 else:       # remove silly values
                     xTickLocsAnt = np.delete(xTickLocsAnt, i)
                     xTickLabelsAnt = np.delete(xTickLabelsAnt, i)
@@ -780,14 +785,12 @@ def plotEzPlot1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColo
             if 0.975 < xTickLocsAnt[-2] / antLenM1:   # if last label overlaps, blank it
                 xTickLabelsAnt[-1] = ''
             else:
-                #xTickLabelsAnt[-1] = str(antLenM1) + ' ' + dataTimeUtc[-1].iso[11:16]
-                xTickLabelsAnt[-1] = str(antLenM1) + ' ' \
-                + Time(ezPlotIn[-1, 0], format='mjd', scale='utc').iso[11:16]
-        xLabelSAnt = f'Sample Number (last={antLenM1:,}) + UTC Hour:Min (last=' \
+                xTickLabelsAnt[-1] = f'{antLenM1:,}  ' \
+                    + Time(ezPlotIn[-1, 0], format='mjd', scale='utc').iso[11:16]
+        xLabelSAnt = f'Sample Number (last={antLenM1:,}) with UTC Hour:Min (last=' \
             + Time(ezPlotIn[-1, 0], format='mjd', scale='utc').iso[11:16] + ')'
-        #    + dataTimeUtc[-1].iso[11:16] + ')'
         plt.xlabel(xLabelSAnt)
-        plt.xticks(xTickLocsAnt, xTickLabelsAnt, rotation=90)
+        plt.xticks(xTickLocsAnt, xTickLabelsAnt, rotation=45, ha='right', rotation_mode='anchor')
     plt.xlim(0, antLenM1)
 
     plt.ylabel(plotYLabel)
@@ -839,7 +842,7 @@ def plotEzPlot000timeUtcMjdSorted():
         ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
 
     plotEzPlot1dSamplesAnt(plotName, ezPlotIn[ezPlotInIdxByMjdRel, 0],
-        'Samples sorted Chronologically', [], 'green',
+        f'{antLen:,} Samples, sorted Chronologically', [], 'green',
         'UTC Time in Modified Julian Day - Chronological' \
             + '\n\nMinimum = ' + timeUtcMjdMinS \
             + '\n\nMaximum = ' + timeUtcMjdMaxS)
@@ -1585,9 +1588,8 @@ def plotEzPlot191sigProg():
         for i in range(len(xTickLocsAnt) - 1)[::-1]:
             xTickLocsAntIInt = int(xTickLocsAnt[i])
             if 0 <= xTickLocsAntIInt and xTickLocsAntIInt <= antLenM1:
-                xTickLabelsAnt[i] = str(xTickLocsAntIInt) + ' ' \
+                xTickLabelsAnt[i] = f'{xTickLocsAntIInt:,} ' \
                     + Time(ezPlotIn[xTickLocsAntIInt, 0], format='mjd', scale='utc').iso[11:16]
-                #    + dataTimeUtc[xTickLocsAntIInt].iso[11:16]
             else:       # remove silly values
                 xTickLocsAnt = np.delete(xTickLocsAnt, i)
                 xTickLabelsAnt = np.delete(xTickLabelsAnt, i)
@@ -1596,17 +1598,15 @@ def plotEzPlot191sigProg():
         if 0.975 < xTickLocsAnt[-2] / antLenM1:   # if last label overlaps, blank it
             xTickLabelsAnt[-1] = ''
         else:
-            #xTickLabelsAnt[-1] = str(antLenM1) + ' ' + dataTimeUtc[-1].iso[11:16]
-            xTickLabelsAnt[-1] = str(antLenM1) + ' ' \
-            + Time(ezPlotIn[-1, 0], format='mjd', scale='utc').iso[11:16]
-        xLabelSAnt = f'Sample Number (last={antLenM1:,}) + UTC Hour:Min (last=' \
+            xTickLabelsAnt[-1] = f'{antLenM1:,}  ' \
+                + Time(ezPlotIn[-1, 0], format='mjd', scale='utc').iso[11:16]
+        xLabelSAnt = f'Sample Number (last={antLenM1:,}) with UTC Hour:Min (last=' \
             + Time(ezPlotIn[-1, 0], format='mjd', scale='utc').iso[11:16] + ')'
-        #    + dataTimeUtc[-1].iso[11:16] + ')'
-    plt.xticks(xTickLocsAnt, xTickLabelsAnt, rotation=90)
+    plt.xticks(xTickLocsAnt, xTickLabelsAnt, rotation=45, ha='right', rotation_mode='anchor')
     plt.xlabel(xLabelSAnt)
     plt.xlim(0, antLenM1)
 
-    plt.ylabel('Signal Computation Progression\n\nfrom Ant to AntXTVT')
+    plt.ylabel('Signal Computation Progression\nfrom Ant to AntXTVT')
     plt.ylim(-150, 2150)
     plt.yticks([ \
           2000., 1800.,    1600., 1400.,
@@ -1708,7 +1708,7 @@ def plotEzPlot1dSamplesRa(plotName, ezPlotInColumn, plotYLabel):
         if ezPlotIn[ezPlotInIdxByMjdRel[index], 1] \
                 < ezPlotIn[ezPlotInIdxByMjdRel[index - 1], 1]:
             # just stepped forward into a new Ra trace, plot the last Ra trace
-            print(f'\r         plotting {lastStartIndex}          ,       {index - 1}')
+            print(f'\r         plotting {lastStartIndex:,}          ,       {index - 1:,}')
 
             # x list = (Right Ascension sorted by time)
             # y list = (ezPlotInColumn sorted by time)
@@ -1724,7 +1724,7 @@ def plotEzPlot1dSamplesRa(plotName, ezPlotInColumn, plotYLabel):
                 penIndex = 1
 
     # out of loop, plot the last Ra trace
-    print(f'\r         plotting {lastStartIndex}          ,       {antLenM1:,}')
+    print(f'\r         plotting {lastStartIndex:,}          ,       {antLenM1:,}')
     plt.plot([ezPlotIn[ezPlotInIdxByMjdRel[i], 1] \
         for i in range(lastStartIndex, antLen) ], \
         [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]     \
@@ -1965,7 +1965,7 @@ def plotEzPlot1dSamplesUtc(plotName, ezPlotInColumn, plotYLabel):
         
         if timeUtcMjdLastStartDay < timeUtcMjdThisDay:      # new UTC day ?
             # just stepped forward into a new UTC day, plot the last UTC day
-            print(f'\r         plotting {lastStartIndex}          ,       {index - 1}')
+            print(f'\r         plotting {lastStartIndex:,}          ,       {index - 1:,}')
 
             # x list = (frac part of MJD) * 24 hours
             # y list = ezPlotInColumn
@@ -1985,7 +1985,7 @@ def plotEzPlot1dSamplesUtc(plotName, ezPlotInColumn, plotYLabel):
     # out of loop, plot the last UTC day
     # x list = (frac part of MJD) * 24 hours
     # y list = ezPlotInColumn
-    print(f'\r         plotting {lastStartIndex}          ,       {antLenM1:,}')
+    print(f'\r         plotting {lastStartIndex:,}          ,       {antLenM1:,}')
     plt.plot([ (ezPlotIn[ezPlotInIdxByMjdRel[i], 0] % 1.0) * 24.0 \
         for i in range(lastStartIndex, antLen) ], \
         [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]     \
@@ -2233,7 +2233,7 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
 
         if timeUtcMjdLastStart + siderealOfUtc < timeUtcMjdThis:      # new sidereal day ?
             # just stepped forward into a new sidereal day, plot the last sidereal day
-            print(f'\r         plotting {lastStartIndex}          ,       {index - 1}')
+            print(f'\r         plotting {lastStartIndex:,}          ,       {index - 1:,}')
 
             # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % SiderealOfUtc) * 24.0
             # y list = ezPlotInColumn
@@ -2254,7 +2254,7 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
     # out of loop, plot the last sidereal day
     # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % SiderealOfUtc) * 24.0
     # y list = ezPlotInColumn
-    print(f'\r         plotting {lastStartIndex}          ,       {antLenM1:,}')
+    print(f'\r         plotting {lastStartIndex:,}          ,       {antLenM1:,}')
     plt.plot([((ezPlotIn[ezPlotInIdxByMjdRel[i], 0] \
         - timeUtcMjdLastStart0) % siderealOfUtc) *  24.0 \
         for i in range(lastStartIndex, antLen) ], \
@@ -2463,10 +2463,6 @@ def plotEzPlot490sidAntXTVTMax():
 
 def plotEzPlot1dSamplesSorted(plotName, ezPlotInColumn, plotYLabel):
 
-    # plotName                                  # string
-    # ezPlotInColumn                            # integer
-    # plotYLabel                                # string
-
     global titleS                               # string
     global ezPlotDispGrid                       # integer
 
@@ -2480,6 +2476,16 @@ def plotEzPlot1dSamplesSorted(plotName, ezPlotInColumn, plotYLabel):
     plt.grid(ezPlotDispGrid)
 
     plt.xlabel(f'{antLen:,} Samples Sorted by Value')
+    xTickLocsAnt, xTickLabelsAnt = plt.xticks()
+    # may remove silly values, and shorten lists, so best to process indices in decreasing order
+    for i in range(len(xTickLocsAnt) - 1)[::-1]:
+        xTickLocsAntIInt = int(xTickLocsAnt[i])
+        if 0 <= xTickLocsAntIInt and xTickLocsAntIInt <= antLen:
+            xTickLabelsAnt[i] = f'{xTickLocsAntIInt:,}'
+        else:       # remove silly values
+            xTickLocsAnt = np.delete(xTickLocsAnt, i)
+            xTickLabelsAnt = np.delete(xTickLabelsAnt, i)
+    plt.xticks(xTickLocsAnt, xTickLabelsAnt, rotation=45, ha='right', rotation_mode='anchor')
     plt.xlim(-antLenM1 * 0.01, antLenM1 * 1.01)
 
     plt.ylabel(plotYLabel)
@@ -2491,6 +2497,7 @@ def plotEzPlot1dSamplesSorted(plotName, ezPlotInColumn, plotYLabel):
 
 
 def plotEzPlot500sortedAnt():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2509,6 +2516,7 @@ def plotEzPlot500sortedAnt():
 
 
 def plotEzPlot510sortedAntMax():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2527,6 +2535,7 @@ def plotEzPlot510sortedAntMax():
 
 
 def plotEzPlot520sortedRef():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2545,6 +2554,7 @@ def plotEzPlot520sortedRef():
 
 
 def plotEzPlot530sortedRefMax():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2563,6 +2573,7 @@ def plotEzPlot530sortedRefMax():
 
 
 def plotEzPlot540sortedAntB():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2581,6 +2592,7 @@ def plotEzPlot540sortedAntB():
 
 
 def plotEzPlot550sortedAntBMax():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2599,6 +2611,7 @@ def plotEzPlot550sortedAntBMax():
 
 
 def plotEzPlot560sortedAntRB():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2617,6 +2630,7 @@ def plotEzPlot560sortedAntRB():
 
 
 def plotEzPlot570sortedAntRBMax():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2635,6 +2649,7 @@ def plotEzPlot570sortedAntRBMax():
 
 
 def plotEzPlot580sortedAntXTVT():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2653,6 +2668,7 @@ def plotEzPlot580sortedAntXTVT():
 
 
 def plotEzPlot590sortedAntXTVTMax():
+
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
@@ -2693,13 +2709,21 @@ def plotEzPlot1dSamplesHist(plotName, ezPlotInColumn, plotYLabel):
     plt.grid(ezPlotDispGrid)
 
     plt.xlabel(f'Sample Value ({antLen:,} Samples)')
-    #plt.xlim(-antLenM1 * 0.01, antLenM1 * 1.01)
-    #ezPlotInColumnMax = ezPlotIn[:, ezPlotInColumn].max()
     plt.xlim(0.99 * ezPlotIn[:, ezPlotInColumn].min(), 1.01 * ezPlotIn[:, ezPlotInColumn].max())
 
     plt.ylabel(plotYLabel)
-    #plt.ylim(-ezPlotInColumnMax * 0.01, ezPlotInColumnMax * 1.01)
-    plt.ylim(-10, None)
+    yTickLocsAnt, yTickLabelsAnt = plt.yticks()
+    # may remove silly values, and shorten lists, so best to process indices in decreasing order
+    for i in range(len(yTickLocsAnt) - 1)[::-1]:
+        yTickLocsAntIInt = int(yTickLocsAnt[i])
+        if 0 <= yTickLocsAntIInt and yTickLocsAntIInt <= antLen:
+            yTickLabelsAnt[i] = f'{yTickLocsAntIInt:,}'
+        else:       # remove silly values
+            yTickLocsAnt = np.delete(yTickLocsAnt, i)
+            yTickLabelsAnt = np.delete(yTickLabelsAnt, i)
+    plt.yticks(yTickLocsAnt, yTickLabelsAnt)
+    #plt.ylim(-antLenM1 * 0.01, None)
+    plt.ylim(-yTickLocsAnt[-1] * 0.01, None)
     
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -2891,23 +2915,32 @@ def plotEzPlot690histAntXTVTMax():
 
 
 
-def studyTime(data1d, data1dName):
+def studyTime(column, data1dName):
     # returns long string
 
-    # data1d                                    # float 1d array
+    # column                                    # integer
     # data1dName                                # string
 
-    OutString = f'\n  {fileNameLast}  ==================================================== ' \
-        + f'Time study of {data1dName}\n'
+    global ezPlotIn                             # float and int 2d array
 
+    # '5 * str(column - 10)' below provides a (unique?) 5-character string.
+    #  RefMax is .ezb file column 13, so later, in the large ezConStudyxxx.txt file,
+    #  search for ' 33333' to easily find the RefMax section.
+    OutString = f'\n  {fileNameLast}  ================================== ' \
+        + f'{5 * str(column - 10)} Time study of {data1dName}\n'
+
+    data1d = ezPlotIn[:, column]
+    
     data1dMax = data1d.max()
     data1dMin = data1d.min()
     OutString += f'                         {data1dName}Max = {data1dMax}\n'
     OutString += f'                         {data1dName}Avg = {np.mean(data1d)}\n'
     OutString += f'                         {data1dName}Min = {data1dMin}\n'
 
-    data1dSpanD100 \
-        = (data1dMax - data1dMin) / 100.
+    data1dSpanD100 = (data1dMax - data1dMin) / 100.
+    # to allow division by data1dSpanD100
+    if not data1dSpanD100:
+        data1dSpanD100 = 1e-14
 
     OutString += f'\n Sample numbers of 20 highest-values of {data1dName}:\n'
     data1dIdxbyValueHigh = np.array(data1d).argsort()[::-1][:20]
@@ -2960,38 +2993,35 @@ def studyTime(data1d, data1dName):
 
 def writeFileStudy():
 
-    global fileNameLast             # string
-    global fileWriteNameStudy       # string
     global fileWriteStudy           # file handle
-    global ezPlotIn                 # float 2d array
 
     print()
     print('   writeFileStudy ===============')
 
     fileWriteStudy.write( \
         '\n============================================================================ ant\n\n\n\n\n')
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 10], 'antAvg'))
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 11], 'antMax'))
+    fileWriteStudy.write(studyTime(10, 'AntAvg'))
+    fileWriteStudy.write(studyTime(11, 'AntMax'))
 
     fileWriteStudy.write( \
         '\n============================================================================ ref\n\n\n\n\n')
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 12], 'refAvg'))
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 13], 'refMax'))
+    fileWriteStudy.write(studyTime(12, 'RefAvg'))
+    fileWriteStudy.write(studyTime(13, 'RefMax'))
     
     fileWriteStudy.write( \
         '\n============================================================================ antB\n\n\n\n\n')
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 14], 'antBAvg'))
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 15], 'antBMax'))
+    fileWriteStudy.write(studyTime(14, 'AntBAvg'))
+    fileWriteStudy.write(studyTime(15, 'AntBMax'))
     
     fileWriteStudy.write( \
         '\n============================================================================ antRB\n\n\n\n\n')
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 16], 'antRBAvg'))
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 17], 'antRBMax'))
+    fileWriteStudy.write(studyTime(16, 'AntRBAvg'))
+    fileWriteStudy.write(studyTime(17, 'AntRBMax'))
 
     fileWriteStudy.write( \
         '\n============================================================================ antXTVT\n\n\n\n\n')
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 18], 'antXTVTAvg'))
-    fileWriteStudy.write(studyTime(ezPlotIn[:, 19], 'antXTVTMax'))
+    fileWriteStudy.write(studyTime(18, 'AntXTVTAvg'))
+    fileWriteStudy.write(studyTime(19, 'AntXTVTMax'))
     fileWriteStudy.write( \
         '\n============================================================================\n\n\n\n\n')
 
