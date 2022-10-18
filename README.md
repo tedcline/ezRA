@@ -4,18 +4,19 @@ The ezRA Easy Radio Astronomy set of programs are free PC tools to help folks be
 
 The ezRA set of programs are still in development, but mostly work well.
 
+=============================================
 
-       =============================================================================   
+ezRA documentation has many images.
+Rather than duplicate those image bytes here in an online README.md file,
+please see these introductory PDFs from the ezRA directory:
 
-       ezRA documentation has many images.
-       Rather than duplicate those image bytes here in an online README.md file,
-       please scan these introductory PDFs in the ezRA directory:
+* Quick overview of programs and documentation:<br>
+[ezRA_00_Introduction.pdf](https://github.com/tedcline/ezRA/blob/master/ezRA/ezRA_00_Introduction.pdf)<br>
 
-           ezRA_00_Introduction.pdf  - Quick overview of programs and documentation
-           ezRA_01_Tour.pdf          - "Sales brochure" showing what ezRA can do
+* "Sales Brochure" showing what ezRA can do:<br>
+[ezRA_01_Tour.pdf](https://github.com/tedcline/ezRA/blob/master/ezRA/ezRA_01_Tour.pdf)<br>
 
-       =============================================================================   
-
+=============================================
 
 ## There are 5 major ezRA programs:
 
@@ -80,5 +81,6 @@ Need to research multiple processes for ezCol.py, to improve dashboard responsiv
 
 Always need more documentation, starting with installation.
 
----
+Comments are encouraged !
 
+---
