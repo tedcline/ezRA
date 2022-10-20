@@ -1,5 +1,7 @@
 # ezRA - Easy Radio Astronomy
 
+![ezRA_logo221020a](/ezRA/ezRA_logo221020a.jpg?raw=true)
+
 The ezRA Easy Radio Astronomy set of programs are free PC tools to help folks beginning to explore Radio Astronomy, with 
 1420 MHz Galactic hydrogen data collection and analysis.
 The programs run on the Python3 programming language, on Windows and Linux.
@@ -68,7 +70,8 @@ please see these introductory PDFs from the ezRA directory:
 
 
 
-Interested folks on GitHub would left-click on the top right Green button and probably choose "Download ZIP" (currently 25 MB).
+Interested folks on [GitHub](https://github.com/tedcline/ezRA)
+would left-click on the top right Green button and probably choose "Download ZIP" (currently 25 MB).
 
 ---
 
@@ -87,7 +90,7 @@ Need to research multiple processes for ezCol.py, to improve dashboard responsiv
 
 Always need more documentation, starting with installation.
 
-<p>
+--
 
 Comments are encouraged !
 
