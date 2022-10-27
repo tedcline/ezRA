@@ -1,10 +1,12 @@
 # ezRA - Easy Radio Astronomy
 
-![ezRA_logo221020a](/ezRA/ezRA_logo221020a.jpg?raw=true)
+<p align="center">
+  <img src="/ezRA/ezRA_logo221020a.jpg?raw=true" alt="ezRA_logo221020a"/>
+</p>
 
 The ezRA Easy Radio Astronomy set of programs are free PC tools to help folks beginning to explore Radio Astronomy, with 
 1420 MHz Galactic hydrogen data collection and analysis.
-The programs run on the Python3 programming language, on Windows and Linux.
+The open source programs run on the Python3 programming language, on Windows and Linux.
 
 The ezRA set of programs are still in development, but mostly work well.
 
