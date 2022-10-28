@@ -1,4 +1,4 @@
-programName = 'ezSky221017a.py'
+programName = 'ezSky221027a.py'
 #programRevision = programName + ' (N0RQV)'
 programRevision = programName
 
@@ -10,6 +10,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezSky221027a.py, fix ezSky309RBTC plot center offset
 # ezSky221017a.py, polishing
 # ezSky221015a.py, commas to prints
 # ezSky221014a.py, commas to prints
@@ -1344,7 +1345,7 @@ def plotEzSky309RBTC():
         pts = plt.scatter(radecRaHalfDegScaled, radecDecHalfDegScaled+reachTallDecHalfDegScaled,
             s=1, marker='|', c=radecCount, cmap=plt.get_cmap('gnuplot'))
     # plot center offset
-    pts = plt.scatter(radecRaHalfDegScaled, radecDecHalfDegScaled+reachTallDecHalfDegScaled,
+    pts = plt.scatter(radecRaHalfDegScaled, radecDecHalfDegScaled,
         s=1, marker='|', c=radecCount, cmap=plt.get_cmap('gnuplot'))
 
     cbar = plt.colorbar(pts, orientation='horizontal', shrink=0.3, pad=0.06)
