@@ -1,4 +1,4 @@
-programName = 'ezCon221017a.py'
+programName = 'ezCon221027a.py'
 #programRevision = programName + ' (N0RQV)'
 programRevision = programName
 
@@ -11,6 +11,7 @@ programRevision = programName
 #       when unsupport .sdre text data file ?
 #       plotCountdown, 'plotting' lines only if plotting
 
+#ezCon221027a.py, "ezRAObsLat = -999.0 is silly" testing to later
 #ezCon221017a.py, tilted xlabel
 #ezCon221016a.py, renamed ezCon5xx to match ezGal5xx, polishing
 #ezCon221015b.py, removed many global from main()
@@ -845,28 +846,6 @@ def ezConArguments():
         print()
         print('   ezConPlotRangeL       =', ezConPlotRangeL)
 
-    if ezRAObsLat < -90 or 90 < ezRAObsLat:
-        print()
-        print()
-        print()
-        print(f' ========== FATAL ERROR:  ezRAObsLat = {ezRAObsLat} is silly')
-        print('                            Required: -90 <= ezRAObsLat <= +90')
-        print()
-        print()
-        print()
-        exit()
-
-    if ezRAObsLon < -180 or 180 < ezRAObsLon:
-        print()
-        print()
-        print()
-        print(f' ========== FATAL ERROR:  ezRAObsLat = {ezRAObsLat} is silly')
-        print('                            Required: -180 <= ezRAObsLon <= +180')
-        print()
-        print()
-        print()
-        exit()
-
 
 
 def readDataDir():
@@ -1024,11 +1003,11 @@ def readDataDir():
                     fileRead.close()                 #   then have processed all lines in this data file
                     continue                            #   skip to next file
                 ezRAObsLatFile = float(fileLineSplit[1])
-                print('   ezRAObsLatFile  = ', ezRAObsLat)
+                print('   ezRAObsLatFile  = ', ezRAObsLatFile)
                 ezRAObsLonFile = float(fileLineSplit[3])
-                print('   ezRAObsLonFile  = ', ezRAObsLon)
+                print('   ezRAObsLonFile  = ', ezRAObsLonFile)
                 ezRAObsAmslFile = float(fileLineSplit[5])
-                print('   ezRAObsAmslFile = ', ezRAObsAmsl)
+                print('   ezRAObsAmslFile = ', ezRAObsAmslFile)
                 if 7 < len(fileLineSplit):
                     # bug: replace with fileLine[qqqq:] (to allow double spaces in name?)
                     ezRAObsNameFile = ' '.join(fileLineSplit[7:])
@@ -1248,8 +1227,28 @@ def readDataDir():
     if not ezRAObsName:                             # if still silly program default
         ezRAObsName = ezRAObsNameFile               # ezRAObsNameFile is better than nothing
     print('   ezRAObsName = ', ezRAObsName)
+    
+    if ezRAObsLat < -90 or 90 < ezRAObsLat:
+        print()
+        print()
+        print()
+        print(f' ========== FATAL ERROR:  ezRAObsLat = {ezRAObsLat} is silly')
+        print('                            Required: -90 <= ezRAObsLat <= +90')
+        print()
+        print()
+        print()
+        exit()
 
-
+    if ezRAObsLon < -180 or 180 < ezRAObsLon:
+        print()
+        print()
+        print()
+        print(f' ========== FATAL ERROR:  ezRAObsLat = {ezRAObsLat} is silly')
+        print('                            Required: -180 <= ezRAObsLon <= +180')
+        print()
+        print()
+        print()
+        exit()
 
     if ezConAzimuth != -999:                        # if not silly program default
         print('   ezConAzimuth = ', ezConAzimuth)
