@@ -90,7 +90,7 @@ These files need lots of cleanup, but should work or be helpful:
 
 Need to research multiple processes for ezCol.py, to improve dashboard responsiveness.
 
-Always need more documentation, starting with installation.
+Always need more documentation.
 
 --
 

@@ -1,4 +1,4 @@
-programName = 'ezCol220930a.py'
+programName = 'ezCol221110a.py'
 #programRevision = programName + ' (N0RQV)'
 programRevision = programName
 
@@ -6,6 +6,7 @@ programRevision = programName
 #   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
 #   Modified from Victor Boesen's https://github.com/byggemandboesen/H-line-software
 
+# ezCol221110a.py, changed Linux from double SPDT "BITFT" USB Relay to single SPDT "HW348" USB Relay
 # ezCol220930a.py, prep for Git
 # ezCol220826a.py, dataFlagsS if no Ref
 
@@ -746,7 +747,7 @@ def main():
             # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
             # C:\Users\c\Documents\EZRA01\usb-relay-hid_bin-20150330a\bin-Win64> hidusb-relay-cmd.exe on 1
             os.system('hidusb-relay-cmd.exe off 1')
-            os.system('hidusb-relay-cmd.exe off 2')
+            os.system('hidusb-relay-cmd.exe off 2')     # ignore error if only single SPDT USB Relay
             sleep(0.5) # Sleep for 0.5 seconds
 
     else:                   # (posix) Linux assumed
@@ -754,7 +755,7 @@ def main():
             # https://github.com/darrylb123/usbrelay
             # sudo apt-get update
             # sudo apt-get install usbrelay
-            os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
+            ###os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
             #####################
             #    Serial: BITFT, Relay: 1 State: ff --- Not Found  <=================== BITFT Not Found !
             #####################
@@ -778,7 +779,7 @@ def main():
             #    HW-343
             #    HW-341
             #    Models with USB-Relay-1, USB-Relay-2 or USB-Relay-4 printed on the PCB
-            ####os.system('sudo usbrelay HW348_1=0')        # works !
+            os.system('sudo usbrelay HW348_1=0')        # works !
 
             # also may be helpful ?:
             #   Human Interface Device (HID)
@@ -994,8 +995,8 @@ def main():
                 if os.name == 'nt':     # Windows
                     os.system('hidusb-relay-cmd.exe off 1')
                 else:                   # (posix) Linux assumed
-                    os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
-                    ####os.system('sudo usbrelay HW348_1=0')
+                    os.system('sudo usbrelay HW348_1=0')
+                    ####os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
                 sleep(0.5) # Sleep for 0.5 seconds
             elif ezColUsbRelay:
                 # pulse Relay1 on to latch feedRef off
@@ -1025,8 +1026,8 @@ def main():
                     if os.name == 'nt':     # Windows
                         os.system('hidusb-relay-cmd.exe on  1')
                     else:                   # Linux assumed
-                        os.system('sudo usbrelay BITFT_1=1 BITFT_2=0')
-                        #os.system('sudo usbrelay HW348_1=1')
+                        os.system('sudo usbrelay HW348_1=1')
+                        ###os.system('sudo usbrelay BITFT_1=1 BITFT_2=0')
                     sleep(0.5) # Sleep for 0.5 seconds
                     sdr.center_freq = centerFreqRefHz                   # in integer Hz
                     feedRef = 1         # this sample will be with feedRef ON
