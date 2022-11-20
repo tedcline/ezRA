@@ -1,7 +1,7 @@
 # ezRA - Easy Radio Astronomy
 
 <p align="center">
-  <img src="/ezRA/ezRA_logo221020a.jpg?raw=true" alt="ezRA_logo"/>
+  <img src="/ezRA/ezRA_logo.jpg?raw=true" alt="ezRA_logo"/>
 </p>
 
 The ezRA Easy Radio Astronomy set of programs are free PC tools to help folks beginning to explore Radio Astronomy, with 
@@ -73,7 +73,7 @@ please see these introductory PDFs from the ezRA directory:
 
 
 Interested folks on [GitHub](https://github.com/tedcline/ezRA)
-would left-click on the top right Green button and probably choose "Download ZIP" (currently 25 MB).
+would left-click on the top right Green button and probably choose "Download ZIP" (about 30 MB).
 
 ---
 
