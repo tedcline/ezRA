@@ -1,4 +1,4 @@
-programName = 'ezCon221027a.py'
+programName = 'ezCon221118a.py'
 #programRevision = programName + ' (N0RQV)'
 programRevision = programName
 
@@ -11,20 +11,26 @@ programRevision = programName
 #       when unsupport .sdre text data file ?
 #       plotCountdown, 'plotting' lines only if plotting
 
-#ezCon221027a.py, "ezRAObsLat = -999.0 is silly" testing to later
-#ezCon221017a.py, tilted xlabel
-#ezCon221016a.py, renamed ezCon5xx to match ezGal5xx, polishing
-#ezCon221015b.py, removed many global from main()
+# ezCon221118a.py, "Galaxy Crossing" to "Galaxy Plane"
+# ezCon221116a.py, add ezCon317, ezCon337, ezCon357, ezCon377, and ezCon397
+# ezCon221112a.py, help typo
+# ezCon221111a.py, experimentEzc for AzEl into .ezb Spare1 and Spare2,
+#   commented openFileSdre() and writeFileSdre(),
+#   fixed 'FATAL ERROR:  ezRAObsLon' typo
+# ezCon221027a.py, "ezRAObsLat = -999.0 is silly" testing to later
+# ezCon221017a.py, tilted xlabel
+# ezCon221016a.py, renamed ezCon5xx to match ezGal5xx, polishing
+# ezCon221015b.py, removed many global from main()
 #   Required:  -90 <= ezRAObsLat <= +90
 #   Required: -180 <= ezRAObsLon <= +180
-#ezCon221015a.py, from skipped ezCon220927a.py,
+# ezCon221015a.py, from skipped ezCon220927a.py,
 #   ezCon220927a, add a thin black horizontal line at zero Doppler on ezCon082antXTV,
 #   print status polishing,
 #   ezCon220924a, add (unique?) 5-character column string (' 33333') into ezConStudyxxx.txt for
 #   easy section searching,
-#ezCon221013a.py, allow division by data1dSpanD100, commas to prints
-#ezCon220930a.py, prep for Git
-#ezCon220917a, polishing, max of 19 thin black vertical lines to plotEzCon191sigProg,
+# ezCon221013a.py, allow division by data1dSpanD100, commas to prints
+# ezCon220930a.py, prep for Git
+# ezCon220917a, polishing, max of 19 thin black vertical lines to plotEzCon191sigProg,
 #  raw sample number to input file map to studyOutString to ezConStudy*.txt
 
 
@@ -59,7 +65,7 @@ def printUsage():
     print('  to read ezCol format .txt radio data file(s),')
     print('  analyse them, optionally creating many .png plot files,')
     print('  and write one .ezb condensed data text file,')
-    print('  and maybe write one Gal.npz Galaxy crossing velocity data file.')
+    print('  and maybe write one Gal.npz Galaxy plane crossing velocity data file.')
     print()
     print('  "radioDataFileDirectories" may be one or more .txt radio data files:')
     print('         py  ezCon.py  bigDish220320_05.txt')
@@ -80,8 +86,8 @@ def printUsage():
     print()
     print('EXAMPLES:')
     print()
-    print('  python ezCon.py -help              (print this help)')
-    print('  python ezCon.py -h                 (print this help)')
+    print('  py ezCon.py -help                  (print this help)')
+    print('  py ezCon.py -h                     (print this help)')
     print()
     print('    -ezRAObsName   Lebanon Kansas    (Observatory Name)')
     print('    -ezRAObsLat    39.8282           (Observatory Latitude  (degrees))')
@@ -777,7 +783,7 @@ def ezConArguments():
         ezConPlotRangeL = [0, 9999]     # save this range of plots to file
 
 
-    plotCountdown = 73                  # number of plots still to print
+    plotCountdown = 78                  # number of plots still to print
 
     # Program argument priority:
     #    Start with the argument value defaults inside the programs.
@@ -1243,7 +1249,7 @@ def readDataDir():
         print()
         print()
         print()
-        print(f' ========== FATAL ERROR:  ezRAObsLat = {ezRAObsLat} is silly')
+        print(f' ========== FATAL ERROR:  ezRAObsLon = {ezRAObsLon} is silly')
         print('                            Required: -180 <= ezRAObsLon <= +180')
         print()
         print()
@@ -1400,7 +1406,7 @@ def openFileStudy():
 
 
 def rawPlotPrep():
-    # creates rawLenM1, freqStep, dopplerSpanD2, freqCenter, titleS, yTickHeatL, byFreqBinAvgX
+    # creates rawLenM1, freqStep, dopplerSpanD2, freqCenter, titleS, yTickHeatL, byFreqBinX
 
     global rawLen                   # integer
     global rawLenM1                 # integer               creation
@@ -1417,7 +1423,7 @@ def rawPlotPrep():
     global titleS                   # string                creation
 
     global yTickHeatL               # string list           creation
-    global byFreqBinAvgX            # float array           creation
+    global byFreqBinX               # float array           creation
 
     print()
     print('   rawPlotPrep ===============')
@@ -1448,7 +1454,7 @@ def rawPlotPrep():
         '',  '', '',  '',  '0.5',  '',  '',  '',  '',  '1.',
         '', '1.2', '']
 
-    byFreqBinAvgX = np.arange(fileFreqBinQty) * freqStep - dopplerSpanD2
+    byFreqBinX = np.arange(fileFreqBinQty) * freqStep - dopplerSpanD2
 
 
 
@@ -3085,15 +3091,17 @@ def createEzConOutEzb():
         #   AntBAvg  AntBMax    AntRBAvg  AntRBMax    AntXTVTAvg  AntXTVTMax
         #   14       15          16        17         18          19
         if not samplesQtyProcessed:
+            #    1., 0., 0., 0.,        # before experimentEzc for AzEl into .ezb Spare1 and Spare2
             ezConOut = np.array([
                 dataTimeUtc[n].mjd, raHThis, decDegThis, gLatDegThis, gLonDegThis, vlsrThis,
-                1., 0., 0., 0.,
+                1., azimuth[n], elevation[n], 0.,
                 antAvg[n], antMax[n], refAvg[n], refMax[n],
                 antBAvg[n], antBMax[n], antRBAvg[n], antRBMax[n], 0., 0.])
         else:
+            #    1., 0., 0., 0.,        # before experimentEzc for AzEl into .ezb Spare1 and Spare2
             ezConOut = np.concatenate([ezConOut, np.array([
                 dataTimeUtc[n].mjd, raHThis, decDegThis, gLatDegThis, gLonDegThis, vlsrThis,
-                1., 0., 0., 0.,
+                1., azimuth[n], elevation[n], 0.,
                 antAvg[n], antMax[n], refAvg[n], refMax[n],
                 antBAvg[n], antBMax[n], antRBAvg[n], antRBMax[n], 0., 0.]) ])
 
@@ -3255,8 +3263,10 @@ def writeFileEzb():
         + '    14       15         16        17          18          19\n')
 
     # save ezConOut[] in columns
+    # experimentEzc for AzEl into .ezb Spare1 and Spare2
+    #    '%0.5f %0.3f %0.3f %0.3f %0.3f %0.3e %d %d %d %d ' + \
     ezConOutFmtS = \
-        '%0.5f %0.3f %0.3f %0.3f %0.3f %0.3e %d %d %d %d ' + \
+        '%0.5f %0.3f %0.3f %0.3f %0.3f %0.3e %d %0.1f %0.1f %0.5e ' + \
         '%0.5e %0.5e %0.5e %0.5e ' + \
         '%0.5e %0.5e %0.5e %0.5e %0.5e %0.5e'
     for n in range(antLen):
@@ -3331,7 +3341,7 @@ def writeFileGal():
     for n in range(antLen):
         gLatDegThis = int(ezConOut[n, 3])                   # gLatDeg is -90 thru +90
 
-        # if n is close enough to Galactic plane, a Galactic crossing
+        # if n is close enough to Galactic plane, a Galactic plane crossing
         if abs(gLatDegThis) <= ezConGalCrossingGLat:
             gLonP180 = int(ezConOut[n, 4]) + 180            # gLonP180 is RtoL from 0 thru 360
 
@@ -3567,20 +3577,20 @@ def printGoodbye(startTime):
 
 
 
-def plotEzCon1dByFreqBinAvg(plotName, plotData1d, plotColorS, plotYLabel):
+def plotEzCon1dByFreqBin(plotName, plotData1d, plotColorS, plotYLabel):
 
     # plotName                                  # string
     # plotData1d                                # float 1d array
     # plotColorS                                # string
     # plotYLabel                                # string
 
-    global byFreqBinAvgX                        # float array
+    global byFreqBinX                           # float array
     global ezConDispGrid                        # integer
     global dopplerSpanD2                        # float
 
     plt.clf()
 
-    plt.plot(byFreqBinAvgX, plotData1d, plotColorS)
+    plt.plot(byFreqBinX, plotData1d, plotColorS)
 
     plt.title(titleS)
     plt.grid(ezConDispGrid)
@@ -6263,7 +6273,7 @@ def plotEzCon300rawRawByFreqBinAvg():
         plotCountdown -= 1
 
         # calculate average by Freq Bin and plot by Doppler
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(raw, axis=1), 'green',
+        plotEzCon1dByFreqBin(plotName, np.mean(raw, axis=1), 'green',
             'RawRaw Average Spectrum')
 
 
@@ -6283,7 +6293,7 @@ def plotEzCon301rawByFreqBinAvg():
         plotCountdown -= 1
 
         # calculate average by Freq Bin and plot by Doppler
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(raw, axis=1), 'green',
+        plotEzCon1dByFreqBin(plotName, np.mean(raw, axis=1), 'green',
             'Raw Average Spectrum')
 
 
@@ -6302,7 +6312,7 @@ def plotEzCon302antRawByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(ant, axis=1), 'blue',
+        plotEzCon1dByFreqBin(plotName, np.mean(ant, axis=1), 'blue',
             'AntRaw Average Spectrum')
 
 
@@ -6322,27 +6332,28 @@ def plotEzCon307antByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(ant, axis=1), 'blue',
+        plotEzCon1dByFreqBin(plotName, np.mean(ant, axis=1), 'blue',
             'Ant Average Spectrum')
 
 
 
-def plotEzCon347antBByFreqBinAvg():
+def plotEzCon317antByFreqBinMax():
+    # after antRfiRemoval()
 
     global ezConPlotRangeL          # integer list
     global fileNameLast             # string
     global plotCountdown            # integer
-    global antB                     # float 2d array
+    global ant                      # float 2d array
 
-    if ezConPlotRangeL[0] <= 347 and 347 <= ezConPlotRangeL[1]:
+    if ezConPlotRangeL[0] <= 317 and 317 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon347antBByFreqBinAvg.png'
+        plotName = 'ezCon317antByFreqBinMax.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(antB, axis=1), 'green',
-            'AntB Average Spectrum')
+        plotEzCon1dByFreqBin(plotName, np.amax(ant, axis=1), 'blue',
+            'Ant Maximum Spectrum')
 
 
 
@@ -6360,7 +6371,7 @@ def plotEzCon322refRawByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(ref, axis=1), 'red',
+        plotEzCon1dByFreqBin(plotName, np.mean(ref, axis=1), 'red',
             'RefRaw Average Spectrum')
 
 
@@ -6379,8 +6390,65 @@ def plotEzCon327refByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(ref, axis=1), 'red',
+        plotEzCon1dByFreqBin(plotName, np.mean(ref, axis=1), 'red',
             'Ref Average Spectrum')
+
+
+
+def plotEzCon337refByFreqBinMax():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global ref                      # float 2d array
+
+    if ezConPlotRangeL[0] <= 337 and 337 <= ezConPlotRangeL[1]:
+
+        plotName = 'ezCon337refByFreqBinAvg.png'
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+        plotCountdown -= 1
+
+        plotEzCon1dByFreqBin(plotName, np.amax(ref, axis=1), 'red',
+            'Ref Maximum Spectrum')
+
+
+
+def plotEzCon347antBByFreqBinAvg():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antB                     # float 2d array
+
+    if ezConPlotRangeL[0] <= 347 and 347 <= ezConPlotRangeL[1]:
+
+        plotName = 'ezCon347antBByFreqBinAvg.png'
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+        plotCountdown -= 1
+
+        plotEzCon1dByFreqBin(plotName, np.mean(antB, axis=1), 'green',
+            'AntB Average Spectrum')
+
+
+
+def plotEzCon357antBByFreqBinMax():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antB                     # float 2d array
+
+    if ezConPlotRangeL[0] <= 357 and 357 <= ezConPlotRangeL[1]:
+
+        plotName = 'ezCon357antBByFreqBinAvg.png'
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+        plotCountdown -= 1
+
+        plotEzCon1dByFreqBin(plotName, np.amax(antB, axis=1), 'green',
+            'AntB Maximum Spectrum')
 
 
 
@@ -6398,7 +6466,7 @@ def plotEzCon361antRAByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(antRA, axis=1), 'orange',
+        plotEzCon1dByFreqBin(plotName, np.mean(antRA, axis=1), 'orange',
             'AntRA Average Spectrum')
 
 
@@ -6417,8 +6485,27 @@ def plotEzCon367antRBByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(antRB, axis=1), 'orange',
+        plotEzCon1dByFreqBin(plotName, np.mean(antRB, axis=1), 'orange',
             'AntRB Average Spectrum')
+
+
+
+def plotEzCon377antRBByFreqBinMax():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antRB                    # float 2d array
+
+    if ezConPlotRangeL[0] <= 377 and 377 <= ezConPlotRangeL[1]:
+
+        plotName = 'ezCon377antRBByFreqBinMax.png'
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+        plotCountdown -= 1
+
+        plotEzCon1dByFreqBin(plotName, np.amax(antRB, axis=1), 'orange',
+            'AntRB Maximum Spectrum')
 
 
 
@@ -6436,7 +6523,7 @@ def plotEzCon381antXTByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(antXT, axis=1), 'violet',
+        plotEzCon1dByFreqBin(plotName, np.mean(antXT, axis=1), 'violet',
             'AntXT Average Spectrum')
 
 
@@ -6455,7 +6542,7 @@ def plotEzCon382antXTVByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(antXTV, axis=1), 'violet',
+        plotEzCon1dByFreqBin(plotName, np.mean(antXTV, axis=1), 'violet',
             'AntXTV Average Spectrum')
 
 
@@ -6474,7 +6561,7 @@ def plotEzCon387antXTVTByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
         plotCountdown -= 1
 
-        plotEzCon1dByFreqBinAvg(plotName, np.mean(antXTVT, axis=1), 'violet',
+        plotEzCon1dByFreqBin(plotName, np.mean(antXTVT, axis=1), 'violet',
             'AntXTVT Average Spectrum')
 
 
@@ -6575,6 +6662,25 @@ def plotEzCon388antXTByFreqBinAvgRfi():
 
 
 
+def plotEzCon397antXTVTByFreqBinMax():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antXTVT                  # float 2d array
+
+    if ezConPlotRangeL[0] <= 397 and 397 <= ezConPlotRangeL[1]:
+
+        plotName = 'ezCon397antXTVTByFreqBinMax.png'
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+        plotCountdown -= 1
+
+        plotEzCon1dByFreqBin(plotName, np.amax(antXTVT, axis=1), 'violet',
+            'AntXTVT Maximum Spectrum')
+
+
+
 #A#################################################################################################
 
 
@@ -6602,7 +6708,7 @@ def plotEzCon510velGLon():
     if ezConPlotRangeL[0] <= 510 and 510 <= ezConPlotRangeL[1] and velGLonP180CountSum:
         plt.clf()
 
-        # if any Galactic crossings, velGLonP180 has been (partially?) filled with averages
+        # if any Galactic plane crossings, velGLonP180 has been (partially?) filled with averages
         velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
         print(' velGLonP180CountNonzero =', velGLonP180CountNonzero, 'of', len(velGLonP180Count) )
         print()
@@ -6695,7 +6801,7 @@ def plotEzCon511velGLonCount():
         plt.xticks([  180,   90,   0,   -90,   -180],
                    [ '180', '90', '0', '-90', '-180'])
 
-        # if any Galactic crossings, velGLonP180 has been (partially?) filled with averages
+        # if any Galactic plane crossings, velGLonP180 has been (partially?) filled with averages
         velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
         print(' velGLonP180CountNonzero =', velGLonP180CountNonzero, 'of', len(velGLonP180Count) )
         print()
@@ -6824,7 +6930,7 @@ def plotEzCon520velGLonPolar():
         ax.set_theta_zero_location('S', offset=0.)
         ax.set_thetagrids((90, 180, 270, 360), ('-90', '0', '90', '180 and -180'))
 
-        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Crossing Spectrums')
+        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Plane Spectrums')
         ax.set_ylabel('Radius Is Increasing "Velocity",\n\n' \
             + 'Radius Is Increasing Receding,\n\n' \
             + 'Radius Is Decreasing Doppler\n\n')
@@ -6881,7 +6987,7 @@ def plotEzCon521velGLonPolarCount():
         ax.set_theta_zero_location('S', offset=0.)
         ax.set_thetagrids((90, 180, 270, 360), ('-90', '0', '90', '180 and -180'))
 
-        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Crossing Spectrums')
+        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Plane Spectrums')
         velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
         ax.set_ylabel('Velocity Data Counts by Galactic Longitude' \
             + f'\nVelocity Count: Sum={velGLonP180CountSum:,}' \
@@ -7146,7 +7252,7 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
     global elevation                # float array
     global titleS                   # string
     global ezConDispGrid            # integer
-    global byFreqBinAvgX            # float array
+    global byFreqBinX               # float array
     global ezConPlotRangeL          # integer list
 
     print()
@@ -7180,7 +7286,7 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
                 plotCountdown -= 1
                 plt.clf()
                 
-                plt.plot(byFreqBinAvgX, velGLonP180[:, gLonP180])
+                plt.plot(byFreqBinX, velGLonP180[:, gLonP180])
 
                 plt.title(titleS)
                 plt.grid(ezConDispGrid)
@@ -7441,12 +7547,12 @@ def main():
                     #   fileFreqMin, fileFreqMax, fileFreqBinQty, 
                     #   azimuth, elevation, dataTimeUtc, raw, rawLen, fileNameLast
 
-    openFileSdre()          # In case it will eventually error.  Creates fileWriteNameSdre, fileWriteSdre
+    #openFileSdre()          # In case it will eventually error.  Creates fileWriteNameSdre, fileWriteSdre
     openFileEzb()           # In case it will eventually error.  Creates fileWriteNameEzb, fileWriteEzb
     openFileStudy()         # In case it will eventually error.  Creates fileWriteNameStudy, fileWriteStudy
 
     rawPlotPrep()                       # creates rawLenM1, freqStep, dopplerSpanD2, freqCenter,
-                                        #   titleS, yTickHeatL, byFreqBinAvgX
+                                        #   titleS, yTickHeatL, byFreqBinX
 
     # Create signals and plot.
     # Full sized signal histories (used in heatmaps) are large, so delete them promptly.
@@ -7516,6 +7622,7 @@ def main():
     plotEzCon007ant()
     plotEzCon207antAvg()                # creates antAvg
     plotEzCon307antByFreqBinAvg()
+    plotEzCon317antByFreqBinMax()
 
     plotEzCon017antMax2d()
     plotEzCon217antMax()                # creates antMax
@@ -7544,6 +7651,7 @@ def main():
     plotEzCon027ref()
     plotEzCon227refAvg()                # creates refAvg
     plotEzCon327refByFreqBinAvg()
+    plotEzCon337refByFreqBinMax()
 
     plotEzCon037refMax2d()
     plotEzCon237refMax()                # creates refMax
@@ -7556,6 +7664,7 @@ def main():
     plotEzCon047antB()                  # creates antB
     plotEzCon247antBAvg()               # creates antBAvg
     plotEzCon347antBByFreqBinAvg()
+    plotEzCon357antBByFreqBinMax()
 
     plotEzCon057antBMax2d()
     plotEzCon257antBMax()               # creates antBMax
@@ -7590,6 +7699,7 @@ def main():
         del antRA
     plotEzCon267antRBAvg()              # creates antRBAvg
     plotEzCon367antRBByFreqBinAvg()
+    plotEzCon377antRBByFreqBinMax()
 
     plotEzCon077antRBMax2d()
     plotEzCon277antRBMax()              # creates antRBMax
@@ -7649,9 +7759,10 @@ def main():
 
     ####### antXTVT
 
-    plotEzCon087antXTVT()               # creates antXTVT, keeps antXTV for Galaxy Crossings plots
+    plotEzCon087antXTVT()               # creates antXTVT, keeps antXTV for Galaxy plane crossing plots
     plotEzCon287antXTVTAvg()            # creates antXTVTAvg into ezConOut[:, 18]
     plotEzCon387antXTVTByFreqBinAvg()
+    plotEzCon397antXTVTByFreqBinMax()
 
     plotEzCon097antXTVTMax2d()
     plotEzCon297antXTVTMax()            # creates antXTVTMax into ezConOut[:, 19]
@@ -7661,7 +7772,7 @@ def main():
     del antXTVT
 
 
-    writeFileSdre()
+    #writeFileSdre()
     writeFileEzb()
 
 
@@ -7699,7 +7810,7 @@ def main():
 
     # Global arrays remaining: dataTimeUtc, antXTV, ezConOut
 
-    # Galaxy Crossings plots
+    # Galaxy plane crossings plots
     writeFileGal()                      # creates fileGalWriteName like 2021_333_00.radGal.npz, velGLonP180,
                                         #   velGLonP180Count, velGLonP180CountSum, galDecP90GLonP180Count
 

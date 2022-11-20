@@ -1,4 +1,4 @@
-programName = 'ezGal221017a.py'
+programName = 'ezGal221118a.py'
 #programRevision = programName + ' (N0RQV)'
 programRevision = programName
 
@@ -10,6 +10,11 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGal221117a.py, "Galaxy Crossing" to "Galaxy Plane"
+# ezGal221117a.py,
+#   ezGal530velDecGLon.png to ezGal530galDecGLon.png,
+#   ezGal550velGRot_*.png to ezGal550galRot_*.png,
+#   ezGal690GLonDegP180_*ByFreqBinAvg.png to ezGal590gLonDegP180_*ByFreqBinAvg.png
 # ezGal221017a.py, polishing
 # ezGal221016a.py, polishing
 # ezGal221013a.py, polishing
@@ -96,9 +101,9 @@ def printUsage():
     print('    -ezGalDispGrid       1           (turn on graphical display plot grids)')
     print()
     print('    -ezGalVelGLonEdgeFrac   0.5    ')
-    print('         (velGLon level fraction for plotEzGal530velGLonEdges)')
+    print('         (velGLon level fraction for ezGal540velGLonEdgesB)')
     print('    -ezGalVelGLonEdgeLevel  0.5    ')
-    print('         (velGLon level for plotEzGal530velGLonEdges, if 0 then use only ezGalVelGLonEdgeFrac)')
+    print('         (velGLon level for ezGal540velGLonEdgesB, if 0 then use only ezGalVelGLonEdgeFrac)')
     print()
     print('    -ezDefaultsFile ../bigDish8.txt     (additional file of ezRA arguments)')
     print()
@@ -386,8 +391,8 @@ def ezGalArguments():
     #ezRAObsName = 'defaultKS'
     ezRAObsName = ''                # overwritten by optional argument
 
-    ezGalVelGLonEdgeFrac  = 0.5     # velGLon level fraction for plotEzGal530velGLonEdges()
-    ezGalVelGLonEdgeLevel = 0.      # velGLon level for plotEzGal530velGLonEdges(), if not 0 then
+    ezGalVelGLonEdgeFrac  = 0.5     # velGLon level fraction for ezGal540velGLonEdgesB
+    ezGalVelGLonEdgeLevel = 0.      # velGLon level for ezGal540velGLonEdgesB, if not 0 then
                                     #   ezGalVelGLonEdgeFrac ignored
 
     ezGalPlotRangeL = [0, 9999]     # save this range of plots to file
@@ -639,7 +644,7 @@ def plotEzGal510velGLon():
     if ezGalPlotRangeL[0] <= 510 and 510 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
         plt.clf()
 
-        # if any Galactic crossings, velGLonP180 has been (partially?) filled with averages
+        # if any Galactic plane crossings, velGLonP180 has been (partially?) filled with averages
         velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
         print(' velGLonP180CountNonzero =', velGLonP180CountNonzero, 'of', len(velGLonP180Count) )
         print()
@@ -739,7 +744,7 @@ def plotEzGal511velGLonCount():
         plt.xticks([ 180,   90,   0,   -90,   -180],
                    ['180', '90', '0', '-90', '-180'])
 
-        # if any Galactic crossings, velGLonP180 has been (partially?) filled with averages
+        # if any Galactic plane crossings, velGLonP180 has been (partially?) filled with averages
         velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
         print(' velGLonP180CountNonzero =', velGLonP180CountNonzero, 'of', len(velGLonP180Count) )
         print()
@@ -865,7 +870,7 @@ def plotEzGal520velGLonPolar():
         ax.set_theta_zero_location('S', offset=0.)
         ax.set_thetagrids((90, 180, 270, 360), ('-90', '0', '90', '180 and -180'))
 
-        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Crossing Spectrums')
+        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Plane Spectrums')
         ax.set_ylabel('Radius Is Increasing "Velocity",\n\n' \
             + 'Radius Is Increasing Receding,\n\n' \
             + 'Radius Is Decreasing Doppler\n\n')
@@ -921,7 +926,7 @@ def plotEzGal521velGLonPolarCount():
         ax.set_theta_zero_location('S', offset=0.)
         ax.set_thetagrids((90, 180, 270, 360), ('-90', '0', '90', '180 and -180'))
 
-        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Crossing Spectrums')
+        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Plane Spectrums')
         ax.set_ylabel('Velocity Data Counts by Galactic Longitude' \
             + f'\n\nVelocity Count Sum = {velGLonP180CountSum:,}' \
             + f'\n\nVelocity Count Nonzero = {np.count_nonzero(velGLonP180Count)}' \
@@ -933,7 +938,7 @@ def plotEzGal521velGLonPolarCount():
 
 
 
-def plotEzGal530velDecGLon():
+def plotEzGal530galDecGLon():
 
     global plotCountdown            # integer
     global velGLonP180              # float 2d array
@@ -946,7 +951,7 @@ def plotEzGal530velDecGLon():
     #global fileFreqBinQty           # integer
     global ezGalPlotRangeL          # integer list
 
-    pltNameS = 'ezGal530velDecGLon.png'
+    pltNameS = 'ezGal530galDecGLon.png'
     print()
     print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
     plotCountdown -= 1
@@ -1024,7 +1029,7 @@ def plotEzGal540velGLonEdgesB():
     if ezGalPlotRangeL[0] <= 540 and 540 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
         plt.clf()
 
-        # if any Galactic crossings, velGLonP180 has been (partially?) filled with averages
+        # if any Galactic plane crossings, velGLonP180 has been (partially?) filled with averages
         velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
         print(' velGLonP180CountNonzero =', velGLonP180CountNonzero, 'of', len(velGLonP180Count) )
         print()
@@ -1093,11 +1098,11 @@ def plotEzGal540velGLonEdgesB():
         # if ezGalVelGLonEdgeLevel not 0, then ezGalVelGLonEdgeFrac ignored
         if ezGalVelGLonEdgeLevel:
             velGLonEdgeLevel = ezGalVelGLonEdgeLevel
-            # create pltNameS with form of 'ezGal541velGLonEdges_nnnnn.png'
+            # create pltNameS with form of 'ezGal540velGLonEdgesB_nnnnn.png'
             pltNameS = f'ezGal540velGLonEdgesB_{ezGalVelGLonEdgeLevel:0.4f}.png'
         else:
             velGLonEdgeLevel = ezGalVelGLonEdgeFrac * (velGLonP180Max - velGLonP180Min) + velGLonP180Min
-            # create pltNameS with form of 'ezGal541velGLonEdges_0.nnnnn.png'
+            # create pltNameS with form of 'ezGal540velGLonEdgesB_0.nnnnn.png'
             pltNameS = f'ezGal540velGLonEdgesB_{ezGalVelGLonEdgeFrac:0.4f}.png'
 
         print()
@@ -1320,23 +1325,23 @@ def plotEzGal541velGLonEdges():
     plotCountdown -= 1
 
 
-    # since need same velGLonUEdge, merged plotEzGal550velGRot() into plotEzGal540velGLonEdgesB()
-    #def plotEzGal550velGRot():
+    # since need same velGLonUEdge, merged plotEzGal550galRot() into plotEzGal541velGLonEdges()
+    #def plotEzGal550galRot():
     # if ezGalVelGLonEdgeLevel not 0, then ezGalVelGLonEdgeFrac ignored
     if ezGalVelGLonEdgeLevel:
         velGLonEdgeLevel = ezGalVelGLonEdgeLevel
-        # create pltNameS with form of 'ezGal550velGLonEdges_nnnnn.png'
-        pltNameS = f'ezGal550velGRot_{ezGalVelGLonEdgeLevel:0.4f}.png'
+        # create pltNameS with form of 'ezGal541velGLonEdges_nnnnn.png'
+        pltNameS = f'ezGal550galRot_{ezGalVelGLonEdgeLevel:0.4f}.png'
     else:
         velGLonEdgeLevel = ezGalVelGLonEdgeFrac * (velGLonP180Max - velGLonP180Min) + velGLonP180Min
-        # create pltNameS with form of 'ezGal550velGLonEdges_0.nnnnn.png'
-        pltNameS = f'ezGal550velGRot_{ezGalVelGLonEdgeFrac:0.4f}.png'
+        # create pltNameS with form of 'ezGal541velGLonEdges_0.nnnnn.png'
+        pltNameS = f'ezGal550galRot_{ezGalVelGLonEdgeFrac:0.4f}.png'
     print()
     print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
     plotCountdown -= 1
 
     # If anything in velGLonP180 to plot.
-    # This plotEzGal550velGRot() requires plotEzGal540velGLonEdgesB() to run.
+    # This plotEzGal550galRot() requires plotEzGal541velGLonEdges() to run.
     if ezGalPlotRangeL[0] <= 550 and 550 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
         plt.clf()
 
@@ -1383,7 +1388,7 @@ def plotEzGal541velGLonEdges():
 
 
 
-def plotEzGal690GLonDegP180_nnnByFreqBinAvg():
+def plotEzGal590gLonDegP180_nnnByFreqBinAvg():
 
     global velGLonP180              # float 2d array
     global velGLonP180Count         # integer array
@@ -1397,24 +1402,24 @@ def plotEzGal690GLonDegP180_nnnByFreqBinAvg():
     global ezGalPlotRangeL          # integer list
 
     # if anything in velGLonP180 to plot
-    if ezGalPlotRangeL[0] <= 690 and 690 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
+    if ezGalPlotRangeL[0] <= 590 and 590 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
         plotCountdown += np.count_nonzero(velGLonP180Count)
 
         if 1:
-            # same ylim for all ezGal690GLonDegP180_nnnByFreqBinAvg plots
-            ezGal690yLimMin = 0.95 * velGLonP180.min()
-            print(' ezGal690yLimMin =', ezGal690yLimMin)
-            # for small antLen, that ezGal690yLimMin may be nan
+            # same ylim for all ezGal590gLonDegP180_nnnByFreqBinAvg plots
+            ezGal590yLimMin = 0.95 * velGLonP180.min()
+            print(' ezGal590yLimMin =', ezGal590yLimMin)
+            # for small antLen, that ezGal590yLimMin may be nan
 
-            ezGal690yLimMax = 1.05 * velGLonP180.max()
-            print(' ezGal690yLimMax =', ezGal690yLimMax)
-            # for small antLen, that ezGal690yLimMax may be nan
+            ezGal590yLimMax = 1.05 * velGLonP180.max()
+            print(' ezGal590yLimMax =', ezGal590yLimMax)
+            # for small antLen, that ezGal590yLimMax may be nan
 
         for gLonP180 in range(361):                 # for every column, RtoL
             if velGLonP180Count[gLonP180]:      # if column used
 
-                # create pltNameS with form of 'ezGal690GLonDegP180_nnnByFreqBinAvg.png'
-                pltNameS = f'ezGal690GLonDegP180_{gLonP180:03d}ByFreqBinAvg.png'
+                # create pltNameS with form of 'ezGal590gLonDegP180_nnnByFreqBinAvg.png'
+                pltNameS = f'ezGal590gLonDegP180_{gLonP180:03d}ByFreqBinAvg.png'
                 print()
                 print('    ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ============')
                 print(' gLonP180 =', gLonP180)
@@ -1432,18 +1437,18 @@ def plotEzGal690GLonDegP180_nnnByFreqBinAvg():
                 plt.xlim(-dopplerSpanD2, dopplerSpanD2)
 
                 if 0:
-                    # new ylim for each ezGal690GLonDegP180_nnnByFreqBinAvg plot
-                    ezGal690yLimMin = 0.95 * velGLonP180[:, gLonP180].min()
-                    print(' ezGal690yLimMin =', ezGal690yLimMin)
-                    # for small antLen, that ezGal690yLimMin may be nan
+                    # new ylim for each ezGal590gLonDegP180_nnnByFreqBinAvg plot
+                    ezGal590yLimMin = 0.95 * velGLonP180[:, gLonP180].min()
+                    print(' ezGal590yLimMin =', ezGal590yLimMin)
+                    # for small antLen, that ezGal590yLimMin may be nan
 
-                    ezGal690yLimMax = 1.05 * velGLonP180[:, gLonP180].max()
-                    print(' ezGal690yLimMax =', ezGal690yLimMax)
-                    # for small antLen, that ezGal690yLimMax may be nan
+                    ezGal590yLimMax = 1.05 * velGLonP180[:, gLonP180].max()
+                    print(' ezGal590yLimMax =', ezGal590yLimMax)
+                    # for small antLen, that ezGal590yLimMax may be nan
 
-                if not np.isnan(ezGal690yLimMin):
-                    if not np.isnan(ezGal690yLimMax):
-                        plt.ylim(ezGal690yLimMin, ezGal690yLimMax)
+                if not np.isnan(ezGal590yLimMin):
+                    if not np.isnan(ezGal590yLimMax):
+                        plt.ylim(ezGal590yLimMin, ezGal590yLimMax)
 
                 # create gLonDegS with form of '+nnn' or '-nnn' degrees
                 if gLonP180 < 180:
@@ -1556,13 +1561,13 @@ def main():
     plotEzGal520velGLonPolar()
     plotEzGal521velGLonPolarCount()
 
-    plotEzGal530velDecGLon()
+    plotEzGal530galDecGLon()
 
     plotEzGal540velGLonEdgesB()
     plotEzGal541velGLonEdges()
-    #plotEzGal550velGRot()              # merged with previous plotEzGal541velGLonEdges()
+    #plotEzGal550galRot()                # merged with previous plotEzGal541velGLonEdges()
 
-    plotEzGal690GLonDegP180_nnnByFreqBinAvg()
+    plotEzGal590gLonDegP180_nnnByFreqBinAvg()
 
     printGoodbye(startTime)
 

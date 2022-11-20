@@ -1,7 +1,7 @@
 # ezRA - Easy Radio Astronomy
 
 <p align="center">
-  <img src="/ezRA/ezRA_logo221020a.jpg?raw=true" alt="ezRA_logo221020a"/>
+  <img src="/ezRA/ezRA_logo221020a.jpg?raw=true" alt="ezRA_logo"/>
 </p>
 
 The ezRA Easy Radio Astronomy set of programs are free PC tools to help folks beginning to explore Radio Astronomy, with 
@@ -102,6 +102,6 @@ Help improve ezRA.
 
 tedClineGit@gmail.com
 <br>
-Nov-10-2022
+Nov-20-2022
 
 ---
