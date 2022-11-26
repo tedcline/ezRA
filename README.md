@@ -73,7 +73,7 @@ please see these introductory PDFs from the ezRA directory:
 
 
 Interested folks on [GitHub](https://github.com/tedcline/ezRA)
-would left-click on the top right Green button and probably choose "Download ZIP" (about 30 MB).
+would left-click on the top right Green button and probably choose "Download ZIP" (about 32 MB).
 
 ---
 
@@ -102,6 +102,6 @@ Help improve ezRA.
 
 tedClineGit@gmail.com
 <br>
-Nov-20-2022
+Nov-26-2022
 
 ---

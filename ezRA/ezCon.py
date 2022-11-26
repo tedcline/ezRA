@@ -1,5 +1,4 @@
-programName = 'ezCon221118a.py'
-#programRevision = programName + ' (N0RQV)'
+programName = 'ezCon221125a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy Data CONdenser - ezCon
@@ -11,6 +10,10 @@ programRevision = programName
 #       when unsupport .sdre text data file ?
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezCon221125a.py, to ezCon690gLonDegP180_nnnByFreqBinAvg, and to X axis using -byFreqBinX
+# ezCon221122a.py, ezCon560antXTVTMaxIdxGLon
+# ezCon221121a.py, avoid div by 0 when creating antRA,
+#   create antRA only once
 # ezCon221118a.py, "Galaxy Crossing" to "Galaxy Plane"
 # ezCon221116a.py, add ezCon317, ezCon337, ezCon357, ezCon377, and ezCon397
 # ezCon221112a.py, help typo
@@ -1454,8 +1457,8 @@ def rawPlotPrep():
         '',  '', '',  '',  '0.5',  '',  '',  '',  '',  '1.',
         '', '1.2', '']
 
+    # increasing freq
     byFreqBinX = np.arange(fileFreqBinQty) * freqStep - dopplerSpanD2
-
 
 
 def refAvgTrimFrac():
@@ -4039,6 +4042,10 @@ def plotEzCon061antRA():
     global ref                                  # float 2d array
     global antRA                                # float 2d array        creation
 
+    # create antRA
+    # before division, if any ref is zero, then add tiny number to all ref
+    if not ref.all():
+        ref += 1e-14
     antRA = np.true_divide(ant, ref)            # creation
 
     if 61 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 61:
@@ -4049,9 +4056,6 @@ def plotEzCon061antRA():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
-
-    # create antRA
-    antRA = np.true_divide(ant, ref)
 
     plotEzCon2dSamples(plotName, antRA, 'Ant', antLenM1, 'AntRA', 0)
         
@@ -4145,7 +4149,10 @@ def plotEzCon081antXT():
     antXSlopeValueStop  = antXByFreqBinAvg[ezConAntXFreqBin1]
     antXSlope = (antXSlopeValueStop - antXSlopeValueStart) / antXSlopeQty
     antXTThisDivisor = antXRange * antXSlope + antXSlopeValueStart
-   
+    # before division, if antXTThisDivisor is zero, then add tiny number to all antXTThisDivisor
+    if not antXTThisDivisor.all():
+        antXTThisDivisor += 1e-14
+
     for n in range(antLen):
         # want to slope-flatten the antX center section, which has antXSlopeQty indicies,
         #   inserting at index antXSlopeIndexStart
@@ -4269,7 +4276,10 @@ def plotEzCon087antXTVT():
     antXTVSlopeValueStop  = antXTVByFreqBinAvg[ezConAntXTVFreqBin1]
     antXTVSlope = (antXTVSlopeValueStop - antXTVSlopeValueStart) / antXTVSlopeQty
     antXTVTThisDivisor = antXTVRange * antXTVSlope + antXTVSlopeValueStart
-   
+    # before division, if antXTVTThisDivisor is zero, then add tiny number to all antXTVTThisDivisor
+    if not antXTVTThisDivisor.all():
+        antXTVTThisDivisor += 1e-14
+
     for n in range(antLen):
         ## level antXTV center sloped spectrum
         # want to slope-flatten the antXTV center section, which has antXTVSlopeQty indicies,
@@ -7241,6 +7251,60 @@ def plotEzCon541velGLonEdges():
 
 
 
+def plotEzCon560antXTVTMaxIdxGLon():
+
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antXTVT                  # float 2d array
+
+    global titleS                   # string
+    global ezConPlotRangeL          # integer list
+
+    plotName = 'ezCon560antXTVTMaxIdxGLon.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    if ezConPlotRangeL[0] <= 560 and 560 <= ezConPlotRangeL[1]:
+        plt.clf()
+
+        #velMaxIndex = np.empty(antLen, dtype=int)
+        #for n in range(antLen):
+        #    velMaxIndex[n] = np.maximum(antXTVT[:, n] = antXTVTThis)    # index of spectrum's max power
+
+        antXTVTMaxIndex = np.argmax(antXTVT, axis=0)          # freqBin-like for each sample's max
+        #velMaxIndexY, velMaxIndexX = np.where(antXTVT == velMax)
+
+        # ezConOut[:, 4] is gLon is RtoL from -180 thru 180
+        #pts = plt.scatter(ezConOut[:, 4], velMaxIndex-120,
+        #    s=1, marker='|', c='violet', cmap=plt.get_cmap('gnuplot'))
+        #pts = plt.scatter(ezConOut[:, 4]+360., velMaxIndex-120,
+        #    s=1, marker='|', c='red', cmap=plt.get_cmap('gnuplot'))
+        pts = plt.scatter(ezConOut[:, 4], antXTVTMaxIndex,
+            s=1, marker='|', c='violet', cmap=plt.get_cmap('gnuplot'))
+        pts = plt.scatter(ezConOut[:, 4]+360., antXTVTMaxIndex,
+            s=1, marker='|', c='red', cmap=plt.get_cmap('gnuplot'))
+
+        plt.title(titleS)
+        plt.grid(0)
+
+        plt.xlabel('Galactic Longitude (degrees)')
+        #plt.xlim(180, -180)        # in degrees
+        #plt.xlim(-180, 180)        # in degrees
+        #plt.xticks([  180,   90,   0,   -90,   -180],
+        #           [ '180', '90', '0', '-90', '-180'])
+        plt.xlim(0, 360)        # in degrees
+
+        plt.ylabel('Index of AntXTVT Spectrum Maximum (increasing freq)')
+        #plt.ylim(-270, 270)
+        plt.ylim(0, 400)
+
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
+
+
+
 def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
 
     global velGLonP180              # float 2d array
@@ -7263,20 +7327,20 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
         plotCountdown += np.count_nonzero(velGLonP180Count)
 
         if 1:
-            # same ylim for all ezCon590GLonDegP180_nnnByFreqBinAvg plots
-            ezCon590yLimMin = 0.95 * velGLonP180.min()
-            print(' ezCon590yLimMin =', ezCon590yLimMin)
-            # for small antLen, that ezCon590yLimMin may be nan
+            # same ylim for all ezCon690GLonDegP180_nnnByFreqBinAvg plots
+            ezCon690yLimMin = 0.95 * velGLonP180.min()
+            print(' ezCon690yLimMin =', ezCon690yLimMin)
+            # for small antLen, that ezCon690yLimMin may be nan
 
-            ezCon590yLimMax = 1.05 * velGLonP180.max()
-            print(' ezCon590yLimMax =', ezCon590yLimMax)
-            # for small antLen, that ezCon590yLimMax may be nan
+            ezCon690yLimMax = 1.05 * velGLonP180.max()
+            print(' ezCon690yLimMax =', ezCon690yLimMax)
+            # for small antLen, that ezCon690yLimMax may be nan
 
         for gLonP180 in range(361):                 # for every column, RtoL
             if velGLonP180Count[gLonP180]:      # if column used
 
-                # create plotName with form of 'ezCon590GLonDegP180_nnnByFreqBinAvg.png'
-                plotName = f'ezCon590gLonDegP180_{gLonP180:03d}ByFreqBinAvg.png'
+                # create plotName with form of 'ezCon690GLonDegP180_nnnByFreqBinAvg.png'
+                plotName = f'ezCon690gLonDegP180_{gLonP180:03d}ByFreqBinAvg.png'
                 print()
                 print(f'  {fileNameLast}  {plotCountdown} plotting {plotName}' \
                     + ' ================================')
@@ -7286,7 +7350,8 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
                 plotCountdown -= 1
                 plt.clf()
                 
-                plt.plot(byFreqBinX, velGLonP180[:, gLonP180])
+                # velGLonP180 stores increasing velocity, but X axis is increasing freq, so use -byFreqBinX
+                plt.plot(-byFreqBinX, velGLonP180[:, gLonP180])
 
                 plt.title(titleS)
                 plt.grid(ezConDispGrid)
@@ -7295,17 +7360,17 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
                 plt.xlim(-dopplerSpanD2, dopplerSpanD2)
 
                 if 0:
-                    # new ylim for each ezCon590GLonDegP180_nnnByFreqBinAvg plot
-                    ezCon590yLimMin = 0.95 * velGLonP180[:, gLonP180].min()
-                    print(' ezCon590yLimMin =', ezCon590yLimMin)
-                    # for small antLen, that ezCon590yLimMin may be nan
+                    # new ylim for each ezCon690GLonDegP180_nnnByFreqBinAvg plot
+                    ezCon690yLimMin = 0.95 * velGLonP180[:, gLonP180].min()
+                    print(' ezCon690yLimMin =', ezCon690yLimMin)
+                    # for small antLen, that ezCon690yLimMin may be nan
 
-                    ezCon590yLimMax = 1.05 * velGLonP180[:, gLonP180].max()
-                    print(' ezCon590yLimMax =', ezCon590yLimMax)
-                    # for small antLen, that ezCon590yLimMax may be nan
+                    ezCon690yLimMax = 1.05 * velGLonP180[:, gLonP180].max()
+                    print(' ezCon690yLimMax =', ezCon690yLimMax)
+                    # for small antLen, that ezCon690yLimMax may be nan
 
-                if not np.isnan(ezCon590yLimMin) and not np.isnan(ezCon590yLimMax):
-                    plt.ylim(ezCon590yLimMin, ezCon590yLimMax)
+                if not np.isnan(ezCon690yLimMin) and not np.isnan(ezCon690yLimMax):
+                    plt.ylim(ezCon690yLimMin, ezCon690yLimMax)
 
                 # create gLonDegS with form of '+nnn' or '-nnn' degrees
                 if gLonP180 < 180:
@@ -7763,6 +7828,7 @@ def main():
     plotEzCon287antXTVTAvg()            # creates antXTVTAvg into ezConOut[:, 18]
     plotEzCon387antXTVTByFreqBinAvg()
     plotEzCon397antXTVTByFreqBinMax()
+    plotEzCon560antXTVTMaxIdxGLon()
 
     plotEzCon097antXTVTMax2d()
     plotEzCon297antXTVTMax()            # creates antXTVTMax into ezConOut[:, 19]

@@ -1,5 +1,4 @@
-programName = 'ezPlot221017a.py'
-#programRevision = programName + ' (N0RQV)'
+programName = 'ezPlot221123a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy Data CONdenser - ezPlot
@@ -9,6 +8,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezPlot221123a.py, fixed ezPlot000timeUtcMjdSorted
 # ezPlot221017a.py, polishing, ylabel
 # ezPlot221016a.py, 
 # ezPlot221015a.py, commas to prints, allow division by data1dSpanD100
@@ -839,11 +839,12 @@ def plotEzPlot000timeUtcMjdSorted():
     # ezPlotIn[n:] indices sorted by MJD
     if not len(ezPlotInIdxByMjdRel):
         ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
-        ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
+        #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
 
-    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[ezPlotInIdxByMjdRel, 0],
+    # MJD relative to the start of the minimum MJD
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[ezPlotInIdxByMjdRel, 0]-int(timeUtcMjdMin),
         f'{antLen:,} Samples, sorted Chronologically', [], 'green',
-        'UTC Time in Modified Julian Day - Chronological' \
+        'UTC Time in Relative Modified Julian Days - Chronological' \
             + '\n\nMinimum = ' + timeUtcMjdMinS \
             + '\n\nMaximum = ' + timeUtcMjdMaxS)
 
@@ -1697,7 +1698,7 @@ def plotEzPlot1dSamplesRa(plotName, ezPlotInColumn, plotYLabel):
     # ezPlotIn[n:] indices sorted by MJD
     if not len(ezPlotInIdxByMjdRel):
         ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
-        ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
+        #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
 
     # To avoid retrace lines caused by new Right Ascension trace, plot each Ra trace separately.
     # Just keep records until stepping forward into new Ra trace.
@@ -1951,7 +1952,7 @@ def plotEzPlot1dSamplesUtc(plotName, ezPlotInColumn, plotYLabel):
     # ezPlotIn[n:] indices sorted by MJD
     if not len(ezPlotInIdxByMjdRel):
         ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
-        ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
+        #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
 
     # To avoid retrace lines caused by new UTC day, plot each UTC day separately.
     # Just keep records until stepping forward into new UTC day.
@@ -2211,7 +2212,7 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
     # ezPlotIn[n:] indices sorted by MJD
     if not len(ezPlotInIdxByMjdRel):
         ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
-        ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
+        #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
 
     # Sidereal Day math
     # ((365.0 + 0.25 + 0.01 + 0.0025) ...

@@ -1,4 +1,4 @@
-programName = 'ezSky221118a.py'
+programName = 'ezSky221125a.py'
 #programRevision = programName + ' (N0RQV)'
 programRevision = programName
 
@@ -10,6 +10,9 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezSky221125a.py, ezSky201RBVOMax to ezSky201RBMax
+# ezSky221122a.py, ezSky080elDeg ylim -95 to +195
+# ezSky221121h.py, ezSky201RBVOMax
 # ezSky221118a.py, 'ezSky600azEl_' + ezSkyInputS + '.png'
 # ezSky221116a.py, help's -ezSkyPlotRange to -ezSkyPlotRangeL
 # ezSky221115a.py, ezSky601 to ezSky600, ezSky600 minus sign typo
@@ -966,7 +969,7 @@ def plotEzSky080elDeg():
     print('                         elDegAvg =', np.mean(elDeg))
     print('                         elDegMin =', elDeg.min())
 
-    plotEzSky1dSamplesAnt(plotName, elDeg, '', [-90., 90.], 'green',
+    plotEzSky1dSamplesAnt(plotName, elDeg, '', [-95., 195.], 'green',
         'Elevation (degrees)')
 
 
@@ -1131,7 +1134,6 @@ def plotEzSky200RBVO():
     imgaxesRatioX = ezSkyBackground1XMax / 720
     imgaxesRatioY = ezSkyBackground1YMax / 360
     radecRaHalfDegScaled  = (720 - radecRaHalfDeg ) * imgaxesRatioX
-    radecDecHalfDegScaled = (180 - radecDecHalfDeg) * imgaxesRatioY
     radecDecHalfDegScaled = (360 - radecDecHalfDeg) * imgaxesRatioY
 
     # thin black horizontal line on each used scaled declination
@@ -1169,6 +1171,197 @@ def plotEzSky200RBVO():
         ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24'])
 
     plt.ylabel(f'{ezSkyInputS[2:]} Vertical Offset in RaDec Coordinates')
+    plt.yticks([i * imgaxesRatioY for i in range(360, -1, -30)],
+        ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
+    imgaxes.tick_params(axis='both', labelsize=6)
+
+    plt.subplots_adjust(left=0.4, right=0.5, bottom=0.4, top=0.5)
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+
+
+
+def plotEzSky201RBMax():
+    # radio Sky Radec map with background, dots on left and right maximum Power
+
+    global radecPower               # float   1d array
+    global radecRaHalfDeg           # integer 1d array
+    global radecDecHalfDeg          # integer 1d array
+    global ezbColumnColor           # string list
+    global ezSkyInputS              # string
+    global ezSkyVOGain              # float
+
+    global ezSkyPlotRangeL          # integer list
+    global plotCountdown            # integer
+    global fileNameLast             # string
+    global titleS                   # string
+    #global ezSkyDispGrid           # integer
+
+    global ezSkyBackground1         # string
+    global ezSkyBackground1XMax     # integer
+    global ezSkyBackground1YMax     # integer
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 201 or 201 < ezSkyPlotRangeL[0]:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezSky201RBMax_' + ezSkyInputS + '.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+    plt.clf()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # plot RaDec background
+    backImg = plt.imread(ezSkyBackground1)    # Reeve map
+
+    imgaxes = fig.add_axes(ax.get_position(), label='image', xticks=[], yticks=[])
+    #print(ax.get_position())
+
+    imgaxes.set_xlim(0, ezSkyBackground1XMax)
+    imgaxes.set_ylim(0, ezSkyBackground1YMax)
+
+    plt.gca().invert_yaxis()
+
+    # comment next line to remove background
+    img = imgaxes.imshow(backImg, aspect='auto')
+
+    ax.set_axis_off()
+
+    # map radec to background image
+    imgaxesRatioX = ezSkyBackground1XMax / 720
+    imgaxesRatioY = ezSkyBackground1YMax / 360
+    radecRaHalfDegScaled  = (720 - radecRaHalfDeg ) * imgaxesRatioX
+    radecDecHalfDegScaled = (360 - radecDecHalfDeg) * imgaxesRatioY
+
+    #365,370,420,428,432,435,
+    galRaHDegLeft054304 = np.array([ \
+    400,412,420,428,432,435,
+    443,446,450,453,456,460,463,466,468,469,
+    471,474,477,479,481,482,484,485,486,489,
+    491,492,493,495,496,497,499,500,501,503,
+    504,505,507,508,509,510,511,512,513,514,
+    515,516,516,517,518,519,520,521,522,522,
+    523,524,525,526,526,527,528,529,530,530,
+    531,532,532,533,534,535,535,536,537,537,
+    538,538,539,540,540,541,541,542,542,543,
+    543,544,545,545,546,546,547,547,548,549,
+    549,550,550,551,551,552,552,553,554,555,
+    555,556,556,557,558,558,559,559,560,561,
+    561,562,562,563,563,563,564,564,564,565,
+    566,566,567,567,568,568,569,570,570,571,
+    571,572,572,573,573,574,574,574,575,575,
+    576,577,577,578,578,579,579,580,580,581,
+    581,582,583,583,584,584,585,585,586,587,
+    587,588,588,589,590,590,591,592,593,593,
+    594,595,595,596,596,597,598,598,599,600,
+    601,602,602,603,604,605,605,606,607,608,
+    609,610,610,611,612,613,614,614,615,616,
+    617,618,619,621,622,622,624,625,626,627,
+    628,630,632,633,634,636,637,638,640,641,
+    642,644,647,648,649,652,654,657,659,660,
+    662,665,668,671,675,678,681,685,688,692,
+    696,703,707,715])
+    print('galRaHDegLeft054304 =', len(galRaHDegLeft054304))
+
+    galRaHDegRight054304 = np.array([ \
+    363,355,347,343,336,332,
+    328,325,321,318,315,311,308,305,302,300,
+    299,297,294,292,289,288,287,284,283,282,
+    280,278,277,276,273,272,271,270,269,268,
+    266,265,264,263,262,261,260,259,258,257,
+    256,254,253,253,252,251,250,249,249,248,
+    247,246,246,245,244,243,242,242,241,241,
+    240,239,238,237,236,236,235,235,234,234,
+    233,232,231,230,230,229,229,228,228,227,
+    226,225,225,224,224,223,223,222,221,221,
+    220,220,219,219,218,218,217,216,216,215,
+    215,214,214,213,213,213,212,212,211,210,
+    209,209,208,208,207,207,206,206,205,204,
+    204,203,203,203,203,202,202,201,201,200,
+    200,199,199,198,197,197,196,196,195,195,
+    194,193,193,192,192,191,191,190,190,189,
+    188,188,187,187,186,186,185,184,183,183,
+    183,182,182,181,180,180,179,179,178,178,
+    177,176,176,175,175,174,173,172,171,170,
+    170,169,168,167,166,166,165,165,164,163,
+    162,161,160,159,159,158,157,156,155,154,
+    153,152,151,150,149,148,147,145,144,143,
+    142,141,139,137,136,135,133,132,131,129,
+    127,126,124,122,120,119,117,114,111,109,
+    108,106,103,100, 96, 93, 90, 86, 83, 75,
+    72,  68, 60, 52])
+    #72,  68, 60,  0]
+    print('galRaHDegRight054304 =', len(galRaHDegRight054304))
+
+    galRaHDegRight054304Scaled  = (720 - galRaHDegRight054304) * imgaxesRatioX
+    galRaHDegLeft054304Scaled  = (720 - galRaHDegLeft054304) * imgaxesRatioX
+    decHDegScaled = (360 - np.array(range(54,304))) * imgaxesRatioY
+
+    plt.scatter(galRaHDegRight054304Scaled, decHDegScaled, s=100, marker='.', c='red')
+    plt.scatter(galRaHDegLeft054304Scaled, decHDegScaled, s=100, marker='.', c='red')
+
+    # find and plot dots on MaxRight and on MaxLeft
+    radecDecHalfDegScaledLast = 9999                # silly value
+    radecPowerMaxRight = -9999                      # silly value
+    radecPowerMaxLeft  = -9999                      # silly value
+    nMaxRight = -1                                  # silly value
+    nMaxLeft  = -1                                  # silly value
+    # walk through data, already sorted as increasing RaH then increasing Dec 
+    for n in range(len(radecDecHalfDegScaled)):
+        if radecDecHalfDegScaledLast != radecDecHalfDegScaled[n]:   # if new Dec
+            radecDecHalfDegScaledLast = radecDecHalfDegScaled[n]
+            print()
+            #print(f'                 {radecDecHalfDeg[nMaxLeft]}:{radecDecHalfDeg[nMaxRight]}:')
+            #print(f'{radecRaHalfDeg[nMaxLeft]},{radecRaHalfDeg[nMaxRight]},')
+            if nMaxRight + 1:                       # if not silly value, plot MaxLeft
+                if radecDecHalfDeg[nMaxRight] <= 304:   # if <= DecHDeg top of Galactic plane
+                    raHDiff = (radecRaHalfDeg[nMaxRight] \
+                        - galRaHDegRight054304[radecDecHalfDeg[nMaxRight] - 54]) / 30.
+                    #print(f'    nMaxRight = {nMaxRight}   RaH = {radecRaHalfDeg[nMaxRight]/30.:.1f}',
+                    #    f'  DecDeg = {radecDecHalfDeg[nMaxRight]/2.-90.}   raHDiff = {raHDiff:.1f}')
+                    print(f' DecDeg = {radecDecHalfDeg[nMaxRight]/2.-90.}',
+                        f'  RaH = {radecRaHalfDeg[nMaxRight]/30.:.1f}   Right raHDiff = {raHDiff:.1f}')
+                plt.scatter(radecRaHalfDegScaled[nMaxRight], radecDecHalfDegScaled[nMaxRight],
+                    s=100, marker='.', c='green')
+                radecPowerMaxRight = -9999          # reset to silly value
+                nMaxRight = -1                      # reset to silly value
+            if nMaxLeft + 1:                        # if not silly value, plot MaxLeft
+                #print(f'nMaxLeft = {nMaxLeft}   RaH = {radecRaHalfDeg[nMaxLeft]/30.}',
+                #    f'  DecDeg = {radecDecHalfDeg[nMaxLeft]/2.}')
+                if radecDecHalfDeg[nMaxLeft] <= 304:   # if <= DecHDeg top of Galactic plane
+                    raHDiff = (radecRaHalfDeg[nMaxLeft] \
+                        - galRaHDegLeft054304[radecDecHalfDeg[nMaxLeft] - 54]) / 30.
+                    #print(f'  nMaxLeft = {nMaxLeft}   RaH = {radecRaHalfDeg[nMaxLeft]/30.:.1f}',
+                    #    f'  DecDeg = {radecDecHalfDeg[nMaxLeft]/2.-90.}   raHDiff = {raHDiff:.1f}')
+                    print(f' DecDeg = {radecDecHalfDeg[nMaxLeft]/2.-90.}',
+                        f'  RaH = {radecRaHalfDeg[nMaxLeft]/30.:.1f}   Left  raHDiff = {raHDiff:.1f}')
+                plt.scatter(radecRaHalfDegScaled[nMaxLeft], radecDecHalfDegScaled[nMaxLeft],
+                    s=100, marker='.', c='green')
+                radecPowerMaxLeft  = -9999          # reset to silly value
+                nMaxLeft = -1                       # reset to silly value
+        if radecRaHalfDeg[n] < 360:                 # if on right half of RaDec
+            if radecPowerMaxRight < radecPower[n]:  # if found the new maxRight
+                radecPowerMaxRight = radecPower[n]
+                nMaxRight = n
+        else:
+            if radecPowerMaxLeft < radecPower[n]:   # if found the new maxLeft
+                radecPowerMaxLeft = radecPower[n]
+                nMaxLeft = n
+
+    plt.title(titleS)
+    ###plt.grid(ezSkyDispGrid)
+
+    plt.xticks([i * imgaxesRatioX for i in range(720, -1, -60)],
+        ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24'])
+
+    plt.ylabel(f'{ezSkyInputS[2:]} Local Maximum in RaDec Coordinates')
     plt.yticks([i * imgaxesRatioY for i in range(360, -1, -30)],
         ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
     imgaxes.tick_params(axis='both', labelsize=6)
@@ -1234,7 +1427,6 @@ def plotEzSky300RB():
     imgaxesRatioX = ezSkyBackground1XMax / 720
     imgaxesRatioY = ezSkyBackground1YMax / 360
     radecRaHalfDegScaled  = (720 - radecRaHalfDeg ) * imgaxesRatioX
-    radecDecHalfDegScaled = (180 - radecDecHalfDeg) * imgaxesRatioY
     radecDecHalfDegScaled = (360 - radecDecHalfDeg) * imgaxesRatioY
 
     # plot each radecPower value as a dot with a radecPower color
@@ -2150,6 +2342,7 @@ def main():
     ezSkyGridRadec()
 
     plotEzSky200RBVO()
+    plotEzSky201RBMax()
 
     plotEzSky300RB()
     plotEzSky301RBT()

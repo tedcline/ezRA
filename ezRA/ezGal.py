@@ -1,5 +1,4 @@
-programName = 'ezGal221118a.py'
-#programRevision = programName + ' (N0RQV)'
+programName = 'ezGal221123a.py'
 programRevision = programName
 
 # Easy Radio Astronomy (ezRA) ezGal GALaxy explorer program,
@@ -10,6 +9,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGal221123a.py, to ezGal690, and to X axis using -byFreqBinX
 # ezGal221117a.py, "Galaxy Crossing" to "Galaxy Plane"
 # ezGal221117a.py,
 #   ezGal530velDecGLon.png to ezGal530galDecGLon.png,
@@ -438,7 +438,8 @@ def readDataDir():
     print()
     print('   readDataDir ===============')
 
-    directoryList = sorted(cmdDirectoryS.split())           # sorted needed on Linux
+    #directoryList = sorted(cmdDirectoryS.split())           # sorted needed on Linux
+    directoryList = cmdDirectoryS.split()
     directoryListLen = len(directoryList)
     
     VelNpz_Qty = 0
@@ -576,7 +577,7 @@ def readDataDir():
 
 
 def plotPrep():
-    # creates freqStep, dopplerSpanD2, freqCenter, titleS, byFreqBinAvgX
+    # creates freqStep, dopplerSpanD2, freqCenter, titleS, byFreqBinX
 
     global fileObsName              # string
     global fileFreqMin              # float
@@ -588,7 +589,7 @@ def plotPrep():
     global freqCenter               # float                 creation
     global titleS                   # string                creation
 
-    global byFreqBinAvgX            # float array           creation
+    global byFreqBinX               # float array           creation
 
     print()
     print('   plotPrep ===============')
@@ -618,7 +619,8 @@ def plotPrep():
     titleS = '  ' + fileNameLast.split(os.path.sep)[-1] + u'           ' + fileObsName \
         + '          (' + programName + ')'
 
-    byFreqBinAvgX = np.arange(fileFreqBinQty) * freqStep - dopplerSpanD2
+    # increasing freq
+    byFreqBinX = np.arange(fileFreqBinQty) * freqStep - dopplerSpanD2
 
 
 
@@ -1388,7 +1390,7 @@ def plotEzGal541velGLonEdges():
 
 
 
-def plotEzGal590gLonDegP180_nnnByFreqBinAvg():
+def plotEzGal690gLonDegP180_nnnByFreqBinAvg():
 
     global velGLonP180              # float 2d array
     global velGLonP180Count         # integer array
@@ -1398,28 +1400,28 @@ def plotEzGal590gLonDegP180_nnnByFreqBinAvg():
     global elevation                # float array
     global titleS                   # string
     global ezGalDispGrid            # integer
-    global byFreqBinAvgX            # float array
+    global byFreqBinX               # float array
     global ezGalPlotRangeL          # integer list
 
     # if anything in velGLonP180 to plot
-    if ezGalPlotRangeL[0] <= 590 and 590 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
+    if ezGalPlotRangeL[0] <= 690 and 690 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
         plotCountdown += np.count_nonzero(velGLonP180Count)
 
         if 1:
-            # same ylim for all ezGal590gLonDegP180_nnnByFreqBinAvg plots
-            ezGal590yLimMin = 0.95 * velGLonP180.min()
-            print(' ezGal590yLimMin =', ezGal590yLimMin)
-            # for small antLen, that ezGal590yLimMin may be nan
+            # same ylim for all ezGal690gLonDegP180_nnnByFreqBinAvg plots
+            ezGal690yLimMin = 0.95 * velGLonP180.min()
+            print(' ezGal690yLimMin =', ezGal690yLimMin)
+            # for small antLen, that ezGal690yLimMin may be nan
 
-            ezGal590yLimMax = 1.05 * velGLonP180.max()
-            print(' ezGal590yLimMax =', ezGal590yLimMax)
-            # for small antLen, that ezGal590yLimMax may be nan
+            ezGal690yLimMax = 1.05 * velGLonP180.max()
+            print(' ezGal690yLimMax =', ezGal690yLimMax)
+            # for small antLen, that ezGal690yLimMax may be nan
 
         for gLonP180 in range(361):                 # for every column, RtoL
             if velGLonP180Count[gLonP180]:      # if column used
 
-                # create pltNameS with form of 'ezGal590gLonDegP180_nnnByFreqBinAvg.png'
-                pltNameS = f'ezGal590gLonDegP180_{gLonP180:03d}ByFreqBinAvg.png'
+                # create pltNameS with form of 'ezGal690gLonDegP180_nnnByFreqBinAvg.png'
+                pltNameS = f'ezGal690gLonDegP180_{gLonP180:03d}ByFreqBinAvg.png'
                 print()
                 print('    ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ============')
                 print(' gLonP180 =', gLonP180)
@@ -1427,8 +1429,9 @@ def plotEzGal590gLonDegP180_nnnByFreqBinAvg():
                 print(' velGLonP180Count[gLonP180] =', velGLonP180Count[gLonP180])
                 plotCountdown -= 1
                 plt.clf()
-                
-                plt.plot(byFreqBinAvgX, velGLonP180[:, gLonP180])
+
+                # velGLonP180 stores increasing velocity, but X axis is increasing freq, so use -byFreqBinX
+                plt.plot(-byFreqBinX, velGLonP180[:, gLonP180])
 
                 plt.title(titleS)
                 plt.grid(ezGalDispGrid)
@@ -1437,18 +1440,18 @@ def plotEzGal590gLonDegP180_nnnByFreqBinAvg():
                 plt.xlim(-dopplerSpanD2, dopplerSpanD2)
 
                 if 0:
-                    # new ylim for each ezGal590gLonDegP180_nnnByFreqBinAvg plot
-                    ezGal590yLimMin = 0.95 * velGLonP180[:, gLonP180].min()
-                    print(' ezGal590yLimMin =', ezGal590yLimMin)
-                    # for small antLen, that ezGal590yLimMin may be nan
+                    # new ylim for each ezGal690gLonDegP180_nnnByFreqBinAvg plot
+                    ezGal690yLimMin = 0.95 * velGLonP180[:, gLonP180].min()
+                    print(' ezGal690yLimMin =', ezGal690yLimMin)
+                    # for small antLen, that ezGal690yLimMin may be nan
 
-                    ezGal590yLimMax = 1.05 * velGLonP180[:, gLonP180].max()
-                    print(' ezGal590yLimMax =', ezGal590yLimMax)
-                    # for small antLen, that ezGal590yLimMax may be nan
+                    ezGal690yLimMax = 1.05 * velGLonP180[:, gLonP180].max()
+                    print(' ezGal690yLimMax =', ezGal690yLimMax)
+                    # for small antLen, that ezGal690yLimMax may be nan
 
-                if not np.isnan(ezGal590yLimMin):
-                    if not np.isnan(ezGal590yLimMax):
-                        plt.ylim(ezGal590yLimMin, ezGal590yLimMax)
+                if not np.isnan(ezGal690yLimMin):
+                    if not np.isnan(ezGal690yLimMax):
+                        plt.ylim(ezGal690yLimMin, ezGal690yLimMax)
 
                 # create gLonDegS with form of '+nnn' or '-nnn' degrees
                 if gLonP180 < 180:
@@ -1552,7 +1555,7 @@ def main():
                     #   galDecP90GLonP180Count, fileNameLast
 
     plotPrep()                       # creates freqStep, dopplerSpanD2, freqCenter,
-                                        #   titleS, byFreqBinAvgX
+                                        #   titleS, byFreqBinX
 
     # velocity plots
     plotEzGal510velGLon()
@@ -1567,7 +1570,7 @@ def main():
     plotEzGal541velGLonEdges()
     #plotEzGal550galRot()                # merged with previous plotEzGal541velGLonEdges()
 
-    plotEzGal590gLonDegP180_nnnByFreqBinAvg()
+    plotEzGal690gLonDegP180_nnnByFreqBinAvg()
 
     printGoodbye(startTime)
 

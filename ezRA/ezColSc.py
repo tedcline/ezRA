@@ -1,13 +1,12 @@
-pgmName = 'ezColSc220930a.py'
-#pgmRev  = pgmName + ' (N0RQV)'
-pgmRev  = pgmName
-
+programName = 'ezColSc221126a.py'
+programRevision = programName
 
 '''
-ezColSc220930a.py, prep for Git
-ezColSc01M.py, Jul- 3-2022a first try at SpectraCyber ezCol Converter, using AC0UB Sep-2019 data
 
-480 freqBin from 1419.808 to 1421.012 MHz
+ezColSc221126a.py, commented out special timing code
+
+The "R-40DEC-2019-09-13 UTC  15 01 30 LAST.001" data file from Sep-2019 had
+480 freqBin from 1419.808 to 1421.012 MHz:
 s 9 13 2019 15 1 30 1.000000 -600 600 5 0
 0.000000	= 2
 ...
@@ -19,7 +18,12 @@ s 9 13 2019 15 1 30 1.000000 -600 600 5 0
 ...
 0.000000	= 401
 
+
+
 321 - 81 = 240
+
+80 + 240 + 80 = 400
+1421.012 - 1419.808 = 1.204 MHz
 
 '''
 
@@ -36,7 +40,7 @@ import numpy as np
 
 def printHello():
 
-    global pgmRev                   # string
+    global programRevision          # string
     global cmd                      # string
 
     #print(' startTime = ', startTime)
@@ -47,7 +51,7 @@ def printHello():
     #print(' Local time = %s ' % time.asctime(time.localtime()))
     print(' Local time =', time.asctime(time.localtime()))
 
-    print(' pgmRev =', pgmRev)
+    print(' programRevision =', programRevision)
     print()
 
     #print(sys.argv)
@@ -63,7 +67,7 @@ def printHello():
 def ezColArgumentsFileRead(ezColArgumentsFileNameInput):
     # process arguments from file
 
-    #global pgmRev                           # string
+    #global programRevision                  # string
     #global cmd                              # string
 
     global ezRAObsName                      # string
@@ -71,6 +75,9 @@ def ezColArgumentsFileRead(ezColArgumentsFileNameInput):
     global ezRAObsLon                       # float
     global ezRAObsAmsl                      # float
     #global ezColFileNamePrefix              # string
+
+    global ezColFreqMin                     # float
+    global ezColFreqMax                     # float
 
     global ezColAzimuth                     # float
     global ezColElevation                   # float
@@ -151,6 +158,12 @@ def ezColArgumentsFileRead(ezColArgumentsFileNameInput):
 
             # ezCol arguments
             # float arguments
+            elif thisLine0Lower == '-ezColFreqMin'.lower():
+                ezColFreqMin = float(thisLine[1])
+
+            elif thisLine0Lower == '-ezColFreqMax'.lower():
+                ezColFreqMax = float(thisLine[1])
+
             elif thisLine0Lower == '-ezColAzimuth'.lower():
                 ezColAzimuth = float(thisLine[1])
 
@@ -196,7 +209,7 @@ def ezColArgumentsFileRead(ezColArgumentsFileNameInput):
 def ezColArgumentsCommandLine():
     # process arguments from command line
 
-    #global pgmRev                           # string
+    #global programRevision                  # string
     global cmd                              # string
 
     global ezRAObsName                      # string
@@ -204,6 +217,9 @@ def ezColArgumentsCommandLine():
     global ezRAObsLon                       # float
     global ezRAObsAmsl                      # float
     #global ezColFileNamePrefix              # string
+
+    global ezColFreqMin                     # float
+    global ezColFreqMax                     # float
 
     global ezColAzimuth                     # float
     global ezColElevation                   # float
@@ -276,6 +292,12 @@ def ezColArgumentsCommandLine():
 
 
             # float arguments:
+            elif cmdLineArgLower == 'ezColFreqMin'.lower():
+                ezColFreqMin = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezColFreqMax'.lower():
+                ezColFreqMax = float(cmdLineSplit[cmdLineSplitIndex])
+
             elif cmdLineArgLower == 'ezColAzimuth'.lower():
                 ezColAzimuth = float(cmdLineSplit[cmdLineSplitIndex])
 
@@ -284,9 +306,6 @@ def ezColArgumentsCommandLine():
 
             elif cmdLineArgLower == 'ezDefaultsFile'.lower():
                 ezColArgumentsFileRead(cmdLineSplit[cmdLineSplitIndex])
-
-            elif cmdLineArgLower == 'input'.lower():
-                pass                                    # special case handled below
 
             else:
                 print()
@@ -304,16 +323,12 @@ def ezColArgumentsCommandLine():
                 
         cmdLineSplitIndex += 1
 
-        # to allow more than one space character in file names
-        cmdDirectoryS = sys.argv[sys.argv.find('-input') + 7:]
-        #                                       01234567
-        print('cmdDirectoryS =', cmdDirectoryS, '=')
 
 
 def ezColArguments():
     # argument: (Computing) a value or address passed to a procedure or function at the time of call
 
-    #global pgmRev                           # string
+    #global programRevision                  # string
     #global cmd                              # string
 
     global ezRAObsName                      # string
@@ -321,6 +336,9 @@ def ezColArguments():
     global ezRAObsLon                       # float
     global ezRAObsAmsl                      # float
     #global ezColFileNamePrefix              # string
+
+    global ezColFreqMin                     # float
+    global ezColFreqMax                     # float
 
     global ezColAzimuth                     # float
     global ezColElevation                   # float
@@ -332,11 +350,14 @@ def ezColArguments():
 
     # defaults
     if 1:
-        ezRAObsName = 'default KS'          # Geographic Center of USA, near Lebanon, Kansas
         ezRAObsLat  =  39.8282              # Observatory Latitude  (degrees)
         ezRAObsLon  = -98.5696              # Observatory Longitude (degrees)
         ezRAObsAmsl = 563.88                # Observatory Above Mean Sea Level (meters)
+        ezRAObsName = 'default KS'          # Geographic Center of USA, near Lebanon, Kansas
         ezColFileNamePrefix = ''
+
+        ezColFreqMin   = 1419.808           # Azimuth   pointing of antenna (degrees)
+        ezColFreqMax   = 1421.012           # Elevation pointing of antenna (degrees)
 
         ezColAzimuth   = 180.0              # Azimuth   pointing of antenna (degrees)
         ezColElevation =  45.0              # Elevation pointing of antenna (degrees)
@@ -360,6 +381,9 @@ def ezColArguments():
         print('   ezRAObsAmsl =', ezRAObsAmsl)
         #print('   ezColFileNamePrefix =', ezColFileNamePrefix)
         print()
+        print('   ezColFreqMin   =', ezColFreqMin)
+        print('   ezColFreqMax   =', ezColFreqMax)
+        print()
         print('   ezColAzimuth   =', ezColAzimuth)
         print('   ezColElevation =', ezColElevation)
 
@@ -374,8 +398,8 @@ def printUsage():
     print('USAGE:')
     #print('  Windows:   py      ezColSc.py [optional arguments] radioDataFileDirectories')
     #print('  Linux:     python3 ezColSc.py [optional arguments] radioDataFileDirectories')
-    print('  Windows:   py      ezColSc.py [optional arguments] -input radioDataFileDirectory')
-    print('  Linux:     python3 ezColSc.py [optional arguments] -input radioDataFileDirectory')
+    print('  Windows:   py      ezColSc.py [optional arguments] radioDataFileDirectory')
+    print('  Linux:     python3 ezColSc.py [optional arguments] radioDataFileDirectory')
     print()
     print('  Easy Radio Astronomy (ezRA) ezColSc data Collector converter program')
     print('  to read SpectraCyber format radio spectrum data file(s),')
@@ -387,7 +411,7 @@ def printUsage():
     #print('         py  ezColSc.py  220122_0005.txt 220122_0006.txt')
     #print('         py  ezColSc.py  220122_*.txt')
     print('  "radioDataFileDirectory" may be one directory:')
-    print('         py  ezColSc.py  -input 220122')
+    print('         py  ezColSc.py  220122')
     #print('  "radioDataFileDirectories" may be one or more directories:')
     #print('         py  ezColSc.py  220122')
     #print('         py  ezColSc.py  220122 220123')
@@ -412,13 +436,16 @@ def printUsage():
     print('    -ezRAObsAmsl     1524            (Observatory Above Mean Sea Level (meters))')
     #print('    -ezColFileNamePrefix bigDish8    (Data File Name Prefix)')
     print()
+    print('    -ezColFreqMin    1419.808        (Frequency of first data value (MHz))')
+    print('    -ezColFreqMax    1421.012        (Frequency of last  data value (MHz))')
+    print()
     print('    -ezColAzimuth    180.0           (Azimuth   pointing of antenna (degrees))')
     print('    -ezColElevation  45.0            (Elevation pointing of antenna (degrees))')
     print()
     print('    -ezDefaultsFile ..\\bigDish8.txt     (Additional file of default arguments)')
     print()
     print()
-    print(' pgmRev =', pgmRev)
+    print(' programRevision =', programRevision)
     print()
     print()
     print()
@@ -440,7 +467,7 @@ def printUsage():
 
 def printGoodbye(startTime):
 
-    global pgmRev                   # string
+    global programRevision          # string
     global cmd                      # string
 
     if 1:
@@ -451,6 +478,9 @@ def printGoodbye(startTime):
         print('   ezRAObsLon  =', ezRAObsLon)
         print('   ezRAObsAmsl =', ezRAObsAmsl)
         #print('   ezColFileNamePrefix =', ezColFileNamePrefix)
+        print()
+        print('   ezColFreqMin   =', ezColFreqMin)
+        print('   ezColFreqMax   =', ezColFreqMax)
         print()
         print('   ezColAzimuth   =', ezColAzimuth)
         print('   ezColElevation =', ezColElevation)
@@ -466,7 +496,7 @@ def printGoodbye(startTime):
 
     #print(' Helpful commands:')
     print()
-    print(' ( pgmRev =', pgmRev, ')')
+    print(' ( programRevision =', programRevision, ')')
     print()
     print()
     print()
@@ -486,7 +516,7 @@ def printGoodbye(startTime):
 # Main method
 def main():
 
-    #global pgmRev                           # string
+    #global programRevision                  # string
     #global cmd                              # string
 
     global ezRAObsName                      # string
@@ -494,6 +524,9 @@ def main():
     global ezRAObsLon                       # float
     global ezRAObsAmsl                      # float
     #global ezColFileNamePrefix              # string
+
+    global ezColFreqMin                     # float
+    global ezColFreqMax                     # float
 
     global ezColAzimuth                     # float
     global ezColElevation                   # float
@@ -506,7 +539,7 @@ def main():
     startTime = time.time()
 
     print()
-    print(pgmRev)
+    print(programRevision)
     print()
 
     printHello()
@@ -554,15 +587,26 @@ def main():
     #    print()
     #    for fileCtr in range(fileListLen):
     #       fileName = fileList[fileCtr]
-    
 
-    #fileNameRoot = sys.argv[1:][0]
-    fileNameRoot = cmdDirectoryS[:-1]
-    print('fileNameRoot =', fileNameRoot, '=')
+    #    #fileNameRoot = sys.argv[1:][0]
+    #    fileNameRoot = cmdDirectoryS[:-1]
+    #    print('fileNameRoot =', fileNameRoot, '=')
+    #    print()
+    #    if 1:
+    #        for fileCtr in range(1000):
+    #            fileName = fileNameRoot + f'{fileCtr:03d}'
+
+    directory = cmdDirectoryS[:-1]                  # trim space character from end
+    fileList = sorted(os.listdir(directory))        # each directory is now sorted alphabetically
+    #print(fileList)
+    fileListLen = len(fileList)
+    #print(fileListLen)
     print()
     if 1:
-        for fileCtr in range(1000):
-            fileName = fileNameRoot + f'{fileCtr:03d}'
+        fileDaySCorrected = ''
+        for fileCtr in range(fileListLen):
+            fileName = fileList[fileCtr]
+
             #print('fileName =', fileName, '=')
 
             #print('\r file = ' + str(fileCtr + 1) + ' of ' + str(fileListLen) \
@@ -574,8 +618,8 @@ def main():
             #    + ' = ' + directory + os.path.sep + fileName + \
             #    '                       ', end='')   # allow append to line
             print('\r file = ' + str(fileCtr + 1) \
-                + ' = ' + fileName + \
-                '                       ', end='')   # allow append to line
+                + ' = ' + fileName \
+                + '                       ', end='')   # allow append to line
             #if(fileName.lower().endswith('.txt')):
             #    fileRead = open(directory + '\\' + fileName, 'r')
             #if(fileName.lower().endswith('.txt')):
@@ -584,10 +628,13 @@ def main():
             #    else:
             #        fileRead = open(directory + os.path.sep + fileName, 'r')
 
-            #if 1:
-            if os.path.exists(fileName):
+            ##if 1:
+            #if os.path.exists(fileName):
+            #   fileRead = open(fileName, 'r')
 
-                fileRead = open(fileName, 'r')
+            if fileName[-1].isnumeric():
+
+                fileRead = open(directory + os.path.sep + fileName, 'r')
 
                 if fileRead.mode == 'r':
                     #print(' samplesFileOutQty =', str(samplesFileOutQty))
@@ -615,6 +662,10 @@ def main():
                     thisLine = fileLine.split()
                     #if not (len(thisLine) == 4): # if not a valid data file
                     if not (9 < len(thisLine)):  # if not a valid data file
+                        fileRead.close()         #   then have processed all lines in this data file
+                        continue                 #   skip to next file
+
+                    if fileLine[0:2] != 's ':       # if not a valid data file
                         fileRead.close()         #   then have processed all lines in this data file
                         continue                 #   skip to next file
 
@@ -651,6 +702,7 @@ def main():
                     #
                     #fileHourS = ('0' + str(fileHour))[-2:]   # insure 2-character fileHourS
 
+
                     # Bases: astropy.time.TimeString
                     # FITS format: “[±Y]YYYY-MM-DD[THH:MM:SS[.sss]]”.
                     # https://docs.astropy.org/en/stable/time/#id3
@@ -658,7 +710,7 @@ def main():
 
                     dataTimeStrThis = fileYearS + '-' + fileMonthS + '-' + fileDayS \
                         + ' ' + fileHourS + ':' + dataMinuteS + ':' + dataSecondS
-                    #print('dataTimeStrThis =' + dataTimeStrThis + '=')
+                    print('dataTimeStrThis =' + dataTimeStrThis + '=')
 
                     # convert to UTC: convert dataTimeStrThis to dataTimeUtcThis
 
@@ -766,10 +818,10 @@ def main():
                             fileRead.close()         #   then have processed all lines in this data file
                             break                    #   onto next file
 
-                        fileFreqLast = float(fileLine.split()[0])           # take first number on line
-                        if not freqBinQty:
-                            #dataFreqMin = float(fileLine.split()[0])        # take first number on line
-                            dataFreqMin = fileFreqLast                      # remember first number on line
+                        #fileFreqLast = float(fileLine.split()[0])           # take first number on line
+                        #if not freqBinQty:
+                        #    #dataFreqMin = float(fileLine.split()[0])        # take first number on line
+                        #    dataFreqMin = fileFreqLast                      # remember first number on line
 
                         #radDataL.append(float(fileLine.split()[1]))         # take second number on line
                         #radDataS = radDataS + ' ' + fileLine.split()[1]     # take second number on line
@@ -781,7 +833,7 @@ def main():
                     fileRead.close()                #   then have processed all lines in this data file
 
                     #dataFreqMax = float(fileLine.split()[0])      # take first number on lastine
-                    dataFreqMax = fileFreqLast                    # remember first number on last line
+                    #dataFreqMax = fileFreqLast                    # remember first number on last line
 
                     if not freqBinQty:
                         print()
@@ -888,7 +940,7 @@ def main():
                         ## 2022-03-01T06:32:55 10.523690382 10.570080895 10.535587705 10.527403187 ... C
                         ## 2022-03-01T06:33:56 10.558290361 10.551762452 10.545512521 10.539835481 ...
                         ## ...
-                        #fileWrite.write('from ' + pgmRev  \
+                        #fileWrite.write('from ' + programRevision  \
                         #    + '\nlat {:g}'.format(sdrQthLat) \
                         #    + ' long {:g}'.format(sdrQthLon) \
                         #    + ' amsl ' + str(sdrQthAmsl) \
@@ -900,13 +952,11 @@ def main():
                         #    + ' el {:g}'.format(elevationThis) \
                         #    + '\n# times are in UTC\n')
                         fileWrite.write(
-                            'from ' + pgmRev \
-                            + '\nlat {:g} long {:g} amsl {:g} name '.format( \
-                            ezRAObsLat, ezRAObsLon, ezRAObsAmsl) \
+                            'from ' + programRevision \
+                            + f'\nlat {ezRAObsLat:g} long {ezRAObsLon:g} amsl {ezRAObsAmsl:g} name ' \
                             + ezRAObsName \
-                            + '\nfreqMin {:g} freqMax {:g} freqBinQty {:d}'.format( \
-                            dataFreqMin, dataFreqMax, freqBinQty) \
-                            + '\naz {:g} el {:g}'.format(ezColAzimuth, ezColElevation) \
+                            + f'\nfreqMin {ezColFreqMin:g} freqMax {ezColFreqMax:g} freqBinQty {freqBinQty:d}' \
+                            + f'\naz {ezColAzimuth:g} el {ezColElevation:g}' \
                             + '\n# times are in UTC\n')
 
                     # write data line

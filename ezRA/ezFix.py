@@ -1,4 +1,4 @@
-pgmName = 'ezFix220930a.py'
+pgmName = 'ezFix221122a.py'
 #pgmRev  = pgmName + ' N0RQV'
 pgmRev  = pgmName
 
@@ -6,6 +6,7 @@ pgmRev  = pgmName
 TTD:
 dataTimeUtcVlsr2000.mjd = 51544.0
 
+ezFix221122a.py, -ET sign of 'sHH' to ezFixTimeShiftMM and ezFixTimeShiftSS
 ezFix220930a.py, prep for Git
 ezFix10z05u.py, ezDefaults.txt, ezCon to ezFix,
 
@@ -692,9 +693,14 @@ def readDataDir():
     if ezFixTimeShiftS:
         # -ET   -07:00:00 (Edit samples: add this time (sHH:MM:SS) to all timestamps)
         ezFixTimeShiftSSplit = ezFixTimeShiftS.split(':')
-        ezFixTimeShiftHH = int(ezFixTimeShiftSSplit[0])   # positive or negative HH
-        ezFixTimeShiftMM = int(ezFixTimeShiftSSplit[1])
-        ezFixTimeShiftSS = int(ezFixTimeShiftSSplit[2])
+        ezFixTimeShiftHH = int(ezFixTimeShiftSSplit[0])     # positive or negative 'sHH'
+        # apply sign of 'sHH' to ezFixTimeShiftMM and ezFixTimeShiftSS
+        if ezFixTimeShiftSSplit[0][0] == '-':               # if 'sHH' is negative (may be '-00')
+            ezFixTimeShiftMM = -int(ezFixTimeShiftSSplit[1])
+            ezFixTimeShiftSS = -int(ezFixTimeShiftSSplit[2])
+        else:
+            ezFixTimeShiftMM = int(ezFixTimeShiftSSplit[1])
+            ezFixTimeShiftSS = int(ezFixTimeShiftSSplit[2])
 
     # if one of these reference values are not silly, may edit sample data
     if -8e99 < ezFixEditLess or ezFixEditGreater < 8e99 or ezFixRemoveReference:
