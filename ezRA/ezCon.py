@@ -1,4 +1,4 @@
-programName = 'ezCon221125a.py'
+programName = 'ezCon221202a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy Data CONdenser - ezCon
@@ -10,6 +10,9 @@ programRevision = programName
 #       when unsupport .sdre text data file ?
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezCon221202a.py, ezConAstroMath=1 calculates wrong Right Ascension values,
+#   default changed to the slower ezConAstroMath=2
+# ezCon221126a.py, if not start with '-ezCon', allow unrecognized words on command line
 # ezCon221125a.py, to ezCon690gLonDegP180_nnnByFreqBinAvg, and to X axis using -byFreqBinX
 # ezCon221122a.py, ezCon560antXTVTMaxIdxGLon
 # ezCon221121a.py, avoid div by 0 when creating antRA,
@@ -656,7 +659,7 @@ def ezConArgumentsCommandLine():
             elif 5 <= len(cmdLineArgLower) and cmdLineArgLower[:5] == '-ezez':
                 pass
 
-            else:
+            elif cmdLineArgLower[:6] == '-ezCon'.lower():
                 print()
                 print()
                 print()
@@ -669,6 +672,9 @@ def ezConArgumentsCommandLine():
                 print()
                 print()
                 exit()
+
+            else:
+                pass    # unrecognized first word, but no error, allows for other ezRA programs
 
         else:
             # must be a data directory or file, remember it
@@ -772,7 +778,7 @@ def ezConArguments():
         ezConDispGrid    = 0
         ezConDispFreqBin = 0
 
-        ezConAstroMath = 1
+        ezConAstroMath = 2
 
         ezConRefMode = 10
 

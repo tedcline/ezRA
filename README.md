@@ -79,6 +79,18 @@ would left-click on the top right Green button and probably choose "Download ZIP
 
 ## Status:
 
+Known bugs:
+
+    ezCon's "-ezConAstroMath  1" calculates wrong Right Ascension values.
+    ezCon's default now changed to the slower "-ezConAstroMath  2".
+
+    ezSky's new ezSky201RBMax.png highlights at the wrong Right Ascension.
+    ezSky's call to plotEzSky201RBMax() now commented out.
+
+Thanks to Todd Ullery, the included  ezColX.py  is an experimental multiple process version of  ezCol.py , to improve dashboard responsiveness.
+<br>
+Problems ?  Graphic dashboard more responsive ?  Faster ?
+
 These files need lots of cleanup, but should work or be helpful:
 
     ezColBAA.py
@@ -87,8 +99,6 @@ These files need lots of cleanup, but should work or be helpful:
     ezColSc.py
 
     ezFix.py
-
-Need to research multiple processes for ezCol.py, to improve dashboard responsiveness.
 
 Always need more documentation.
 
@@ -100,8 +110,8 @@ Help improve ezRA.
 
 --
 
-tedClineGit@gmail.com
+TedClineGit@gmail.com
 <br>
-Nov-26-2022
+Dec-2-2022
 
 ---

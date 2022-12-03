@@ -1,4 +1,4 @@
-programName = 'ezSky221125a.py'
+programName = 'ezSky221202a.py'
 #programRevision = programName + ' (N0RQV)'
 programRevision = programName
 
@@ -10,6 +10,8 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezSky221202a.py, new ezSky201RBMax highlights wrong Right Ascension,
+#   call to plotEzSky201RBMax() commented out
 # ezSky221125a.py, ezSky201RBVOMax to ezSky201RBMax
 # ezSky221122a.py, ezSky080elDeg ylim -95 to +195
 # ezSky221121h.py, ezSky201RBVOMax
@@ -2342,7 +2344,7 @@ def main():
     ezSkyGridRadec()
 
     plotEzSky200RBVO()
-    plotEzSky201RBMax()
+    #plotEzSky201RBMax()
 
     plotEzSky300RB()
     plotEzSky301RBT()

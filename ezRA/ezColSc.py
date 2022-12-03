@@ -1,8 +1,13 @@
-programName = 'ezColSc221126a.py'
+programName = 'ezColSc221202a.py'
 programRevision = programName
 
 '''
+ezColSc program to convert one SpectraCyber output radio spectrum data file
+        to ezRA .txt radio spectrum data file.
 
+
+
+ezColSc221202a.py, comments
 ezColSc221126a.py, commented out special timing code
 
 The "R-40DEC-2019-09-13 UTC  15 01 30 LAST.001" data file from Sep-2019 had
