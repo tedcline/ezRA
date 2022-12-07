@@ -1,15 +1,34 @@
-programName = 'ezSky221202a.py'
-#programRevision = programName + ' (N0RQV)'
+programName = 'ezSky221205b.py'
 programRevision = programName
 
 # Easy Radio Astronomy (ezRA) ezSky Sky Mapper program,
 #   to read ezCon format .ezb condensed data text file(s)
 #   and optionally create .png plot files.
+# https://github.com/tedcline/ezRA
+
+# Copyright (c) 2022, Ted Cline   TedClineGit@gmail.com
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # TTD:
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezSky221205b.py, new .py header
+# ezSky221205a.py, ezSky201RBMax fixed highlight Right Ascensions,
+#   allows for ezConAstroMath=2 calculation noise of 1 HalfDeg Declination
 # ezSky221202a.py, new ezSky201RBMax highlights wrong Right Ascension,
 #   call to plotEzSky201RBMax() commented out
 # ezSky221125a.py, ezSky201RBVOMax to ezSky201RBMax
@@ -45,7 +64,8 @@ import datetime
 import numpy as np
 
 from scipy.interpolate import griddata
-from scipy.ndimage.filters import gaussian_filter
+#from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 
 # to find polygon for mask
 #####from PIL import Image, ImageDraw
@@ -109,10 +129,10 @@ def printUsage():
     #print('         (radio sky mask input for ezSky404GIP_  and ezSky405GIPS_  plots, unseen sky as white)')
     #print('    -ezSkyMaskDecDegN    -49.6     (observatory horizon = ezRAObsLat - 90.0)')
     #print('         (north edge degrees to create radio sky mask.  Use',
-    #    'default silly -99 to disable creation)')
+    #    'default silly low  -99 to disable creation)')
     #print('    -ezSkyMaskDecDegS    -90.0     (below horizon south celestial pole = -90.0)')
     #print('         (south edge degrees to create radio sky mask.  Use',
-    #    'default silly  99 to disable creation)')
+    #    'default silly high  99 to disable creation)')
     #print('    -ezSkyMaskWrite      1         (default = 0 = not write sky mask to file)')
     #print()
     print('    -ezSkyPlotRangeL     0  300    (save only this range of ezSky plots to file, to save time)')
@@ -454,8 +474,8 @@ def ezSkyArguments():
     # N0RQV = south horizon declination = latitude - 90 = 40.4 - 90 = -49.6
     # ezSkyMaskDecDegN =  sdrQthLat - 90.0
     # ezSkyMaskDecDegN = -49.6
-    ezSkyMaskDecDegN = -99      # north edge of mask, -99 = silly value, to disable modifying mask
-    ezSkyMaskDecDegS =  99      # south edge of mask,  99 = silly value, to disable modifying mask
+    ezSkyMaskDecDegN = -99      # north edge of mask, -99 = silly low  value, to disable modifying mask
+    ezSkyMaskDecDegS =  99      # south edge of mask,  99 = silly high value, to disable modifying mask
     ezSkyMaskWrite = 0          # default = 0: not write mask to file
 
     ezSkyPlotRangeL = [0, 9999]             # save this range of plots to file
@@ -1161,6 +1181,23 @@ def plotEzSky200RBVO():
         # gain determined from span below average
         radecPowerGain = ezSkyVOGain / (radecPowerAvg - radecPowerMin)
 
+
+
+
+
+
+
+
+
+    print('                                            radecPowerGain =', radecPowerGain)
+
+
+
+
+
+
+
+
     # plot each radecPower value as a dot with a radecPowerScaled offset from its scaled declination
     radecPowerScaled = radecPowerGain * (radecPowerAvg - radecPower)
     plt.scatter(radecRaHalfDegScaled, radecDecHalfDegScaled + radecPowerScaled, s=1, marker='.',
@@ -1242,6 +1279,7 @@ def plotEzSky201RBMax():
     radecRaHalfDegScaled  = (720 - radecRaHalfDeg ) * imgaxesRatioX
     radecDecHalfDegScaled = (360 - radecDecHalfDeg) * imgaxesRatioY
 
+    # galRaHDegLeft054304[] has RaHDeg halfDeg data for Left side of Galactic Plane, for 54 through 304 radecDecHalfDeg
     #365,370,420,428,432,435,
     galRaHDegLeft054304 = np.array([ \
     400,412,420,428,432,435,
@@ -1270,8 +1308,9 @@ def plotEzSky201RBMax():
     642,644,647,648,649,652,654,657,659,660,
     662,665,668,671,675,678,681,685,688,692,
     696,703,707,715])
-    print('galRaHDegLeft054304 =', len(galRaHDegLeft054304))
+    #print('          len(galRaHDegLeft054304)  =', len(galRaHDegLeft054304))
 
+    # galRaHDegRight054304[] has RaHDeg halfDeg data for Right side of Galactic Plane, for 54 through 304 radecDecHalfDeg
     galRaHDegRight054304 = np.array([ \
     363,355,347,343,336,332,
     328,325,321,318,315,311,308,305,302,300,
@@ -1300,7 +1339,7 @@ def plotEzSky201RBMax():
     108,106,103,100, 96, 93, 90, 86, 83, 75,
     72,  68, 60, 52])
     #72,  68, 60,  0]
-    print('galRaHDegRight054304 =', len(galRaHDegRight054304))
+    #print('          len(galRaHDegRight054304) =', len(galRaHDegRight054304))
 
     galRaHDegRight054304Scaled  = (720 - galRaHDegRight054304) * imgaxesRatioX
     galRaHDegLeft054304Scaled  = (720 - galRaHDegLeft054304) * imgaxesRatioX
@@ -1309,53 +1348,141 @@ def plotEzSky201RBMax():
     plt.scatter(galRaHDegRight054304Scaled, decHDegScaled, s=100, marker='.', c='red')
     plt.scatter(galRaHDegLeft054304Scaled, decHDegScaled, s=100, marker='.', c='red')
 
-    # find and plot dots on MaxRight and on MaxLeft
-    radecDecHalfDegScaledLast = 9999                # silly value
-    radecPowerMaxRight = -9999                      # silly value
-    radecPowerMaxLeft  = -9999                      # silly value
+
+    ## calculate signal gain
+    #radecPowerMax = radecPower.max()
+    #print('                         radecPowerMax =', radecPowerMax)
+    #radecPowerAvg = np.mean(radecPower)
+    #print('                         radecPowerAvg =', radecPowerAvg)
+    #radecPowerMin = radecPower.min()
+    #print('                         radecPowerMin =', radecPowerMin)
+    #if radecPowerMax == radecPowerMin:
+    #    radecPowerGain = 0.
+    #elif radecPowerAvg - radecPowerMin < radecPowerMax - radecPowerAvg:
+    #    # gain determined from span above average
+    #    radecPowerGain = ezSkyVOGain / (radecPowerMax  - radecPowerAvg)
+    #else:
+    #    # gain determined from span below average
+    #    radecPowerGain = ezSkyVOGain / (radecPowerAvg - radecPowerMin)
+    # 
+    ## plot each radecPower value as a dot with a radecPowerScaled offset from its scaled declination
+    ##radecPowerGain = 1000
+    ##radecPowerAvg = 1
+    #radecPowerScaled = radecPowerGain * (radecPowerAvg - radecPower)
+    #plt.scatter(radecRaHalfDegScaled, radecDecHalfDegScaled + radecPowerScaled, s=1, marker='.',
+    #    c=ezbColumnColor[ezSkyInput])
+
+
+    # For each declination, find and plot dots on MaxRight and on MaxLeft data indexes
+    radecDecHalfDegLast = -9999                     # silly low value
     nMaxRight = -1                                  # silly value
     nMaxLeft  = -1                                  # silly value
+    radecPowerMaxRight = -9999                      # silly low value
+    radecPowerMaxLeft  = -9999                      # silly low value
     # walk through data, already sorted as increasing RaH then increasing Dec 
     for n in range(len(radecDecHalfDegScaled)):
-        if radecDecHalfDegScaledLast != radecDecHalfDegScaled[n]:   # if new Dec
-            radecDecHalfDegScaledLast = radecDecHalfDegScaled[n]
-            print()
-            #print(f'                 {radecDecHalfDeg[nMaxLeft]}:{radecDecHalfDeg[nMaxRight]}:')
-            #print(f'{radecRaHalfDeg[nMaxLeft]},{radecRaHalfDeg[nMaxRight]},')
-            if nMaxRight + 1:                       # if not silly value, plot MaxLeft
-                if radecDecHalfDeg[nMaxRight] <= 304:   # if <= DecHDeg top of Galactic plane
+        #print(f'          n = {n}',
+        #    f'  radecDecHalfDeg = {radecDecHalfDeg[n]}',
+        #    f'  radecRaHalfDeg = {radecRaHalfDeg[n]}',
+        #    f'  radecPower[n] = {radecPower[n]}',
+        #    f'  radecPowerMaxRight = {radecPowerMaxRight}',
+        #    f'  nMaxRight = {nMaxRight}')
+
+        #if radecDecHalfDegLast != radecDecHalfDeg[n]:   # if new Dec
+        # if definately new Dec (allow for ezConAstroMath=2 calculation noise of 1 HalfDeg)
+        if radecDecHalfDegLast + 1 < radecDecHalfDeg[n]:
+            radecDecHalfDegLast = radecDecHalfDeg[n]
+            #print(f'       radecDecHalfDeg jumped')
+            if nMaxRight + 1:                       # if not silly value, plot MaxRight
+                # if have Galactic plane galRaHDegRight054304 data for this declination
+                if 54 <= radecDecHalfDeg[nMaxRight] and radecDecHalfDeg[nMaxRight] <= 304:
+                    # Right Ascension (hours) difference from Galactic Plane data
+                    #print(f'\n          nMaxRight at radecDecHalfDeg = {radecDecHalfDeg[nMaxRight]}',
+                    #    f'  radecRaHalfDeg = {radecRaHalfDeg[nMaxRight]}')
+                    # print the offset, of nMaxRight vs Right side of Galactic Plane
+                    # galRaHDegRight054304[] has RaHDeg halfDeg data for Right side of Galactic Plane,
+                    #   for only 54 through 304 radecDecHalfDeg
+                    # (30 halfDeg per Right Ascension hour)
                     raHDiff = (radecRaHalfDeg[nMaxRight] \
                         - galRaHDegRight054304[radecDecHalfDeg[nMaxRight] - 54]) / 30.
-                    #print(f'    nMaxRight = {nMaxRight}   RaH = {radecRaHalfDeg[nMaxRight]/30.:.1f}',
-                    #    f'  DecDeg = {radecDecHalfDeg[nMaxRight]/2.-90.}   raHDiff = {raHDiff:.1f}')
-                    print(f' DecDeg = {radecDecHalfDeg[nMaxRight]/2.-90.}',
-                        f'  RaH = {radecRaHalfDeg[nMaxRight]/30.:.1f}   Right raHDiff = {raHDiff:.1f}')
+                    print(f'\n          DecDeg = {radecDecHalfDeg[nMaxRight] / 2. - 90.}',
+                        f'  RaH = {radecRaHalfDeg[nMaxRight] / 30.:.1f}        Right raHDiff = {raHDiff:.1f}')
+
                 plt.scatter(radecRaHalfDegScaled[nMaxRight], radecDecHalfDegScaled[nMaxRight],
                     s=100, marker='.', c='green')
-                radecPowerMaxRight = -9999          # reset to silly value
                 nMaxRight = -1                      # reset to silly value
+            radecPowerMaxRight = -9999              # reset to silly low value
+
             if nMaxLeft + 1:                        # if not silly value, plot MaxLeft
-                #print(f'nMaxLeft = {nMaxLeft}   RaH = {radecRaHalfDeg[nMaxLeft]/30.}',
-                #    f'  DecDeg = {radecDecHalfDeg[nMaxLeft]/2.}')
-                if radecDecHalfDeg[nMaxLeft] <= 304:   # if <= DecHDeg top of Galactic plane
+                # if have Galactic plane galRaHDegLeft054304 data for this declination
+                if 54 <= radecDecHalfDeg[nMaxLeft] and radecDecHalfDeg[nMaxLeft] <= 304:
+                    # Right Ascension (hours) difference from Galactic Plane data
+                    #print(f'\n          nMaxLeft  at radecDecHalfDeg = {radecDecHalfDeg[nMaxLeft]}',
+                    #    f'  radecRaHalfDeg = {radecRaHalfDeg[nMaxLeft]}')
+                    # print the offset, of nMaxLeft vs Left side of Galactic Plane
+                    # galRaHDegLeft054304[] has RaHDeg halfDeg data for Left side of Galactic Plane,
+                    #   for only 54 through 304 radecDecHalfDeg
+                    # (30 halfDeg per Right Ascension hour)
                     raHDiff = (radecRaHalfDeg[nMaxLeft] \
                         - galRaHDegLeft054304[radecDecHalfDeg[nMaxLeft] - 54]) / 30.
-                    #print(f'  nMaxLeft = {nMaxLeft}   RaH = {radecRaHalfDeg[nMaxLeft]/30.:.1f}',
-                    #    f'  DecDeg = {radecDecHalfDeg[nMaxLeft]/2.-90.}   raHDiff = {raHDiff:.1f}')
-                    print(f' DecDeg = {radecDecHalfDeg[nMaxLeft]/2.-90.}',
-                        f'  RaH = {radecRaHalfDeg[nMaxLeft]/30.:.1f}   Left  raHDiff = {raHDiff:.1f}')
+                    print(f'          DecDeg = {radecDecHalfDeg[nMaxLeft] / 2. - 90.}',
+                        f'  RaH = {radecRaHalfDeg[nMaxLeft] / 30.:.1f}    Left raHDiff = {raHDiff:.1f}')
+
                 plt.scatter(radecRaHalfDegScaled[nMaxLeft], radecDecHalfDegScaled[nMaxLeft],
                     s=100, marker='.', c='green')
-                radecPowerMaxLeft  = -9999          # reset to silly value
                 nMaxLeft = -1                       # reset to silly value
-        if radecRaHalfDeg[n] < 360:                 # if on right half of RaDec
+            radecPowerMaxLeft = -9999               # reset to silly low value
+
+            #print()
+            #print(f'                 {n}:{nMaxLeft}:{nMaxRight}')
+            #print(f'                 {radecDecHalfDeg[nMaxLeft]}:{radecDecHalfDeg[nMaxRight]}:')
+            #print(f'{radecRaHalfDeg[nMaxLeft]},{radecRaHalfDeg[nMaxRight]},')
+
+        if radecRaHalfDeg[n] < 360:
+            # on right half of RaDec
             if radecPowerMaxRight < radecPower[n]:  # if found the new maxRight
                 radecPowerMaxRight = radecPower[n]
                 nMaxRight = n
         else:
+            # on left half of RaDec
             if radecPowerMaxLeft < radecPower[n]:   # if found the new maxLeft
                 radecPowerMaxLeft = radecPower[n]
                 nMaxLeft = n
+
+    # loop completed, but maybe plot nMaxRight or MaxLeft
+
+    if nMaxRight + 1:                               # if not silly value, plot MaxRight
+        # if have Galactic plane galRaHDegRight054304 data for this declination
+        if 54 <= radecDecHalfDeg[nMaxRight] and radecDecHalfDeg[nMaxRight] <= 304:
+            # Right Ascension (hours) difference from Galactic Plane data
+            #print(f'\n          nMaxRight at radecDecHalfDeg = {radecDecHalfDeg[nMaxRight]}',
+            #    f'  radecRaHalfDeg = {radecRaHalfDeg[nMaxRight]}')
+            raHDiff = (radecRaHalfDeg[nMaxRight] \
+                - galRaHDegRight054304[radecDecHalfDeg[nMaxRight] - 54]) / 30.
+            #print(f'\n          radecDecHalfDeg = {radecDecHalfDeg[nMaxRight]}',
+            #    f'  radecRaHalfDeg = {radecRaHalfDeg[nMaxRight]}')
+            print(f'\n          DecDeg = {radecDecHalfDeg[nMaxRight] / 2. - 90.}',
+                f'  RaH = {radecRaHalfDeg[nMaxRight] / 30.:.1f}        Right raHDiff = {raHDiff:.1f}')
+
+        plt.scatter(radecRaHalfDegScaled[nMaxRight], radecDecHalfDegScaled[nMaxRight],
+            s=100, marker='.', c='green')
+
+    if nMaxLeft + 1:                               # if not silly value, plot MaxLeft
+        # if have Galactic plane galRaHDegLeft054304 data for this declination
+        if 54 <= radecDecHalfDeg[nMaxLeft] and radecDecHalfDeg[nMaxLeft] <= 304:
+            # Right Ascension (hours) difference from Galactic Plane data
+            #print(f'\n          nMaxLeft  at radecDecHalfDeg = {radecDecHalfDeg[nMaxRight]}',
+            #    f'  radecRaHalfDeg = {radecRaHalfDeg[nMaxRight]}')
+            raHDiff = (radecRaHalfDeg[nMaxLeft] \
+                - galRaHDegLeft054304[radecDecHalfDeg[nMaxLeft] - 54]) / 30.
+            #print(f'\n          radecDecHalfDeg = {radecDecHalfDeg[nMaxRight]}',
+            #    f'  radecRaHalfDeg = {radecRaHalfDeg[nMaxRight]}')
+            print(f'          DecDeg = {radecDecHalfDeg[nMaxLeft] / 2. - 90.}',
+                f'  RaH = {radecRaHalfDeg[nMaxLeft] / 30.:.1f}    Left raHDiff = {raHDiff:.1f}')
+
+        plt.scatter(radecRaHalfDegScaled[nMaxLeft], radecDecHalfDegScaled[nMaxLeft],
+            s=100, marker='.', c='green')
+
 
     plt.title(titleS)
     ###plt.grid(ezSkyDispGrid)
@@ -2344,7 +2471,7 @@ def main():
     ezSkyGridRadec()
 
     plotEzSky200RBVO()
-    #plotEzSky201RBMax()
+    plotEzSky201RBMax()
 
     plotEzSky300RB()
     plotEzSky301RBT()
