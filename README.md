@@ -10,6 +10,9 @@ The open source programs run on the Python3 programming language, on Windows and
 
 The ezRA set of programs are still in development, but mostly work well.
 
+Interested folks on [GitHub](https://github.com/tedcline/ezRA)
+would left-click on the top right Green button and probably choose "Download ZIP" (about 30 MB).
+
 =============================================
 
 ezRA documentation has many images.
@@ -46,7 +49,7 @@ please see these introductory PDFs from the ezRA directory:
 
 
 
-## Documentation for ezRA, in the ezRA directory, will include:
+## Documentation for ezRA, in the ezRA directory, will eventually include:
 
     ezRA_00_Introduction.pdf
     ezRA_01_Tour.pdf
@@ -70,11 +73,6 @@ please see these introductory PDFs from the ezRA directory:
     ezRA_24_ezSky.pdf
     ezRA_25_ezGal.pdf
 
-
-
-Interested folks on [GitHub](https://github.com/tedcline/ezRA)
-would left-click on the top right Green button and probably choose "Download ZIP" (about 30 MB).
-
 ---
 
 ## Status:
@@ -84,9 +82,11 @@ Known bugs:
     ezCon's "-ezConAstroMath  1" calculates wrong Right Ascension values.
     ezCon's default now changed to the slower "-ezConAstroMath  2".
 
-Thanks to Todd Ullery, the included  ezColX.py  is an experimental multiple process version of  ezCol.py , to improve dashboard responsiveness.
+Thanks to Todd Ullery, the  ezColX.py  was an experimental multiple process version of  ezCol.py , to improve dashboard responsiveness.
 <br>
 Problems ?  Graphic dashboard more responsive ?  Faster ?
+<br>
+The experiment has completed successfully, ezColX is now named ezCol, and the name ezColX is retired.
 
 These files need lots of cleanup, but should work or be helpful:
 
@@ -109,6 +109,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Dec-7-2022
+Feb-6-2023
 
 ---

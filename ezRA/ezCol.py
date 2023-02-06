@@ -1,19 +1,99 @@
-programName = 'ezCol221110a.py'
-#programRevision = programName + ' (N0RQV)'
+programName = 'ezCol230206a.py'
 programRevision = programName
+
+# Thanks to Todd Ullery, this ezColX.py was an experimental multiple process version of ezCol.py ,
+# to improve graphic dashboard responsiveness.
+# Problems ?  Dashboard more responsive ?  Faster ?
+
+# 221202, works on Win7Pro 'Python 3.8.10'
+# 221130, works on Ubuntu22 'Python 3.10.6'
 
 # ezRA - Easy Radio Astronomy Data COLlector - ezCol
 #   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
 #   Modified from Victor Boesen's https://github.com/byggemandboesen/H-line-software
 
+# ezCol230206a.py, name change, seems successful, so I now retire experimental ezColX name.
+#   Last single-process version was ezCol221110a.py .
+#   Now latest ezColX230205c becomes non-experimental ezCol230206a and ezCol.
+# ezColX230205c.py, SampleQty and flags show sample currently being created, had serialsend.exe commands reversed
+# ezColX230205b.py, cont.
+# ezColX230205a.py, name change
+# ezColXP230204a.py, more defining detail to -ezColUsbRelay 1 2 and 3,
+# ezColXP230203a.py, Pablo code confused by space in dir name, want hidusb-relay-cmd.exe and serialSend.exe found in ezColX directory,
+# ezColXP221220a.py, Pablo USB Relay control serialSend.exe experiment
+# ezColXP221219a.py, Pablo USB Relay control serialSend.exe experiment
+# ezColX221202a.py, renamed for GitHub
+# ezCol221110atbb.py, ezColIntegQty needed by sdrTask(), reordered sdrTask() arguments,
+#   small fixes, program overview
+# ezCol221110atba.py, https://www.youtube.com/watch?v=AZnGRKFUU0c at 0:36
+#   says Python multithreading is still one process,
+#   so, changed 2 threads to 2 processes, rearranged blocks
+# ezCol221110atb.py, second threaded ezCol
 # ezCol221110a.py, changed Linux from double SPDT "BITFT" USB Relay to single SPDT "HW348" USB Relay
 # ezCol220930a.py, prep for Git
 # ezCol220826a.py, dataFlagsS if no Ref
 
 
+#########################################################################################
+# ezCol program overview:
+
+# I think this ezCol line to read the SDR hardware is what slows the program:
+#    psd = np.abs(np.fft.fft(sdr.read_samples(freqBinQty)))
+# I think this command on that line is what slows the program:
+#    sdr.read_samples(freqBinQty)
+# That leaves too little time to update and read the dashboard graphics window.
+
+# After initialization, that is why 2 processes: main process loop, and sdrTask process loop.
+# ezCol program assumes sdrTask process loop takes more time than main process loop.
+
+# main process:
+#    initialize: help screen, read in arguments
+#    initialize feedRef relay, if any
+#    programState = 0 (0: Collect, 1: Pause, 2: Exit)
+#    if ezColDashboard:
+#        initialize dashboard (including buttons and programState)
+#    create new 'data' directory, unless already exists
+#    initialize and start the SDR Process 'sdrTask'
+#    initialize while loop
+#    while programState <= 1: (0: Collect, 1: Pause, 2: Exit)
+#        get sdrSpectrumQueue
+#        if sdrSpectrumQueue has New Data:
+#            initialize timestamp
+#            set feedRef relay
+#            set centerFreq, put to sdrTask
+#            maybe start new data file (if new UTC day, or if newFileButton)
+#            maybe write an az line (if az or el changed)
+#            write data sample line
+#            if ezColVerbose:
+#                print status
+#            if ezColDashboard:
+#                erase dashboard
+#                plot top right text section
+#                plot 3 stripcharts
+#                plot top left frequency spectrum
+#            remember timestamp
+#        allow time for dashboard interaction
+
+# sdrTask process:
+#    get the first sdrStatus
+#    while currentSDRstatus <= 1: (0: Collect, 1: Pause, 2: Exit)
+#        get the sdrStatus
+#        if currentSDRstatus == 2:
+#            exit
+#        if currentSDRstatus == 0 (not Paused):
+#            set the center frequency if changed
+#            create and put tuple with Power Spectral Density (PSD), values averaged
+#              from ezColIntegQty datasets
+#########################################################################################
+
+#import operator
 import os
+#from pickle import FALSE
 import sys
 import time
+
+#import threading
+#import queue
 # delayed other imports until after possible help screen
 
 
@@ -87,12 +167,13 @@ def printUsage():
     print('  py ezCol.py -ezColDispGrid    1           (Turn on graphical display plot grids)')
     print()
     print('  py ezCol.py -ezColUsbRelay   0            (No relays driving a feed Dicke reference)')
-    print('  py ezCol.py -ezColUsbRelay   1            (1 SPST relay, driving feedRef ON or OFF)')
-    print('  py ezCol.py -ezColUsbRelay   2            (2 SPST relays, driving a latching feedRef relay',
-        'with pulses)')
+    print('  py ezCol.py -ezColUsbRelay   1            (1 SPST HID relay, driving feedRef ON or OFF)')
+    print('  py ezCol.py -ezColUsbRelay   2            (2 SPST HID relays, driving a latching feedRef',
+        ' relay with pulses)')
+    print('  py ezCol.py -ezColUsbRelay   3            (1 SPST non-HID relay, driving feedRef ON or OFF)')
     print()
-    print('  py ezCol.py -ezColSlowness   0.9          (Define "Slow" data collect, to allow faster',
-        'Dashboard interaction)')
+    #print('  py ezCol.py -ezColSlowness   0.9          (Define "Slow" data collect, to allow faster',
+    #    'Dashboard interaction)')
     print('  py ezCol.py -ezColIntegQty   31000        (Number of readings to be integrated into',
         'one sample)')
     print('  py ezCol.py -ezColTextFontSize   11       (Size of text font)')
@@ -147,7 +228,7 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
 
     global ezColUsbRelay                    # integer
 
-    global ezColSlowness                    # float
+    #global ezColSlowness                    # float
     global ezColIntegQty                    # integer
     global ezColTextFontSize                # integer
     global ezColYLim0                       # float
@@ -240,8 +321,8 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezColElevation'.lower():
                 ezColElevation = float(thisLineSplit[1])
 
-            elif thisLine0Lower == '-ezColSlowness'.lower():
-                ezColSlowness = float(thisLineSplit[1])
+            #elif thisLine0Lower == '-ezColSlowness'.lower():
+            #    ezColSlowness = float(thisLineSplit[1])
 
 
             # list arguments
@@ -304,7 +385,7 @@ def ezColArgumentsCommandLine():
 
     global ezColUsbRelay                    # integer
 
-    global ezColSlowness                    # float
+    #global ezColSlowness                    # float
     global ezColIntegQty                    # integer
     global ezColTextFontSize                # integer
     global ezColYLim0                       # float
@@ -428,9 +509,9 @@ def ezColArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezColElevation = float(cmdLineSplit[cmdLineSplitIndex])
 
-            elif cmdLineArgLower == '-ezColSlowness'.lower():
-                cmdLineSplitIndex += 1      # point to first argument value
-                ezColSlowness = float(cmdLineSplit[cmdLineSplitIndex])
+            #elif cmdLineArgLower == '-ezColSlowness'.lower():
+            #    cmdLineSplitIndex += 1      # point to first argument value
+            #    ezColSlowness = float(cmdLineSplit[cmdLineSplitIndex])
 
 
             # list arguments:
@@ -493,7 +574,7 @@ def ezColArguments():
 
     global ezColUsbRelay                    # integer
 
-    global ezColSlowness                    # float         creation
+    #global ezColSlowness                    # float         creation
     global ezColIntegQty                    # integer       creation
     global ezColTextFontSize                # integer       creation
 
@@ -543,10 +624,11 @@ def ezColArguments():
         ezColDispGrid  = 0
 
         ezColUsbRelay = 0           # no relays driving a feedRef
-        #ezColUsbRelay = 1           # 1 SPST relay, driving feedRef ON or OFF
-        #ezColUsbRelay = 2           # 2 SPST relays, driving a latching feedRef relay with pulses
+        #ezColUsbRelay = 1           # 1 SPST HID relay, driving feedRef ON or OFF
+        #ezColUsbRelay = 2           # 2 SPST HID relays, driving a latching feedRef relay with pulses
+        #ezColUsbRelay = 3           # 1 SPST non-HID relay, driving feedRef ON or OFF
 
-        ezColSlowness = 0.9         # data collecting pause to allow dashboard interaction
+        #ezColSlowness = 0.9         # data collecting pause to allow dashboard interaction
         ezColIntegQty = 31000       # number of samples to be integrated into one recorded sample
         ezColTextFontSize = 10
         ezColYLim0    = 0.0         # fraction of Y Auto Scale, Minimum
@@ -594,7 +676,7 @@ def ezColArguments():
     print('   ezColDispGrid  =', ezColDispGrid)
     print()
     print('   ezColUsbRelay =', ezColUsbRelay)
-    print('   ezColSlowness =', ezColSlowness)
+    #print('   ezColSlowness =', ezColSlowness)
     print('   ezColIntegQty =', ezColIntegQty)
     print('   ezColTextFontSize =', ezColTextFontSize)
     print('   ezColYLimL    = [', ezColYLim0, ',', ezColYLim1, ']')
@@ -636,13 +718,11 @@ def main():
     global rmsAvgHistoryLen                 # integer
     global programState                     # integer
     global refAction                        # integer
-    global ezColSlowness                    # float
+    #global ezColSlowness                    # float
     global ezColIntegQty                    # integer
     global ezColYLim0                       # float
     global ezColYLim1                       # float
     global ezColTextFontSize                # integer
-
-
 
     printHello()
 
@@ -654,16 +734,13 @@ def main():
     from datetime import date, datetime, timezone
     import numpy as np
     import operator
-    from math import sqrt
+    from multiprocessing import Process, Queue
+    #from math import sqrt
     import matplotlib
     #matplotlib.use('agg')
     import matplotlib.pyplot as plt
     from matplotlib.widgets import Button, RadioButtons, TextBox
 
-    from rtlsdr import RtlSdr
-    #       pip3 install pyrtlsdr   # worked on Ubuntu 18.04.5
-    #       https://pypi.org/project/pyrtlsdr/
-    #       https://github.com/roger-/pyrtlsdr
 
 
 
@@ -726,32 +803,93 @@ def main():
     centerFreqAntHz = int(ezColCenterFreqAnt * 1e6)             # in integer Hz
     bandWidthHz = ezColBandWidth * 1e6                          # in float Hz
 
-    # initialize SDR
-    sdr = RtlSdr()
-    sdr.sample_rate = int(bandWidthHz)                          # in integer Hz
-    sdr.center_freq = centerFreqAntHz                           # in integer Hz
-    sdr.gain = ezColGain        # "set" SDR gain
-    sdrGain = sdr.gain          # what the SDR actually set the gain to
-
-    print('sdr.bandwidth =', sdr.bandwidth)
-    print('sdr.center_freq =', sdr.center_freq)
-    print('sdr.fc =', sdr.fc)
-    print('sdr.freq_correction =', sdr.freq_correction)
-    print('sdr.gain =', sdr.gain)
-    print('sdr.rs =', sdr.rs)
-
     # by operating system, initialize (reset) feedRef relay system, if any
-    if os.name == 'nt':     # Windows
-        if ezColUsbRelay:
-            # https://github.com/pavel-a/usb-relay-hid
-            # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
-            # C:\Users\c\Documents\EZRA01\usb-relay-hid_bin-20150330a\bin-Win64> hidusb-relay-cmd.exe on 1
-            os.system('hidusb-relay-cmd.exe off 1')
-            os.system('hidusb-relay-cmd.exe off 2')     # ignore error if only single SPDT USB Relay
-            sleep(0.5) # Sleep for 0.5 seconds
+    if ezColUsbRelay:
+        if os.name == 'nt':     # Windows
+            # hidusb-relay-cmd.exe or serialSend.exe assumed to be in same Windows directory as ezCol program
+            # in case os.path.dirname(__file__) contains space characters
+            #relayOff0 = os.path.dirname(__file__).replace(' ', '\ ')
+            #print(relayOff0)
+            #print()
 
-    else:                   # (posix) Linux assumed
-        if ezColUsbRelay:
+            if ezColUsbRelay == 1:
+                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                # for USB Relay that talks HID
+                # https://github.com/pavel-a/usb-relay-hid
+                # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
+                # C:\Users\c\Documents\EZRA01\usb-relay-hid_bin-20150330a\bin-Win64> hidusb-relay-cmd.exe on 1
+                # define relay command strings
+                # the command prompt command line
+                #      ..\ezRA\hidusb-relay-cmd.exe enum 
+                # returned
+                #      Board ID=[HW348] State: R1=OFF
+                # because of the "R1" on that last line, I use:
+                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 1'
+                #relayOff1 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 2'     # ignore error if only single SPDT USB Relay
+                relayOff1 = ''
+                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 1'
+                #relayOn1  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 2'     # ignore error if only single SPDT USB Relay
+                relayOn1  = ''
+                # initialize relays
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                if relayOff1:
+                    os.system(relayOff1)
+                    sleep(0.5) # Sleep for 0.5 seconds
+            elif ezColUsbRelay == 2:
+                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                # for USB Relay that talks HID
+                # https://github.com/pavel-a/usb-relay-hid
+                # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
+                # C:\Users\c\Documents\EZRA01\usb-relay-hid_bin-20150330a\bin-Win64> hidusb-relay-cmd.exe on 1
+                # define relay command strings
+                # the command prompt command line
+                #      ..\ezRA\hidusb-relay-cmd.exe enum 
+                # returned
+                #      Board ID=[BITFT] State: R1=OFF R2=OFF
+                # because of the "R1" and "R2" on that last line, I use:
+                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 1'
+                relayOff1 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 2'
+                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 1'
+                relayOn1  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 2'
+
+                # initialize relays
+                # both relays off
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                os.system(relayOff1)
+                sleep(0.5) # Sleep for 0.5 seconds
+
+                # pulse 'off relay' 0 once to latch feedRef OFF
+                os.system(relayOn0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+            elif ezColUsbRelay == 3:
+                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                # for USB Relay that talks serial
+                # define relay command strings
+                # https://www.amazon.com/dp/B01CN7E0RQ
+                #   and down below in "Customer questions & answers",
+                #   see "How to set for 7sec on, 3sec off, 20sec on, 1 sec off. (5 series repeat)"
+                #   talks of
+                #     c:\disp\serialsend.exe /baudrate 9600 /hex "\xA0\x01\x01\xA2"
+                #   and
+                #     c:\disp\serialsend.exe /baudrate 9600 /hex "\xA0\x01\x00\xA1"
+                # https://batchloaf.wordpress.com/serialsend/
+                # https://batchloaf.wordpress.com/2011/12/05/serialsend-a-windows-program-to-send-a-text-word-via-serial-port/
+                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'serialSend.exe /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x00\\xA1"'
+                relayOff1 = ''
+                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'serialSend.exe /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x01\\xA2"'
+                relayOn1  = ''
+                # initialize relays
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                if relayOff1:
+                    os.system(relayOff1)
+                    sleep(0.5) # Sleep for 0.5 seconds
+        else:                   # (posix) Linux assumed
+            # how to define relay command strings
             # https://github.com/darrylb123/usbrelay
             # sudo apt-get update
             # sudo apt-get install usbrelay
@@ -779,7 +917,7 @@ def main():
             #    HW-343
             #    HW-341
             #    Models with USB-Relay-1, USB-Relay-2 or USB-Relay-4 printed on the PCB
-            os.system('sudo usbrelay HW348_1=0')        # works !
+            #os.system('sudo usbrelay HW348_1=0')        # works !
 
             # also may be helpful ?:
             #   Human Interface Device (HID)
@@ -798,9 +936,76 @@ def main():
             #               CommandApp_USBRelay.exe [device id] [close / open] [relay nr]
             #                   CommandApp_USBRelay.exe J34EL close 01
             #                   CommandApp_USBRelay.exe J34EL open 01
-            sleep(0.5) # Sleep for 0.5 seconds
 
+            if ezColUsbRelay == 1:
+                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                ##os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
+                #os.system('sudo usbrelay HW348_1=0')        # works !
+                # define relay command strings
+                # the linux command line
+                #      sudo usbrelay
+                # returned
+                #      Device Found
+                #        type: 16c0 05df
+                #        path: /dev/hidraw3
+                #        serial_number: 
+                #        Manufacturer: www.dcttech.com
+                #        Product:      USBRelay1
+                #        Release:      100
+                #        Interface:    0
+                #        Number of Relays = 1
+                #      HW348_1=0
+                # because of that last line, I use:
+                relayOff0 = 'sudo usbrelay HW348_1=0'
+                relayOff1 = ''
+                relayOn0  = 'sudo usbrelay HW348_1=1'
+                relayOn1  = ''
+                # initialize relays
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                if relayOff1:
+                    os.system(relayOff1)
+                    sleep(0.5) # Sleep for 0.5 seconds
+            elif ezColUsbRelay == 2:
+                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                # define relay command strings
+                # the linux command line
+                #      sudo usbrelay
+                # returned
+                #      Device Found
+                #        type: 16c0 05df
+                #        path: /dev/hidraw3
+                #        serial_number: 
+                #        Manufacturer: www.dcttech.com
+                #        Product:      USBRelay2
+                #        Release:      100
+                #        Interface:    0
+                #        Number of Relays = 2
+                #      BITFT_1=0
+                #      BITFT_2=0
+                # because of those 2 last lines, I use:
+                relayOff0 = 'sudo usbrelay BITFT_1=0 BITFT_2=0'
+                relayOff1 = 'sudo usbrelay BITFT_1=0 BITFT_2=0'
+                relayOn0  = 'sudo usbrelay BITFT_1=1 BITFT_2=0'
+                relayOn1  = 'sudo usbrelay BITFT_1=0 BITFT_2=1'
 
+                # initialize relays
+                # both relays off
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                os.system(relayOff1)
+                sleep(0.5) # Sleep for 0.5 seconds
+
+                # pulse 'off relay' 0 once to latch feedRef OFF
+                os.system(relayOn0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+            elif ezColUsbRelay == 3:
+                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                pass                    # linux: not yet implemented
+
+    programState = 0                # 0: Collect, 1: Pause, 2: Exit, in case no ezColDashboard
 
     # initialize dashboard
     if ezColDashboard:
@@ -855,23 +1060,37 @@ def main():
         # dashboard 'programState' radio button, control data collecting priority
         # https://blog.finxter.com/matplotlib-widgets-button/
         def programStateEntry(label):
-            global programState                     # integer
-            if label == 'Fast':
+            global programState                 # integer
+            #if label == 'Fast':
+            if label == 'Collect':
                 programState = 0
-            elif label == 'Slow':
+                #sdrStatusQueue.put(1)
+            #elif label == 'Slow':
+            #    programState = 1
+            #    sdrStatusQueue.put(1)
+            elif label == 'Pause': 
+                #programState = 2
                 programState = 1
-            elif label == 'Pause':
-                programState = 2
+                #sdrStatusQueue.put(2)
             else:
                 # label == 'Exit'
-                print(' label =', label,'= ')
-                print(' programState =', programState)
                 #exit()
+                #sdrStatusQueue.put(3)
+                sdrStatusQueue.put(2)           # needed ????????????????????
+                # sdrThread.join()
+                sdrProcess.join()               # needed ????????????????????
                 sys.exit(0)
+
+            print(' label =', label,'= ')
+            print(' programState =', programState)
+            sdrStatusQueue.put(programState)
+
         radio2_ax = plt.axes([0.865, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
-        radio2 = RadioButtons(radio2_ax, ('Fast', 'Slow', 'Pause', 'Exit'))
+        #radio2 = RadioButtons(radio2_ax, ('Fast', 'Slow', 'Pause', 'Exit'))
+        radio2 = RadioButtons(radio2_ax, ('Collect', 'Pause', 'Exit'))
         radio2.on_clicked(programStateEntry)
-        programState  = 0               # default Fast
+        #programState  = 0               # default Fast
+        programState  = 0               # default Collect
 
         # dashboard 'RefDiv' radio button, spectrum divided by (or subtracting) last REF sample
         def refActionFunction(label):
@@ -888,16 +1107,16 @@ def main():
         radio1.on_clicked(refActionFunction)
         refAction = 0                   # default Off
 
-        # dashboard 'ezColSlowness' number entry, define slowness when programState = 1
-        def ezColSlownessEntry(ezColSlownessEntryS):
-            global ezColSlowness                    # float
-            ezColSlownessEntrySplit = ezColSlownessEntryS.split()
-            if ezColSlownessEntrySplit:
-                ezColSlowness = float(ezColSlownessEntrySplit[0])
-        ezColSlownessEntry_ax = fig.add_axes([0.92, 0.80, 0.05, 0.04])
-        ezColSlownessEntryBox = TextBox(ezColSlownessEntry_ax, 'ezColSlowness ')
-        ezColSlownessEntryBox.on_submit(ezColSlownessEntry)
-        ezColSlownessEntryBox.set_val(str(ezColSlowness))  # initialize string of ezColSlownessEntryBox
+        ## dashboard 'ezColSlowness' number entry, define slowness when programState = 1
+        #def ezColSlownessEntry(ezColSlownessEntryS):
+        #    global ezColSlowness                    # float
+        #    ezColSlownessEntrySplit = ezColSlownessEntryS.split()
+        #    if ezColSlownessEntrySplit:
+        #        ezColSlowness = float(ezColSlownessEntrySplit[0])
+        #ezColSlownessEntry_ax = fig.add_axes([0.92, 0.80, 0.05, 0.04])
+        #ezColSlownessEntryBox = TextBox(ezColSlownessEntry_ax, 'ezColSlowness ')
+        #ezColSlownessEntryBox.on_submit(ezColSlownessEntry)
+        #ezColSlownessEntryBox.set_val(str(ezColSlowness))  # initialize string of ezColSlownessEntryBox
 
         # dashboard 'ezColIntegQty' number entry, define number of readings per data sample
         def ezColIntegQtyEntry(ezColIntegQtyEntryS):
@@ -946,11 +1165,11 @@ def main():
         # initialize string of ezColYLimEntryBox
         ezColYLimEntryBox.set_val(str(ezColYLim0) + '   ' + str(ezColYLim1))
 
-        if os.name == 'nt':     # Windows
-            # maximize plot window
-            # https://stackoverflow.com/questions/12439588/how-to-maximize-a-plt-show-window-using-python
-            mng = plt.get_current_fig_manager()
-            mng.window.state('zoomed')
+        #if os.name == 'nt':     # Windows
+        #    # maximize plot window
+        #    # https://stackoverflow.com/questions/12439588/how-to-maximize-a-plt-show-window-using-python
+        #    mng = plt.get_current_fig_manager()
+        #    #mng.window.state('zoomed')
 
 
 
@@ -958,6 +1177,34 @@ def main():
     if not os.path.exists('data'):
         os.makedirs('data')
         print(' Created new "data" directory')
+
+
+    #create the SDR Process
+    # sdrStatusQueue = queue.SimpleQueue()
+    sdrStatusQueue = Queue()
+    #sdrStatusQueue.put(0)
+    sdrStatusQueue.put(programState)
+
+    # centerFreqQueue = queue.SimpleQueue()
+    centerFreqQueue = Queue()
+    centerFreqQueue.put(centerFreqAntHz)
+    currentCenterFreq = centerFreqAntHz
+
+    # sdrReportedGainQueue = queue.SimpleQueue() #sdr to main communication
+    sdrReportedGainQueue = Queue()      #sdr to main communication
+    # sdrSpectrumQueue = queue.SimpleQueue()  #sdr to main communication
+    sdrSpectrumQueue = Queue()          #sdr to main communication
+
+    # sdrThread = threading.Thread(target=sdrTask, args=(sdrStatusQueue, centerFreqQueue, sdrReportedGainQueue, sdrSpectrumQueue,  
+    #                                                    bandWidthHz, ezColGain, freqBinQty))
+    #sdrProcess = Process(target=sdrTask, args=(sdrStatusQueue, centerFreqQueue, sdrReportedGainQueue, sdrSpectrumQueue,  
+    #                                                   bandWidthHz, ezColGain, freqBinQty))
+    sdrProcess = Process(target=sdrTask, args=(bandWidthHz, ezColGain, freqBinQty, ezColIntegQty, centerFreqQueue,
+        sdrStatusQueue, sdrReportedGainQueue, sdrSpectrumQueue))
+
+    # sdrThread.start()
+    sdrProcess.start()
+
 
     dateDayLastS = ''         # silly value to force new data file
     fileNameS = ''
@@ -975,79 +1222,124 @@ def main():
     feedRef = 0             # assume last sample was Ant sample
     antB4Ref = 0            # number of Ant samples before next Ref sample
     dataFlagsS = ' '
-    while 1:
-        while programState == 2:        # if Pause
-            plt.pause(0.5)              # allow dashboard response
-            sleep(3)                    # to allow other actions
-        timeStampUtc  = datetime.now(timezone.utc)      # this sample's timestamp
-        timeStampUtcS = timeStampUtc.strftime('%Y-%m-%dT%H:%M:%S ')
-        # https://stackoverflow.com/questions/44823073/convert-datetime-time-to-seconds
-        # datetime.time objects are meant to represent a time of the day.
-        # datetime.timedelta objects are meant to represent a duration, and they have a total_seconds() method
-        timeStampUtcSecRelThis = (timeStampUtc - timeStampUtcZero).total_seconds()
-        timeStampUtcHourRelThis = timeStampUtcSecRelThis / 3600.
-
-        if feedRef:
-            # last sample had feedRef ON
-            if ezColUsbRelay == 1:
-                # reset Relay1 off for feedRef off
-                # https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
-                if os.name == 'nt':     # Windows
-                    os.system('hidusb-relay-cmd.exe off 1')
-                else:                   # (posix) Linux assumed
-                    os.system('sudo usbrelay HW348_1=0')
-                    ####os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
-                sleep(0.5) # Sleep for 0.5 seconds
-            elif ezColUsbRelay:
-                # pulse Relay1 on to latch feedRef off
-                if os.name == 'nt':     # Windows
-                    os.system('hidusb-relay-cmd.exe on  1')
-                    sleep(0.5) # Sleep for 0.5 seconds
-                    os.system('hidusb-relay-cmd.exe off 1')
-                else:                   # (posix) Linux assumed
-                    os.system('sudo usbrelay BITFT_1=1 BITFT_2=0')
-                    sleep(0.5) # Sleep for 0.5 seconds
-                    os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
-                sleep(0.5) # Sleep for 0.5 seconds
-
-            sdr.center_freq = centerFreqAntHz                   # in integer Hz
-            feedRef = 0         # this sample will be with feedRef OFF
-            dataFlagsS = ' '
-            antB4Ref = ezColAntBtwnRef - 1  # reset number of Ant samples before next Ref sample
+    firstDraw = 1           # flag to draw the plot the first time without data
+    #mainLoop = 0
+    while programState <= 1:
+        #get the rmsSpectrum from the queue
+        #if firstDraw and programState <= 1:
+        hasNewData = 1
+        if firstDraw:
+            rmsSpectrum = sdrSpectrumQueue.get()
+            firstDraw = 0
         else:
-            # last sample had feedRef OFF
-            # make changes only if necessary
-            if 0 < antB4Ref:                # if Ant samples before next Ref sample
-                antB4Ref -= 1               #   decrement number of Ant samples before next Ref sample
-            else:                           # if no Ant samples before next Ref sample
-                # Reference sample if enabled
-                if ezColUsbRelay == 1:
-                    # set Relay1 on for feedRef on
+            try:
+                rmsSpectrum = sdrSpectrumQueue.get_nowait()
+            except:
+                hasNewData = 0
+                #plt.pause(0.5)       # waiting for sdrSpectrumQueue anyway
+
+        if hasNewData:
+            #while programState == 2:        # if Pause
+            #    plt.pause(0.5)              # allow dashboard response
+            #    sleep(3)                    # to allow other actions
+            timeStampUtc  = datetime.now(timezone.utc)      # this sample's timestamp
+            timeStampUtcS = timeStampUtc.strftime('%Y-%m-%dT%H:%M:%S ')
+            # https://stackoverflow.com/questions/44823073/convert-datetime-time-to-seconds
+            # datetime.time objects are meant to represent a time of the day.
+            # datetime.timedelta objects are meant to represent a duration, and they have a total_seconds() method
+            timeStampUtcSecRelThis = (timeStampUtc - timeStampUtcZero).total_seconds()
+            timeStampUtcHourRelThis = timeStampUtcSecRelThis / 3600.
+
+            #has the sdrGain changed
+            if not sdrReportedGainQueue.empty():
+                sdrGain = sdrReportedGainQueue.get_nowait()
+
+            if feedRef:
+                # last sample had feedRef ON
+                if ezColUsbRelay:
+                    # https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
                     if os.name == 'nt':     # Windows
-                        os.system('hidusb-relay-cmd.exe on  1')
-                    else:                   # Linux assumed
-                        os.system('sudo usbrelay HW348_1=1')
-                        ###os.system('sudo usbrelay BITFT_1=1 BITFT_2=0')
-                    sleep(0.5) # Sleep for 0.5 seconds
-                    sdr.center_freq = centerFreqRefHz                   # in integer Hz
-                    feedRef = 1         # this sample will be with feedRef ON
-                    dataFlagsS = ' R'
-                elif ezColUsbRelay:
-                    # pulse Relay2 on to latch feedRef ON
-                    if os.name == 'nt':     # Windows
-                        os.system('hidusb-relay-cmd.exe on  2')
-                        sleep(0.5) # Sleep for 0.5 seconds
-                        os.system('hidusb-relay-cmd.exe off 2')
-                    else:                   # Linux assumed
-                        os.system('sudo usbrelay BITFT_1=0 BITFT_2=1')
-                        sleep(0.5) # Sleep for 0.5 seconds
-                        os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
-                    sleep(0.5) # Sleep for 0.5 seconds
-                    sdr.center_freq = centerFreqRefHz                   # in integer Hz
-                    feedRef = 1         # this sample will be with feedRef ON
-                    dataFlagsS = ' R'
-                elif ezColCenterFreqRef:
-                    sdr.center_freq = centerFreqRefHz                   # in integer Hz
+                        if ezColUsbRelay == 1:
+                            # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                            os.system(relayOff0)
+                            sleep(0.5) # Sleep for 0.5 seconds
+                        elif ezColUsbRelay == 2:
+                            # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                            # pulse 'off relay' 0 once to latch feedRef OFF
+                            os.system(relayOn0)
+                            sleep(0.5) # Sleep for 0.5 seconds
+                            os.system(relayOff0)
+                            sleep(0.5) # Sleep for 0.5 seconds
+                        elif ezColUsbRelay == 3:
+                            # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                            os.system(relayOff0)
+                            sleep(0.5) # Sleep for 0.5 seconds
+                    else:                   # (posix) Linux assumed
+                        if ezColUsbRelay == 1:
+                            # ezColUsbRelay = 1: 1 SPST relay, driving feedRef ON or OFF
+                            os.system(relayOff0)
+                            sleep(0.5) # Sleep for 0.5 seconds
+                        elif ezColUsbRelay == 2:
+                            # ezColUsbRelay = 2: 2 SPST relays, driving a latching feedRef relay with pulses
+                            # pulse 'off relay' 0 once to latch feedRef OFF
+                            os.system(relayOn0)
+                            sleep(0.5) # Sleep for 0.5 seconds
+                            os.system(relayOff0)
+                            sleep(0.5) # Sleep for 0.5 seconds
+                        elif ezColUsbRelay == 3:
+                            # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                            pass                    # not implemented
+
+                centerFreqQueue.put(centerFreqAntHz)                   # in integer Hz
+                currentCenterFreq = centerFreqAntHz
+                feedRef = 0         # this sample will be with feedRef OFF
+                dataFlagsS = ' '
+                antB4Ref = ezColAntBtwnRef - 1  # reset number of Ant samples before next Ref sample
+            else:
+                # last sample had feedRef OFF
+                # make changes only if necessary
+                if 0 < antB4Ref:                # if Ant samples before next Ref sample
+                    antB4Ref -= 1               #   decrement number of Ant samples before next Ref sample
+                else:                           # if no Ant samples before next Ref sample
+                    # Reference sample if enabled
+                    if ezColUsbRelay:
+                        if os.name == 'nt':     # Windows
+                            if ezColUsbRelay == 1:
+                                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                                # set Relay1 on for feedRef on
+                                os.system(relayOn0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                            elif ezColUsbRelay == 2:
+                                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                                # pulse 'on relay' 1 once to latch feedRef ON
+                                os.system(relayOn1)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                                os.system(relayOff1)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                            elif ezColUsbRelay == 3:
+                                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                                # set Relay1 on for feedRef on
+                                os.system(relayOn0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                        else:                   # Linux assumed
+                            if ezColUsbRelay == 1:
+                                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                                # set Relay1 on for feedRef on
+                                os.system(relayOn0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                            elif ezColUsbRelay == 2:
+                                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                                # pulse 'on relay' 1 once to latch feedRef ON
+                                os.system(relayOn1)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                                os.system(relayOff1)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                            elif ezColUsbRelay == 3:
+                                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                                pass                    # not implemented
+
+                    centerFreqQueue.put(centerFreqRefHz)                # in integer Hz
+                    currentCenterFreq = centerFreqRefHz
                     feedRef = 1         # this sample will be with feedRef ON
                     dataFlagsS = ' R'
 
@@ -1085,6 +1377,11 @@ def main():
                         print()
                         print('ERROR: already too many files with same fileName base on this UTC date')
                         print()
+                        sdrStatusQueue.put(2)
+
+                        # sdrThread.join()
+                        #sdrProcess.join()   # ??????????????????????
+
                         exit()
 
                 print()
@@ -1123,266 +1420,325 @@ def main():
                 dateDayLastS = dateDayThisS
                 fileSample = 0
 
-        # now feedRef, timeStampUtcS, fileNameS, and fileSample are updated
-        fileSample += 1
+            # not new file, if az or el changed, write an az line
+            elif ezColAzimuthLast != ezColAzimuth or ezColElevationLast != ezColElevation:
+                ezColAzimuthLast   = ezColAzimuth
+                ezColElevationLast = ezColElevation
+                fileWrite.write(f'az {ezColAzimuth:g} el {ezColElevation:g}\n')
 
-        # timeStampUtcS = '2022-12-22T21:19:49 '
-        #                  01234567890123456789
-        timeUtcDateS = timeStampUtcS[:10]
-        timeUtcTimeS = timeStampUtcS[11:19]
-        # https://stackoverflow.com/questions/4563272/how-to-convert-a-utc-datetime-to-a-local-datetime-using-only-standard-library
-        timePcS = timeStampUtc.astimezone(tz=None).strftime('%Y-%m-%dT%H:%M:%S ')
-        timePcDateS = timePcS[:10]
-        timePcTimeS = timePcS[11:19]
+            # now feedRef, timeStampUtcS, fileNameS, and fileSample are updated
+            fileSample += 1
 
-        print()
-        print(timeStampUtcS, 'UTC    ', fileNameS, '   ', fileSample, '  ', sdr.center_freq, 'Hz  ', dataFlagsS)
-        print('Receiving', ezColIntegQty, 'readings, each with', freqBinQty, 'frequencies ...')
+            # timeStampUtcS = '2022-12-22T21:19:49 '
+            #                  01234567890123456789
+            timeUtcDateS = timeStampUtcS[:10]
+            timeUtcTimeS = timeStampUtcS[11:19]
+            # https://stackoverflow.com/questions/4563272/how-to-convert-a-utc-datetime-to-a-local-datetime-using-only-standard-library
+            timePcS = timeStampUtc.astimezone(tz=None).strftime('%Y-%m-%dT%H:%M:%S ')
+            timePcDateS = timePcS[:10]
+            timePcTimeS = timePcS[11:19]
 
-        # create tuple with Power Spectral Density (PSD), values averaged from ezColIntegQty datasets
-        psdSummed = (0, ) * freqBinQty
-        for __ in range(ezColIntegQty):
-            # for more convenient (and faster) data values,
-            #   uncalibrated __relative__ RMS power can ignore FFT gain constants,
-            #   and ignore normalizing amplitude
-            #psd = np.abs(np.fft.fft(sdr.read_samples(freqBinQty)) / freqBinQty)       # gives small values
-            #psd = np.abs(np.fft.fft(sdr.read_samples(freqBinQty)) / bandWidthHz)      # gives tiny values
-            psd = np.abs(np.fft.fft(sdr.read_samples(freqBinQty))) # dashboard values displayed using less space
-            psdSummed = tuple(map(operator.add, psdSummed, np.fft.fftshift(psd * psd)))     # sum so far
+            print()
+            print(timeStampUtcS, 'UTC    ', fileNameS, '   ', fileSample, '  ', currentCenterFreq, 'Hz  ', dataFlagsS)
+            print('Receiving', ezColIntegQty, 'readings, each with', freqBinQty, 'frequencies ...')
 
-        # create tuple with Root Mean Squared (RMS) power frequency spectrum from those ezColIntegQty readings
-        # https://en.wikipedia.org/wiki/Root_mean_square
-        #   Root Mean Squared (RMS) power = sqrt((x1*x1 + x2*x2 + x3*x3 + ... + xn*xn) / n)
-        rmsSpectrum = tuple(sqrt(i / ezColIntegQty) for i in psdSummed)                # square root
+            # write data sample line
+            fileWrite.write(timeStampUtcS + ' '.join(f'{i:.9g}' for i in rmsSpectrum) + dataFlagsS + '\n')
 
-        # if changed, write an az line
-        if ezColAzimuthLast != ezColAzimuth or ezColElevationLast != ezColElevation:
-            ezColAzimuthLast   = ezColAzimuth
-            ezColElevationLast = ezColElevation
-            fileWrite.write(f'az {ezColAzimuth:g} el {ezColElevation:g}\n')
+            # this sample's Local Mean Sidereal Time (LMST) in hours, value at dashboard stripcharts' right edge
+            lmstThis = (lmstZero + timeStampUtcHourRelThis) % 24.
 
-        # write data sample line
-        fileWrite.write(timeStampUtcS + ' '.join(f'{i:.9g}' for i in rmsSpectrum) + dataFlagsS + '\n')
+            if ezColVerbose:
+                print(ezRAObsName)
+                print(f'  Latitude    {ezRAObsLat:0.1f}')
+                print(f'  Longitude   {ezRAObsLon:0.1f}')
+                print(f'  Amsl        {ezRAObsAmsl:0.0f}')
+                print(f'  Azimuth     {ezColAzimuth:0.1f}')
+                print(f'  Elevation   {ezColElevation:0.1f}')
+                print(f'FreqBinQty    {freqBinQty:d}')
+                print(f'Gain          {sdrGain:0.1f}')
+                print(f'Integration   {timeStampUtcSecRelThis - timeStampUtcSecRelLast:0.1f}  sec')
+                print( 'ezColIntegQty', ezColIntegQty)
+                print('---')
+                print(f'ezColCenterFreqRef {ezColCenterFreqRef:0.6f}')
+                print(f'ezColCenterFreqAnt {ezColCenterFreqAnt:0.6f}')
+                print(f'FreqMin            {freqMinAnt:0.6f}')
+                print(f'FreqMax            {freqMaxAnt:0.6f}')
+                print('---')
+                print(fileNameDashS)
+                print('SampleQty   ', fileSample, dataFlagsS)
+                print('---')
+                print(timeUtcDateS + '   ' + timeUtcTimeS + '  UTC')
+                print(timePcDateS  + '   ' + timePcTimeS  + '  PC')
+                print( \
+                    f"approximate Local Mean Sidereal Time (LMST) Hours = south's Right Ascension = {lmstThis:0.1f}")
 
-        # this sample's Local Mean Sidereal Time (LMST) in hours, value at dashboard stripcharts' right edge
-        lmstThis = (lmstZero + timeStampUtcHourRelThis) % 24.
-
-        if ezColVerbose:
-            print(ezRAObsName)
-            print(f'  Latitude    {ezRAObsLat:0.1f}')
-            print(f'  Longitude   {ezRAObsLon:0.1f}')
-            print(f'  Amsl        {ezRAObsAmsl:0.0f}')
-            print(f'  Azimuth     {ezColAzimuth:0.1f}')
-            print(f'  Elevation   {ezColElevation:0.1f}')
-            print(f'FreqBinQty    {freqBinQty:d}')
-            print(f'Gain          {sdrGain:0.1f}')
-            print(f'Integration   {timeStampUtcSecRelThis - timeStampUtcSecRelLast:0.1f}  sec')
-            print( 'ezColIntegQty', ezColIntegQty)
-            print('---')
-            print(f'ezColCenterFreqRef {ezColCenterFreqRef:0.6f}')
-            print(f'ezColCenterFreqAnt {ezColCenterFreqAnt:0.6f}')
-            print(f'FreqMin            {freqMinAnt:0.6f}')
-            print(f'FreqMax            {freqMaxAnt:0.6f}')
-            print('---')
-            print(fileNameDashS)
-            print('SampleQty   ', fileSample, dataFlagsS)
-            print('---')
-            print(timeUtcDateS + '   ' + timeUtcTimeS + '  UTC')
-            print(timePcDateS  + '   ' + timePcTimeS  + '  PC')
-            print( \
-                f"Approximate Local Mean Sidereal Time (LMST) Hours = south's Right Ascension = {lmstThis:0.1f}")
-
-        if ezColDashboard:
-            # erase dashboard
-            details_ax.clear()          # top right text section
-            powerTime_ax1.clear()       # top    right "Recent Samples"  stripchart
-            powerTime_ax2.clear()       # middle right "Recent One Hour" stripchart
-            powerTime_ax3.clear()       # bottom       "Recent 24 Hours" stripchart
-            spectrum_ax.clear()         # top left frequency spectrum
+            if ezColDashboard:
+                # erase dashboard
+                details_ax.clear()          # top right text section
+                powerTime_ax1.clear()       # top    right "Recent Samples"  stripchart
+                powerTime_ax2.clear()       # middle right "Recent One Hour" stripchart
+                powerTime_ax3.clear()       # bottom       "Recent 24 Hours" stripchart
+                spectrum_ax.clear()         # top left frequency spectrum
 
 
-            # update top right text section
-            details_ax.axis('off')
+                # update top right text section
+                details_ax.axis('off')
 
-            # erase previous text
-            del fig.texts[2:]
+                # erase previous text
+                del fig.texts[2:]
 
-            # write column 1 (left)
-            fig.text(0.53, 0.95, \
-                ezRAObsName \
-                + '\n  Latitude\n  Longitude\n  Amsl', \
-                horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
-            fig.text(0.53, 0.76, \
-                '  FreqBinQty\n  Gain\n  Integration', \
-                horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                # write column 1 (left)
+                fig.text(0.53, 0.95, \
+                    ezRAObsName \
+                    + '\n  Latitude\n  Longitude\n  Amsl', \
+                    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                fig.text(0.53, 0.76, \
+                    '  FreqBinQty\n  Gain\n  Integration', \
+                    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
 
-            # write column 2
-            fig.text(0.61, 0.95, \
-                f'\n{ezRAObsLat:0.1f}\n{ezRAObsLon:0.1f}\n{ezRAObsAmsl:0.0f}\n', \
-                horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
-            fig.text(0.61, 0.83, \
-                f'{ezColAzimuth:0.1f}\n{ezColElevation:0.1f}', \
-                horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
-            fig.text(0.61, 0.76, \
-                f'{freqBinQty:d}\n{sdrGain:0.1f}\n{timeStampUtcSecRelThis - timeStampUtcSecRelLast:0.1f}  sec', \
-                horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                # write column 2
+                fig.text(0.61, 0.95, \
+                    f'\n{ezRAObsLat:0.1f}\n{ezRAObsLon:0.1f}\n{ezRAObsAmsl:0.0f}\n', \
+                    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                fig.text(0.61, 0.83, \
+                    f'{ezColAzimuth:0.1f}\n{ezColElevation:0.1f}', \
+                    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                fig.text(0.61, 0.76, \
+                    f'{freqBinQty:d}\n{sdrGain:0.1f}\n{timeStampUtcSecRelThis - timeStampUtcSecRelLast:0.1f}  sec', \
+                    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
 
-            # write column 3
-            fig.text(0.68, 0.95, \
-                'FreqCtrRef\nFreqCtr\nFreqMin\nFreqMax\n\n' \
-                + fileNameDashS + '\nSampleQty\n\n' \
-                + timeUtcDateS + '  ' + timeUtcTimeS + '  UTC\n' \
-                + timePcDateS  + '  ' + timePcTimeS  + '  PC', \
-                horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                # write column 3
+                fig.text(0.68, 0.95, \
+                    'FreqCtrRef\nFreqCtr\nFreqMin\nFreqMax\n\n' \
+                    + fileNameDashS + '\nSampleQty\n\n' \
+                    + timeUtcDateS + '  ' + timeUtcTimeS + '  UTC\n' \
+                    + timePcDateS  + '  ' + timePcTimeS  + '  PC', \
+                    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
 
-            # write column 4 (right)
-            fig.text(0.77, 0.95, \
-                f'{ezColCenterFreqRef:0.6f}\n{ezColCenterFreqAnt:0.6f}\n' \
-                    + f'{freqMinAnt:0.6f}\n{freqMaxAnt:0.6f}\n\n\n{fileSample:d}   ' \
-                + dataFlagsS, \
-                horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                # write column 4 (right)
+                fig.text(0.77, 0.95, \
+                    f'{ezColCenterFreqRef:0.6f}\n{ezColCenterFreqAnt:0.6f}\n' \
+                        + f'{freqMinAnt:0.6f}\n{freqMaxAnt:0.6f}\n\n\n{fileSample:d}   ' \
+                    + dataFlagsS, \
+                    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+
+                # update stripchart data.
+                # trim last of rmsAvgHistory and append this sample's average of rmsSpectrum to first position
+                rmsAvgHistory = np.concatenate([ \
+                    np.array([sum(rmsSpectrum) / freqBinQty]), rmsAvgHistory[:-1] ])
+
+                # trim last of timeStampUtcHourRelHistory and append this sample's timeStamp to first position
+                timeStampUtcHourRelHistory = np.concatenate([ \
+                    np.array([timeStampUtcHourRelThis]), \
+                    timeStampUtcHourRelHistory[:-1] ])
 
 
 
-            # update stripchart data.
-            # trim last of rmsAvgHistory and append this sample's average of rmsSpectrum to first position
-            rmsAvgHistory = np.concatenate([ \
-                np.array([sum(rmsSpectrum) / freqBinQty]), rmsAvgHistory[:-1] ])
-
-            # trim last of timeStampUtcHourRelHistory and append this sample's timeStamp to first position
-            timeStampUtcHourRelHistory = np.concatenate([ \
-                np.array([timeStampUtcHourRelThis]), \
-                timeStampUtcHourRelHistory[:-1] ])
+                # plot top right "Recent Samples" stripchart
+                powerTime_ax1.plot(range(rmsAvgHistoryLenRecentMost), \
+                    rmsAvgHistory[:rmsAvgHistoryLenRecentMost], \
+                    marker = '.', markersize = 2, color = 'b')
+                # x axis increases to the left
+                powerTime_ax1.set(xlim = [rmsAvgHistoryLenRecentMost, 0], \
+                    xlabel = 'Recent Samples', ylabel = 'Relative RMS Power')
 
 
 
-            # plot top right "Recent Samples" stripchart
-            powerTime_ax1.plot(range(rmsAvgHistoryLenRecentMost), \
-                rmsAvgHistory[:rmsAvgHistoryLenRecentMost], \
-                marker = '.', markersize = 2, color = 'b')
-            # x axis increases to the left
-            powerTime_ax1.set(xlim = [rmsAvgHistoryLenRecentMost, 0], \
-                xlabel = 'Recent Samples', ylabel = 'Relative RMS Power')
+                # plot middle right "Recent One Hour" stripchart
+                timeStampUtcHourRelHistoryRecent = timeStampUtcHourRelThis - timeStampUtcHourRelHistory
+
+                powerTime_ax2.plot(timeStampUtcHourRelHistoryRecent[:rmsAvgHistoryLenRecentHour], \
+                    rmsAvgHistory[:rmsAvgHistoryLenRecentHour], \
+                    marker = '.', markersize = 2, color = 'c')
+                # x-scale increases to the left
+                powerTime_ax2.set(xlim = [1, 0], xticks=np.linspace(1, 0, num=11, endpoint=True),
+                    xlabel = 'Recent One Hour', ylabel = 'Relative RMS Power')
+
+                # set top Local Mean Sidereal Time (LMST) x-scale
+                lmstThisInTenths = int(lmstThis * 10.) / 10.        # lmstThis with one decimal digit
+                powerTime_ax2XBXticks = \
+                    [lmstThisInTenths - x for x in [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]]
+                powerTime_ax2XB.set(xlim=[lmstThis - 1, lmstThis], \
+                    xticks=powerTime_ax2XBXticks, \
+                    xticklabels=[f'{x:0.1f}' for x in powerTime_ax2XBXticks], \
+                    xlabel = "approximate Local Mean Sidereal Time (LMST) Hours = south's Right Ascension")
 
 
 
-            # plot middle right "Recent One Hour" stripchart
-            timeStampUtcHourRelHistoryRecent = timeStampUtcHourRelThis - timeStampUtcHourRelHistory
+                # plot bottom "Recent 24 Hours" stripchart
+                powerTime_ax3.plot(timeStampUtcHourRelHistoryRecent, \
+                    rmsAvgHistory, \
+                    marker = '.', markersize = 2, color = 'r')
+                # x-scale increases to the left
+                powerTime_ax3.set(xlim = [24., 0.], xticks=range(24, -1, -1), \
+                    xlabel = 'Recent 24 Hours', ylabel = 'Relative RMS Power')
 
-            powerTime_ax2.plot(timeStampUtcHourRelHistoryRecent[:rmsAvgHistoryLenRecentHour], \
-                rmsAvgHistory[:rmsAvgHistoryLenRecentHour], \
-                marker = '.', markersize = 2, color = 'c')
-            # x-scale increases to the left
-            powerTime_ax2.set(xlim = [1, 0], xticks=np.linspace(1, 0, num=11, endpoint=True),
-                xlabel = 'Recent One Hour', ylabel = 'Relative RMS Power')
-
-            # set top Local Mean Sidereal Time (LMST) x-scale
-            lmstThisInTenths = int(lmstThis * 10.) / 10.        # lmstThis with one decimal digit
-            powerTime_ax2XBXticks = \
-                [lmstThisInTenths - x for x in [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]]
-            powerTime_ax2XB.set(xlim=[lmstThis - 1, lmstThis], \
-                xticks=powerTime_ax2XBXticks, \
-                xticklabels=[f'{x:0.1f}' for x in powerTime_ax2XBXticks], \
-                xlabel = "Approximate Local Mean Sidereal Time (LMST) Hours = south's Right Ascension")
+                # set top Local Mean Sidereal Time (LMST) x-scale
+                lmstThisInt = int(lmstThis)
+                powerTime_ax3XB.set(xlim=[lmstThis - 24., lmstThis], \
+                    xticks=[lmstThisInt - x for x in [23, 22, 21, 20,
+                        19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 
+                        9, 8, 7, 6, 5, 4, 3, 2, 1, 0]],
+                    xticklabels=lmstLabels1to0to0[lmstThisInt:lmstThisInt + 24], \
+                    xlabel = "Local Mean Sidereal Time (LMST) Hours = south's Right Ascension")
 
 
-
-            # plot bottom "Recent 24 Hours" stripchart
-            powerTime_ax3.plot(timeStampUtcHourRelHistoryRecent, \
-                rmsAvgHistory, \
-                marker = '.', markersize = 2, color = 'r')
-            # x-scale increases to the left
-            powerTime_ax3.set(xlim = [24., 0.], xticks=range(24, -1, -1), \
-                xlabel = 'Recent 24 Hours', ylabel = 'Relative RMS Power')
-
-            # set top Local Mean Sidereal Time (LMST) x-scale
-            lmstThisInt = int(lmstThis)
-            powerTime_ax3XB.set(xlim=[lmstThis - 24., lmstThis], \
-                xticks=[lmstThisInt - x for x in [23, 22, 21, 20,
-                    19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 
-                    9, 8, 7, 6, 5, 4, 3, 2, 1, 0]],
-                xticklabels=lmstLabels1to0to0[lmstThisInt:lmstThisInt + 24], \
-                xlabel = "Local Mean Sidereal Time (LMST) Hours = south's Right Ascension")
-
-
-
-            # plot top left frequency spectrum
-            if feedRef:
-                # update as last Ref spectrum
-                rmsSpectrumRefLast = rmsSpectrum
-            else:
-                # update as last Ant spectrum
-                rmsSpectrumAntLast = rmsSpectrum
-
-            # refAction from radio1 radio button
-            if not refAction:           # if not refDiv nor refSub
+                # plot top left frequency spectrum
                 if feedRef:
-                    # plot as Ref spectrum, with Ref frequencies
-                    spectrum_ax.plot(freqsRef, rmsSpectrum, color = 'r')
-                    # plot as Ref spectrum, with Ref frequency limit values
-                    spectrum_ax.set(xlim = [freqMinRef, freqMaxRef],
-                        xlabel = 'Reference Frequency (MHz)', ylabel = 'Relative RMS Power')
-                    # plot vertical dashed green line on Ref center frequency
-                    spectrum_ax.axvline(ezColCenterFreqRef, color = 'g', linestyle = ':', linewidth = 2)
+                    # update as last Ref spectrum
+                    rmsSpectrumRefLast = rmsSpectrum
                 else:
-                    # plot as Ant spectrum, with Ant frequencies
-                    spectrum_ax.plot(freqsAnt, rmsSpectrum, color = 'r')
+                    # update as last Ant spectrum
+                    rmsSpectrumAntLast = rmsSpectrum
+
+                # refAction from radio1 radio button
+                if not refAction:           # if not refDiv nor refSub
+                    if feedRef:
+                        # plot as Ref spectrum, with Ref frequencies
+                        spectrum_ax.plot(freqsRef, rmsSpectrum, color = 'r')
+                        # plot as Ref spectrum, with Ref frequency limit values
+                        spectrum_ax.set(xlim = [freqMinRef, freqMaxRef],
+                            xlabel = 'Reference Frequency (MHz)', ylabel = 'Relative RMS Power')
+                        # plot vertical dashed green line on Ref center frequency
+                        spectrum_ax.axvline(ezColCenterFreqRef, color = 'g', linestyle = ':', linewidth = 2)
+                    else:
+                        # plot as Ant spectrum, with Ant frequencies
+                        spectrum_ax.plot(freqsAnt, rmsSpectrum, color = 'r')
+                        # plot as Ant spectrum, with Ant frequency limit values
+                        spectrum_ax.set(xlim = [freqMinAnt, freqMaxAnt],
+                            xlabel = 'Frequency (MHz)', ylabel = 'Relative RMS Power')
+                        # plot vertical dashed green line on Ant center frequency
+                        spectrum_ax.axvline(ezColCenterFreqAnt, color = 'g', linestyle = ':', linewidth = 2)
+
+                elif refAction == 1:      # refDiv: plot last Ant spectrum divided by last Ref spectrum
+                    spectrum_ax.plot(freqsAnt, \
+                        tuple(map(operator.truediv, rmsSpectrumAntLast, rmsSpectrumRefLast)), color = 'r')
                     # plot as Ant spectrum, with Ant frequency limit values
                     spectrum_ax.set(xlim = [freqMinAnt, freqMaxAnt],
                         xlabel = 'Frequency (MHz)', ylabel = 'Relative RMS Power')
                     # plot vertical dashed green line on Ant center frequency
                     spectrum_ax.axvline(ezColCenterFreqAnt, color = 'g', linestyle = ':', linewidth = 2)
 
-            elif refAction == 1:      # refDiv: plot last Ant spectrum divided by last Ref spectrum
-                spectrum_ax.plot(freqsAnt, \
-                    tuple(map(operator.truediv, rmsSpectrumAntLast, rmsSpectrumRefLast)), color = 'r')
-                # plot as Ant spectrum, with Ant frequency limit values
-                spectrum_ax.set(xlim = [freqMinAnt, freqMaxAnt],
-                    xlabel = 'Frequency (MHz)', ylabel = 'Relative RMS Power')
-                # plot vertical dashed green line on Ant center frequency
-                spectrum_ax.axvline(ezColCenterFreqAnt, color = 'g', linestyle = ':', linewidth = 2)
+                else:
+                    # refAction == 2:   # refSub: plot last Ant spectrum after subtracting last Ref spectrum
+                    spectrum_ax.plot(freqsAnt, \
+                        tuple(map(operator.__abs__, \
+                        map(operator.sub, rmsSpectrumAntLast, rmsSpectrumRefLast))), color = 'r')
+                    # plot as Ant spectrum, with Ant frequency limit values
+                    spectrum_ax.set(xlim = [freqMinAnt, freqMaxAnt],
+                        xlabel = 'Frequency (MHz)', ylabel = 'Relative RMS Power')
+                    # plot vertical dashed green line on Ant center frequency
+                    spectrum_ax.axvline(ezColCenterFreqAnt, color = 'g', linestyle = ':', linewidth = 2)
 
-            else:
-                # refAction == 2:   # refSub: plot last Ant spectrum after subtracting last Ref spectrum
-                spectrum_ax.plot(freqsAnt, \
-                    tuple(map(operator.__abs__, \
-                    map(operator.sub, rmsSpectrumAntLast, rmsSpectrumRefLast))), color = 'r')
-                # plot as Ant spectrum, with Ant frequency limit values
-                spectrum_ax.set(xlim = [freqMinAnt, freqMaxAnt],
-                    xlabel = 'Frequency (MHz)', ylabel = 'Relative RMS Power')
-                # plot vertical dashed green line on Ant center frequency
-                spectrum_ax.axvline(ezColCenterFreqAnt, color = 'g', linestyle = ':', linewidth = 2)
+                # read autoscaled left-side y-scale limit values
+                spectrum_axY0, spectrum_axY1 = spectrum_ax.get_ylim()
+                spectrum_axY1MY0 = spectrum_axY1 - spectrum_axY0        # full autoscaled ylim range, Y1 Minus Y0
+                # use ezColYLim0 and ezColYLim1 to set fraction of autoscaled left-side y-scale limit values
+                spectrum_ax.set(ylim = [(ezColYLim0 * spectrum_axY1MY0) + spectrum_axY0,
+                    (ezColYLim1 * spectrum_axY1MY0) + spectrum_axY0])
 
-            # read autoscaled left-side y-scale limit values
-            spectrum_axY0, spectrum_axY1 = spectrum_ax.get_ylim()
-            spectrum_axY1MY0 = spectrum_axY1 - spectrum_axY0        # full autoscaled ylim range, Y1 Minus Y0
-            # use ezColYLim0 and ezColYLim1 to set fraction of autoscaled left-side y-scale limit values
-            spectrum_ax.set(ylim = [(ezColYLim0 * spectrum_axY1MY0) + spectrum_axY0,
-                (ezColYLim1 * spectrum_axY1MY0) + spectrum_axY0])
+                # set top x-scale limits
+                spectrum_axXB.set_xlim(-bandWidthD2, bandWidthD2)
+                # set right-side y-scale limits
+                spectrum_axYB.set_ylim(ezColYLim0, ezColYLim1)
 
-            # set top x-scale limits
-            spectrum_axXB.set_xlim(-bandWidthD2, bandWidthD2)
-            # set right-side y-scale limits
-            spectrum_axYB.set_ylim(ezColYLim0, ezColYLim1)
-
-            spectrum_ax.grid()      # turn on grid
+                spectrum_ax.grid()      # turn on grid
 
 
 
-            plt.draw()
+                plt.draw()
+            timeStampUtcSecRelLast = timeStampUtcSecRelThis
 
-            # allow time for dashboard interaction ?
-            if programState:            # if Slow (, Pause, Exit)
-                plt.pause(ezColSlowness)
-            else:
-                plt.pause(.001)         # Fast, allow little time for dashboard interaction
+        # allow time for dashboard interaction ?
+        plt.pause(0.5)
+        #if programState:            # if Slow (, Pause, Exit)
+        #    plt.pause(ezColSlowness)
+        #else:
+        #    plt.pause(0.1)          # Fast, allow little time for dashboard interaction
+        #firstDraw = 0
+        #timeStampUtcSecRelLast = timeStampUtcSecRelThis
 
-        timeStampUtcSecRelLast = timeStampUtcSecRelThis
+        # mainLoop heartbeat indicator, only for testing, dashboard erased only on new spectrum
+        #fig.text(0.68, 0.75, (' '*61)[:(mainLoop+mainLoop)%58] \
+        #    + '1234567890'[mainLoop%10], \
+        #    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+        #mainLoop += 1
 
         # go to top of while loop, to start next data sample
 
 
 
+def sdrTask(bandWidthHz, ezColGain, freqBinQty, ezColIntegQty, centerFreqQueue, sdrStatusQueue,
+    sdrReportedGainQueue, sdrSpectrumQueue):
+
+    # unchanging inputs: bandWidthHz, ezColGain, freqBinQty, ezColIntegQty
+    # changing inputs: centerFreqQueue, sdrStatusQueue
+    # changing outputs: sdrReportedGainQueue, sdrSpectrumQueue
+
+    import numpy as np
+    import operator
+    from math import sqrt
+
+    from rtlsdr import RtlSdr
+    #  pip3 install pyrtlsdr   # worked on Ubuntu 18.04.5
+    #  https://pypi.org/project/pyrtlsdr/
+    #  https://github.com/roger-/pyrtlsdr
+
+    #initialize the SDR
+    sdr = RtlSdr()
+    sdr.sample_rate = int(bandWidthHz)                          # in integer Hz
+    sdr.center_freq = centerFreqQueue.get()                     # in integer Hz
+    sdr.gain = ezColGain        # "set" SDR gain
+    sdrGain = sdr.gain          # what the SDR actually set the gain to
+    sdrReportedGainQueue.put(sdrGain)
+
+    print('sdr.bandwidth =', sdr.bandwidth)
+    print('sdr.center_freq =', sdr.center_freq)
+    print('sdr.fc =', sdr.fc)
+    print('sdr.freq_correction =', sdr.freq_correction)
+    print('sdr.gain =', sdr.gain)
+    print('sdr.rs =', sdr.rs)
+
+    #get the original status of the sdrStatus
+    currentSDRstatus = 0
+
+    if not sdrStatusQueue.empty():
+        currentSDRstatus = sdrStatusQueue.get_nowait()
+
+    while currentSDRstatus <= 1:
+        #print('Running sdrProcess')
+        # update status of Collect/Pause/Exit
+        if not sdrStatusQueue.empty():
+            currentSDRstatus = sdrStatusQueue.get_nowait()
+
+        if currentSDRstatus == 2: 
+            sys.exit(0)
+
+        if currentSDRstatus == 0: 
+            #reset the center frequency if needed
+            if not centerFreqQueue.empty():
+                sdr.center_freq = centerFreqQueue.get_nowait()
+
+            # create tuple with Power Spectral Density (PSD), values averaged from ezColIntegQty datasets
+            psdSummed = (0, ) * freqBinQty
+            for __ in range(ezColIntegQty):
+                # for more convenient (and faster) data values,
+                #   uncalibrated __relative__ RMS power can ignore FFT gain constants,
+                #   and ignore normalizing amplitude
+                #psd = np.abs(np.fft.fft(sdr.read_samples(freqBinQty)) / freqBinQty)       # gives small values
+                #psd = np.abs(np.fft.fft(sdr.read_samples(freqBinQty)) / bandWidthHz)      # gives tiny values
+                psd = np.abs(np.fft.fft(sdr.read_samples(freqBinQty))) # dashboard values displayed using less space
+                psdSummed = tuple(map(operator.add, psdSummed, np.fft.fftshift(psd * psd)))     # sum so far
+
+            # create tuple with Root Mean Squared (RMS) power frequency spectrum from those ezColIntegQty readings
+            # https://en.wikipedia.org/wiki/Root_mean_square
+            #   Root Mean Squared (RMS) power = sqrt((x1*x1 + x2*x2 + x3*x3 + ... + xn*xn) / n)
+            rmsSpectrum = tuple(sqrt(i / ezColIntegQty) for i in psdSummed)                # square root
+
+            sdrSpectrumQueue.put(rmsSpectrum)
+
+#run the main process
 if __name__ == "__main__":
     main()
 
