@@ -1,4 +1,4 @@
-programName = 'ezCol230206a.py'
+programName = 'ezCol230208a.py'
 programRevision = programName
 
 # Thanks to Todd Ullery, this ezColX.py was an experimental multiple process version of ezCol.py ,
@@ -12,6 +12,11 @@ programRevision = programName
 #   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
 #   Modified from Victor Boesen's https://github.com/byggemandboesen/H-line-software
 
+# ezCol230208a.py, REF should be defined in data collection process
+#   moved REF and relay control into sdrTask, ezColIntegQtyQueue
+# ezCol230207c.py, marked REF one sample too early, so write with dataFlagsSLast - worked but first REF is second sample, want as first
+# ezCol230207b.py, marked REF one sample too early, so write with dataFlagsSLast
+# ezCol230207a.py, marked REF one sample too early, ignore first sample - but no effect
 # ezCol230206a.py, name change, seems successful, so I now retire experimental ezColX name.
 #   Last single-process version was ezCol221110a.py .
 #   Now latest ezColX230205c becomes non-experimental ezCol230206a and ezCol.
@@ -31,7 +36,7 @@ programRevision = programName
 # ezCol221110atb.py, second threaded ezCol
 # ezCol221110a.py, changed Linux from double SPDT "BITFT" USB Relay to single SPDT "HW348" USB Relay
 # ezCol220930a.py, prep for Git
-# ezCol220826a.py, dataFlagsS if no Ref
+# ezCol220826a.py, dataFlagsS if no REF
 
 
 #########################################################################################
@@ -48,7 +53,6 @@ programRevision = programName
 
 # main process:
 #    initialize: help screen, read in arguments
-#    initialize feedRef relay, if any
 #    programState = 0 (0: Collect, 1: Pause, 2: Exit)
 #    if ezColDashboard:
 #        initialize dashboard (including buttons and programState)
@@ -56,11 +60,10 @@ programRevision = programName
 #    initialize and start the SDR Process 'sdrTask'
 #    initialize while loop
 #    while programState <= 1: (0: Collect, 1: Pause, 2: Exit)
-#        get sdrSpectrumQueue
-#        if sdrSpectrumQueue has New Data:
+#        get sdrOutQueue
+#        if sdrOutQueue had New Data:
 #            initialize timestamp
-#            set feedRef relay
-#            set centerFreq, put to sdrTask
+#            set centerFreq
 #            maybe start new data file (if new UTC day, or if newFileButton)
 #            maybe write an az line (if az or el changed)
 #            write data sample line
@@ -75,13 +78,14 @@ programRevision = programName
 #        allow time for dashboard interaction
 
 # sdrTask process:
-#    get the first sdrStatus
-#    while currentSDRstatus <= 1: (0: Collect, 1: Pause, 2: Exit)
-#        get the sdrStatus
-#        if currentSDRstatus == 2:
+#    initialize feedRef relay, if any
+#    while programState <= 1: (0: Collect, 1: Pause, 2: Exit)
+#        get the programStateQueue
+#        if programState == 2:
 #            exit
-#        if currentSDRstatus == 0 (not Paused):
-#            set the center frequency if changed
+#        if programState == 0 (not Paused):
+#            set feedRef relay
+#            set the center frequency
 #            create and put tuple with Power Spectral Density (PSD), values averaged
 #              from ezColIntegQty datasets
 #########################################################################################
@@ -614,7 +618,7 @@ def ezColArguments():
 
         ezColGain = 9999            # silly big number which RtlSdr library will reduce
 
-        ezColAntBtwnRef = 1         # number of Ant samples between Ref samples
+        ezColAntBtwnRef = 1         # number of Ant samples between REF samples
 
         ezColAzimuth   = 180.0      # Azimuth   pointing of antenna (degrees)
         ezColElevation =  45.0      # Elevation pointing of antenna (degrees)
@@ -730,7 +734,7 @@ def main():
 
 
     # delayed these imports until after possible help screen
-    from time import sleep
+    #from time import sleep
     from datetime import date, datetime, timezone
     import numpy as np
     import operator
@@ -803,208 +807,6 @@ def main():
     centerFreqAntHz = int(ezColCenterFreqAnt * 1e6)             # in integer Hz
     bandWidthHz = ezColBandWidth * 1e6                          # in float Hz
 
-    # by operating system, initialize (reset) feedRef relay system, if any
-    if ezColUsbRelay:
-        if os.name == 'nt':     # Windows
-            # hidusb-relay-cmd.exe or serialSend.exe assumed to be in same Windows directory as ezCol program
-            # in case os.path.dirname(__file__) contains space characters
-            #relayOff0 = os.path.dirname(__file__).replace(' ', '\ ')
-            #print(relayOff0)
-            #print()
-
-            if ezColUsbRelay == 1:
-                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
-                # for USB Relay that talks HID
-                # https://github.com/pavel-a/usb-relay-hid
-                # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
-                # C:\Users\c\Documents\EZRA01\usb-relay-hid_bin-20150330a\bin-Win64> hidusb-relay-cmd.exe on 1
-                # define relay command strings
-                # the command prompt command line
-                #      ..\ezRA\hidusb-relay-cmd.exe enum 
-                # returned
-                #      Board ID=[HW348] State: R1=OFF
-                # because of the "R1" on that last line, I use:
-                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 1'
-                #relayOff1 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 2'     # ignore error if only single SPDT USB Relay
-                relayOff1 = ''
-                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 1'
-                #relayOn1  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 2'     # ignore error if only single SPDT USB Relay
-                relayOn1  = ''
-                # initialize relays
-                os.system(relayOff0)
-                sleep(0.5) # Sleep for 0.5 seconds
-                if relayOff1:
-                    os.system(relayOff1)
-                    sleep(0.5) # Sleep for 0.5 seconds
-            elif ezColUsbRelay == 2:
-                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
-                # for USB Relay that talks HID
-                # https://github.com/pavel-a/usb-relay-hid
-                # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
-                # C:\Users\c\Documents\EZRA01\usb-relay-hid_bin-20150330a\bin-Win64> hidusb-relay-cmd.exe on 1
-                # define relay command strings
-                # the command prompt command line
-                #      ..\ezRA\hidusb-relay-cmd.exe enum 
-                # returned
-                #      Board ID=[BITFT] State: R1=OFF R2=OFF
-                # because of the "R1" and "R2" on that last line, I use:
-                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 1'
-                relayOff1 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 2'
-                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 1'
-                relayOn1  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 2'
-
-                # initialize relays
-                # both relays off
-                os.system(relayOff0)
-                sleep(0.5) # Sleep for 0.5 seconds
-                os.system(relayOff1)
-                sleep(0.5) # Sleep for 0.5 seconds
-
-                # pulse 'off relay' 0 once to latch feedRef OFF
-                os.system(relayOn0)
-                sleep(0.5) # Sleep for 0.5 seconds
-                os.system(relayOff0)
-                sleep(0.5) # Sleep for 0.5 seconds
-            elif ezColUsbRelay == 3:
-                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
-                # for USB Relay that talks serial
-                # define relay command strings
-                # https://www.amazon.com/dp/B01CN7E0RQ
-                #   and down below in "Customer questions & answers",
-                #   see "How to set for 7sec on, 3sec off, 20sec on, 1 sec off. (5 series repeat)"
-                #   talks of
-                #     c:\disp\serialsend.exe /baudrate 9600 /hex "\xA0\x01\x01\xA2"
-                #   and
-                #     c:\disp\serialsend.exe /baudrate 9600 /hex "\xA0\x01\x00\xA1"
-                # https://batchloaf.wordpress.com/serialsend/
-                # https://batchloaf.wordpress.com/2011/12/05/serialsend-a-windows-program-to-send-a-text-word-via-serial-port/
-                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'serialSend.exe /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x00\\xA1"'
-                relayOff1 = ''
-                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'serialSend.exe /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x01\\xA2"'
-                relayOn1  = ''
-                # initialize relays
-                os.system(relayOff0)
-                sleep(0.5) # Sleep for 0.5 seconds
-                if relayOff1:
-                    os.system(relayOff1)
-                    sleep(0.5) # Sleep for 0.5 seconds
-        else:                   # (posix) Linux assumed
-            # how to define relay command strings
-            # https://github.com/darrylb123/usbrelay
-            # sudo apt-get update
-            # sudo apt-get install usbrelay
-            ###os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
-            #####################
-            #    Serial: BITFT, Relay: 1 State: ff --- Not Found  <=================== BITFT Not Found !
-            #####################
-            #    > lsusb -v -d 16c0:05df
-            # - output looks just like on https://github.com/darrylb123/usbrelay
-            #####################
-            #    > sudo usbrelay
-            #    Device Found
-            #      type: 16c0 05df
-            #      path: /dev/hidraw2
-            #      serial_number:
-            #      Manufacturer: www.dcttech.com
-            #      Product:      USBRelay1
-            #      Release:      100
-            #      Interface:    0
-            #      Number of Relays = 1
-            #    HW348_1=0  <================================== OK, use HW348_1 not BITFT_1 ==========
-            # https://www.npmjs.com/package/node-red-contrib-usb-hid-relay/v/0.2.3
-            # says also available are
-            #    HW-348
-            #    HW-343
-            #    HW-341
-            #    Models with USB-Relay-1, USB-Relay-2 or USB-Relay-4 printed on the PCB
-            #os.system('sudo usbrelay HW348_1=0')        # works !
-
-            # also may be helpful ?:
-            #   Human Interface Device (HID)
-            #   http://vusb.wikidot.com/project:driver-less-usb-relays-hid-interface
-            #       https://github.com/pavel-a/usb-relay-hid
-            #       http://vusb.wikidot.com/hosted-projects
-            #           http://vusb.wikidot.com/examples
-            #               https://www.workinprogress.ca/v-usb-tutorial-software-only-usb-for-mega-tiny/
-            #   https://www.giga.co.za/ocart/index.php?route=product/product&product_id=229
-            #       - part is out of stock, but has pictures and links to
-            #           https://github.com/pavel-a/usb-relay-hid
-            #           http://www.giga.co.za/Kit_Drivers/USB_Relay2.zip
-            #           https://github.com/darrylb123/usbrelay
-            #           and says
-            #               Here is an example how to control the relay in command line.
-            #               CommandApp_USBRelay.exe [device id] [close / open] [relay nr]
-            #                   CommandApp_USBRelay.exe J34EL close 01
-            #                   CommandApp_USBRelay.exe J34EL open 01
-
-            if ezColUsbRelay == 1:
-                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
-                ##os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
-                #os.system('sudo usbrelay HW348_1=0')        # works !
-                # define relay command strings
-                # the linux command line
-                #      sudo usbrelay
-                # returned
-                #      Device Found
-                #        type: 16c0 05df
-                #        path: /dev/hidraw3
-                #        serial_number: 
-                #        Manufacturer: www.dcttech.com
-                #        Product:      USBRelay1
-                #        Release:      100
-                #        Interface:    0
-                #        Number of Relays = 1
-                #      HW348_1=0
-                # because of that last line, I use:
-                relayOff0 = 'sudo usbrelay HW348_1=0'
-                relayOff1 = ''
-                relayOn0  = 'sudo usbrelay HW348_1=1'
-                relayOn1  = ''
-                # initialize relays
-                os.system(relayOff0)
-                sleep(0.5) # Sleep for 0.5 seconds
-                if relayOff1:
-                    os.system(relayOff1)
-                    sleep(0.5) # Sleep for 0.5 seconds
-            elif ezColUsbRelay == 2:
-                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
-                # define relay command strings
-                # the linux command line
-                #      sudo usbrelay
-                # returned
-                #      Device Found
-                #        type: 16c0 05df
-                #        path: /dev/hidraw3
-                #        serial_number: 
-                #        Manufacturer: www.dcttech.com
-                #        Product:      USBRelay2
-                #        Release:      100
-                #        Interface:    0
-                #        Number of Relays = 2
-                #      BITFT_1=0
-                #      BITFT_2=0
-                # because of those 2 last lines, I use:
-                relayOff0 = 'sudo usbrelay BITFT_1=0 BITFT_2=0'
-                relayOff1 = 'sudo usbrelay BITFT_1=0 BITFT_2=0'
-                relayOn0  = 'sudo usbrelay BITFT_1=1 BITFT_2=0'
-                relayOn1  = 'sudo usbrelay BITFT_1=0 BITFT_2=1'
-
-                # initialize relays
-                # both relays off
-                os.system(relayOff0)
-                sleep(0.5) # Sleep for 0.5 seconds
-                os.system(relayOff1)
-                sleep(0.5) # Sleep for 0.5 seconds
-
-                # pulse 'off relay' 0 once to latch feedRef OFF
-                os.system(relayOn0)
-                sleep(0.5) # Sleep for 0.5 seconds
-                os.system(relayOff0)
-                sleep(0.5) # Sleep for 0.5 seconds
-            elif ezColUsbRelay == 3:
-                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
-                pass                    # linux: not yet implemented
-
     programState = 0                # 0: Collect, 1: Pause, 2: Exit, in case no ezColDashboard
 
     # initialize dashboard
@@ -1064,26 +866,20 @@ def main():
             #if label == 'Fast':
             if label == 'Collect':
                 programState = 0
-                #sdrStatusQueue.put(1)
-            #elif label == 'Slow':
-            #    programState = 1
-            #    sdrStatusQueue.put(1)
+                programStateQueue.put(programState)
             elif label == 'Pause': 
-                #programState = 2
                 programState = 1
-                #sdrStatusQueue.put(2)
+                programStateQueue.put(programState)
             else:
                 # label == 'Exit'
                 #exit()
-                #sdrStatusQueue.put(3)
-                sdrStatusQueue.put(2)           # needed ????????????????????
-                # sdrThread.join()
-                sdrProcess.join()               # needed ????????????????????
+                programState = 2
+                programStateQueue.put(programState)
+                #sdrProcess.join()               # needed ????????????????????
                 sys.exit(0)
 
             print(' label =', label,'= ')
             print(' programState =', programState)
-            sdrStatusQueue.put(programState)
 
         radio2_ax = plt.axes([0.865, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
         #radio2 = RadioButtons(radio2_ax, ('Fast', 'Slow', 'Pause', 'Exit'))
@@ -1098,10 +894,10 @@ def main():
             if label == 'Off':
                 refAction = 0
             elif label == 'RefDiv':
-                refAction = 1           # plot last Ant spectrum divided by last Ref spectrum
+                refAction = 1           # plot last Ant spectrum divided by last REF spectrum
             else:
                 # 'RefSub'
-                refAction = 2           # plot last Ant spectrum after subtracting last Ref spectrum
+                refAction = 2           # plot last Ant spectrum after subtracting last REF spectrum
         radio1_ax = plt.axes([0.92, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
         radio1 = RadioButtons(radio1_ax, ('Off', 'RefDiv', 'RefSub'))
         radio1.on_clicked(refActionFunction)
@@ -1180,28 +976,20 @@ def main():
 
 
     #create the SDR Process
-    # sdrStatusQueue = queue.SimpleQueue()
-    sdrStatusQueue = Queue()
-    #sdrStatusQueue.put(0)
-    sdrStatusQueue.put(programState)
+    programStateQueue = Queue()
+    programStateQueue.put(programState)
 
-    # centerFreqQueue = queue.SimpleQueue()
-    centerFreqQueue = Queue()
-    centerFreqQueue.put(centerFreqAntHz)
-    currentCenterFreq = centerFreqAntHz
+    ezColIntegQtyQueue = Queue()
+    ezColIntegQtyQueue.put(ezColIntegQty)
 
-    # sdrReportedGainQueue = queue.SimpleQueue() #sdr to main communication
-    sdrReportedGainQueue = Queue()      #sdr to main communication
-    # sdrSpectrumQueue = queue.SimpleQueue()  #sdr to main communication
-    sdrSpectrumQueue = Queue()          #sdr to main communication
+    sdrOutQueue = Queue()               #sdr to main communication
 
-    # sdrThread = threading.Thread(target=sdrTask, args=(sdrStatusQueue, centerFreqQueue, sdrReportedGainQueue, sdrSpectrumQueue,  
-    #                                                    bandWidthHz, ezColGain, freqBinQty))
-    #sdrProcess = Process(target=sdrTask, args=(sdrStatusQueue, centerFreqQueue, sdrReportedGainQueue, sdrSpectrumQueue,  
-    #                                                   bandWidthHz, ezColGain, freqBinQty))
-    sdrProcess = Process(target=sdrTask, args=(bandWidthHz, ezColGain, freqBinQty, ezColIntegQty, centerFreqQueue,
-        sdrStatusQueue, sdrReportedGainQueue, sdrSpectrumQueue))
-
+    sdrProcess = Process(target=sdrTask, args=(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, ezColAntBtwnRef,
+        programStateQueue, ezColIntegQtyQueue, sdrOutQueue))
+    # sdrTask is started once, with arguments bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, and ezColAntBtwnRef.
+    #   It will loop and read the latest inputs from programStateQueue and ezColIntegQtyQueue.
+    #   At the end of each loop it will output one tuple through sdrOutQueue.
+    #   The tuple includes sdrGain, rmsSpectrum, and dataFlagsS.
     # sdrThread.start()
     sdrProcess.start()
 
@@ -1218,30 +1006,30 @@ def main():
         '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '0',
         '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
         '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '0']
-    # encourage starting with Ref sample, begin loop as if last sample had feedRef OFF
-    feedRef = 0             # assume last sample was Ant sample
-    antB4Ref = 0            # number of Ant samples before next Ref sample
-    dataFlagsS = ' '
     firstDraw = 1           # flag to draw the plot the first time without data
     #mainLoop = 0
     while programState <= 1:
+        # update inputs to sdrTask
+        programStateQueue.put(programState)
+        ezColIntegQtyQueue.put(ezColIntegQty)
+
         #get the rmsSpectrum from the queue
         #if firstDraw and programState <= 1:
         hasNewData = 1
         if firstDraw:
-            rmsSpectrum = sdrSpectrumQueue.get()
+            sdrOut = sdrOutQueue.get()
             firstDraw = 0
         else:
             try:
-                rmsSpectrum = sdrSpectrumQueue.get_nowait()
+                sdrOut = sdrOutQueue.get_nowait()
             except:
                 hasNewData = 0
-                #plt.pause(0.5)       # waiting for sdrSpectrumQueue anyway
+                #plt.pause(0.5)       # waiting for sdrOutQueue anyway
 
         if hasNewData:
-            #while programState == 2:        # if Pause
-            #    plt.pause(0.5)              # allow dashboard response
-            #    sleep(3)                    # to allow other actions
+            (sdrGain, rmsSpectrum, dataFlagsS) = sdrOut
+            feedRef = 'R' in dataFlagsS
+
             timeStampUtc  = datetime.now(timezone.utc)      # this sample's timestamp
             timeStampUtcS = timeStampUtc.strftime('%Y-%m-%dT%H:%M:%S ')
             # https://stackoverflow.com/questions/44823073/convert-datetime-time-to-seconds
@@ -1249,99 +1037,6 @@ def main():
             # datetime.timedelta objects are meant to represent a duration, and they have a total_seconds() method
             timeStampUtcSecRelThis = (timeStampUtc - timeStampUtcZero).total_seconds()
             timeStampUtcHourRelThis = timeStampUtcSecRelThis / 3600.
-
-            #has the sdrGain changed
-            if not sdrReportedGainQueue.empty():
-                sdrGain = sdrReportedGainQueue.get_nowait()
-
-            if feedRef:
-                # last sample had feedRef ON
-                if ezColUsbRelay:
-                    # https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
-                    if os.name == 'nt':     # Windows
-                        if ezColUsbRelay == 1:
-                            # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
-                            os.system(relayOff0)
-                            sleep(0.5) # Sleep for 0.5 seconds
-                        elif ezColUsbRelay == 2:
-                            # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
-                            # pulse 'off relay' 0 once to latch feedRef OFF
-                            os.system(relayOn0)
-                            sleep(0.5) # Sleep for 0.5 seconds
-                            os.system(relayOff0)
-                            sleep(0.5) # Sleep for 0.5 seconds
-                        elif ezColUsbRelay == 3:
-                            # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
-                            os.system(relayOff0)
-                            sleep(0.5) # Sleep for 0.5 seconds
-                    else:                   # (posix) Linux assumed
-                        if ezColUsbRelay == 1:
-                            # ezColUsbRelay = 1: 1 SPST relay, driving feedRef ON or OFF
-                            os.system(relayOff0)
-                            sleep(0.5) # Sleep for 0.5 seconds
-                        elif ezColUsbRelay == 2:
-                            # ezColUsbRelay = 2: 2 SPST relays, driving a latching feedRef relay with pulses
-                            # pulse 'off relay' 0 once to latch feedRef OFF
-                            os.system(relayOn0)
-                            sleep(0.5) # Sleep for 0.5 seconds
-                            os.system(relayOff0)
-                            sleep(0.5) # Sleep for 0.5 seconds
-                        elif ezColUsbRelay == 3:
-                            # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
-                            pass                    # not implemented
-
-                centerFreqQueue.put(centerFreqAntHz)                   # in integer Hz
-                currentCenterFreq = centerFreqAntHz
-                feedRef = 0         # this sample will be with feedRef OFF
-                dataFlagsS = ' '
-                antB4Ref = ezColAntBtwnRef - 1  # reset number of Ant samples before next Ref sample
-            else:
-                # last sample had feedRef OFF
-                # make changes only if necessary
-                if 0 < antB4Ref:                # if Ant samples before next Ref sample
-                    antB4Ref -= 1               #   decrement number of Ant samples before next Ref sample
-                else:                           # if no Ant samples before next Ref sample
-                    # Reference sample if enabled
-                    if ezColUsbRelay:
-                        if os.name == 'nt':     # Windows
-                            if ezColUsbRelay == 1:
-                                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
-                                # set Relay1 on for feedRef on
-                                os.system(relayOn0)
-                                sleep(0.5) # Sleep for 0.5 seconds
-                            elif ezColUsbRelay == 2:
-                                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
-                                # pulse 'on relay' 1 once to latch feedRef ON
-                                os.system(relayOn1)
-                                sleep(0.5) # Sleep for 0.5 seconds
-                                os.system(relayOff1)
-                                sleep(0.5) # Sleep for 0.5 seconds
-                            elif ezColUsbRelay == 3:
-                                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
-                                # set Relay1 on for feedRef on
-                                os.system(relayOn0)
-                                sleep(0.5) # Sleep for 0.5 seconds
-                        else:                   # Linux assumed
-                            if ezColUsbRelay == 1:
-                                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
-                                # set Relay1 on for feedRef on
-                                os.system(relayOn0)
-                                sleep(0.5) # Sleep for 0.5 seconds
-                            elif ezColUsbRelay == 2:
-                                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
-                                # pulse 'on relay' 1 once to latch feedRef ON
-                                os.system(relayOn1)
-                                sleep(0.5) # Sleep for 0.5 seconds
-                                os.system(relayOff1)
-                                sleep(0.5) # Sleep for 0.5 seconds
-                            elif ezColUsbRelay == 3:
-                                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
-                                pass                    # not implemented
-
-                    centerFreqQueue.put(centerFreqRefHz)                # in integer Hz
-                    currentCenterFreq = centerFreqRefHz
-                    feedRef = 1         # this sample will be with feedRef ON
-                    dataFlagsS = ' R'
 
             # timeStampUtcS = '2022-12-22T21:19:49 '
             #                  01234567890123456789
@@ -1377,11 +1072,9 @@ def main():
                         print()
                         print('ERROR: already too many files with same fileName base on this UTC date')
                         print()
-                        sdrStatusQueue.put(2)
-
-                        # sdrThread.join()
-                        #sdrProcess.join()   # ??????????????????????
-
+                        programState = 2
+                        programStateQueue.put(programState)
+                        #sdrProcess.join()               # needed ????????????????????
                         exit()
 
                 print()
@@ -1439,6 +1132,7 @@ def main():
             timePcTimeS = timePcS[11:19]
 
             print()
+            currentCenterFreq = ezColCenterFreqRef if feedRef else ezColCenterFreqAnt
             print(timeStampUtcS, 'UTC    ', fileNameS, '   ', fileSample, '  ', currentCenterFreq, 'Hz  ', dataFlagsS)
             print('Receiving', ezColIntegQty, 'readings, each with', freqBinQty, 'frequencies ...')
 
@@ -1586,7 +1280,7 @@ def main():
 
                 # plot top left frequency spectrum
                 if feedRef:
-                    # update as last Ref spectrum
+                    # update as last REF spectrum
                     rmsSpectrumRefLast = rmsSpectrum
                 else:
                     # update as last Ant spectrum
@@ -1595,12 +1289,12 @@ def main():
                 # refAction from radio1 radio button
                 if not refAction:           # if not refDiv nor refSub
                     if feedRef:
-                        # plot as Ref spectrum, with Ref frequencies
+                        # plot as Ref spectrum, with REF frequencies
                         spectrum_ax.plot(freqsRef, rmsSpectrum, color = 'r')
-                        # plot as Ref spectrum, with Ref frequency limit values
+                        # plot as Ref spectrum, with REF frequency limit values
                         spectrum_ax.set(xlim = [freqMinRef, freqMaxRef],
                             xlabel = 'Reference Frequency (MHz)', ylabel = 'Relative RMS Power')
-                        # plot vertical dashed green line on Ref center frequency
+                        # plot vertical dashed green line on REF center frequency
                         spectrum_ax.axvline(ezColCenterFreqRef, color = 'g', linestyle = ':', linewidth = 2)
                     else:
                         # plot as Ant spectrum, with Ant frequencies
@@ -1611,7 +1305,7 @@ def main():
                         # plot vertical dashed green line on Ant center frequency
                         spectrum_ax.axvline(ezColCenterFreqAnt, color = 'g', linestyle = ':', linewidth = 2)
 
-                elif refAction == 1:      # refDiv: plot last Ant spectrum divided by last Ref spectrum
+                elif refAction == 1:      # refDiv: plot last Ant spectrum divided by last REF spectrum
                     spectrum_ax.plot(freqsAnt, \
                         tuple(map(operator.truediv, rmsSpectrumAntLast, rmsSpectrumRefLast)), color = 'r')
                     # plot as Ant spectrum, with Ant frequency limit values
@@ -1621,7 +1315,7 @@ def main():
                     spectrum_ax.axvline(ezColCenterFreqAnt, color = 'g', linestyle = ':', linewidth = 2)
 
                 else:
-                    # refAction == 2:   # refSub: plot last Ant spectrum after subtracting last Ref spectrum
+                    # refAction == 2:   # refSub: plot last Ant spectrum after subtracting last REF spectrum
                     spectrum_ax.plot(freqsAnt, \
                         tuple(map(operator.__abs__, \
                         map(operator.sub, rmsSpectrumAntLast, rmsSpectrumRefLast))), color = 'r')
@@ -1669,16 +1363,17 @@ def main():
 
 
 
-def sdrTask(bandWidthHz, ezColGain, freqBinQty, ezColIntegQty, centerFreqQueue, sdrStatusQueue,
-    sdrReportedGainQueue, sdrSpectrumQueue):
-
-    # unchanging inputs: bandWidthHz, ezColGain, freqBinQty, ezColIntegQty
-    # changing inputs: centerFreqQueue, sdrStatusQueue
-    # changing outputs: sdrReportedGainQueue, sdrSpectrumQueue
+def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, ezColAntBtwnRef,
+        programStateQueue, ezColIntegQtyQueue, sdrOutQueue):
+    # sdrTask is started once, with arguments bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, and ezColAntBtwnRef.
+    #   It will loop and read the latest inputs from programStateQueue and ezColIntegQtyQueue.
+    #   At the end of each loop it will output one tuple through sdrOutQueue.
+    #   The tuple includes sdrGain, rmsSpectrum, and dataFlagsS.
 
     import numpy as np
     import operator
     from math import sqrt
+    from time import sleep
 
     from rtlsdr import RtlSdr
     #  pip3 install pyrtlsdr   # worked on Ubuntu 18.04.5
@@ -1688,10 +1383,9 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, ezColIntegQty, centerFreqQueue, 
     #initialize the SDR
     sdr = RtlSdr()
     sdr.sample_rate = int(bandWidthHz)                          # in integer Hz
-    sdr.center_freq = centerFreqQueue.get()                     # in integer Hz
+    sdr.center_freq = centerFreqAntHz                           # in integer Hz
     sdr.gain = ezColGain        # "set" SDR gain
     sdrGain = sdr.gain          # what the SDR actually set the gain to
-    sdrReportedGainQueue.put(sdrGain)
 
     print('sdr.bandwidth =', sdr.bandwidth)
     print('sdr.center_freq =', sdr.center_freq)
@@ -1700,29 +1394,318 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, ezColIntegQty, centerFreqQueue, 
     print('sdr.gain =', sdr.gain)
     print('sdr.rs =', sdr.rs)
 
-    #get the original status of the sdrStatus
-    currentSDRstatus = 0
+    # by operating system, initialize (reset) feedRef relay system, if any
+    if ezColUsbRelay:
+        if os.name == 'nt':     # Windows
+            # hidusb-relay-cmd.exe or serialSend.exe assumed to be in same Windows directory as ezCol program
+            # in case os.path.dirname(__file__) contains space characters
+            #relayOff0 = os.path.dirname(__file__).replace(' ', '\ ')
+            #print(relayOff0)
+            #print()
 
-    if not sdrStatusQueue.empty():
-        currentSDRstatus = sdrStatusQueue.get_nowait()
+            if ezColUsbRelay == 1:
+                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                # for USB Relay that talks HID
+                # https://github.com/pavel-a/usb-relay-hid
+                # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
+                # C:\Users\c\Documents\EZRA01\usb-relay-hid_bin-20150330a\bin-Win64> hidusb-relay-cmd.exe on 1
+                # define relay command strings
+                # the command prompt command line
+                #      ..\ezRA\hidusb-relay-cmd.exe enum 
+                # returned
+                #      Board ID=[HW348] State: R1=OFF
+                # because of the "R1" on that last line, I use:
+                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 1'
+                #relayOff1 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 2'     # ignore error if only single SPDT USB Relay
+                relayOff1 = ''
+                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 1'
+                #relayOn1  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 2'     # ignore error if only single SPDT USB Relay
+                relayOn1  = ''
+                # initialize relays
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                if relayOff1:
+                    os.system(relayOff1)
+                    sleep(0.5) # Sleep for 0.5 seconds
+            elif ezColUsbRelay == 2:
+                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                # for USB Relay that talks HID
+                # https://github.com/pavel-a/usb-relay-hid
+                # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
+                # C:\Users\c\Documents\EZRA01\usb-relay-hid_bin-20150330a\bin-Win64> hidusb-relay-cmd.exe on 1
+                # define relay command strings
+                # the command prompt command line
+                #      ..\ezRA\hidusb-relay-cmd.exe enum 
+                # returned
+                #      Board ID=[BITFT] State: R1=OFF R2=OFF
+                # because of the "R1" and "R2" on that last line, I use:
+                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 1'
+                relayOff1 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 2'
+                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 1'
+                relayOn1  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 2'
 
-    while currentSDRstatus <= 1:
+                # initialize relays
+                # both relays off
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                os.system(relayOff1)
+                sleep(0.5) # Sleep for 0.5 seconds
+
+                # pulse 'off relay' 0 once to latch feedRef OFF
+                os.system(relayOn0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+            elif ezColUsbRelay == 3:
+                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                # for USB Relay that talks serial
+                # define relay command strings
+                # https://www.amazon.com/dp/B01CN7E0RQ
+                #   and down below in "Customer questions & answers",
+                #   see "How to set for 7sec on, 3sec off, 20sec on, 1 sec off. (5 series repeat)"
+                #   talks of
+                #     c:\disp\serialsend.exe /baudrate 9600 /hex "\xA0\x01\x01\xA2"
+                #   and
+                #     c:\disp\serialsend.exe /baudrate 9600 /hex "\xA0\x01\x00\xA1"
+                # https://batchloaf.wordpress.com/serialsend/
+                # https://batchloaf.wordpress.com/2011/12/05/serialsend-a-windows-program-to-send-a-text-word-via-serial-port/
+                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'serialSend.exe /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x00\\xA1"'
+                relayOff1 = ''
+                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'serialSend.exe /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x01\\xA2"'
+                relayOn1  = ''
+                # initialize relays
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                if relayOff1:
+                    os.system(relayOff1)
+                    sleep(0.5) # Sleep for 0.5 seconds
+
+        else:                   # (posix) Linux assumed
+            # how to define relay command strings
+            # https://github.com/darrylb123/usbrelay
+            # sudo apt-get update
+            # sudo apt-get install usbrelay
+            ###os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
+            #####################
+            #    Serial: BITFT, Relay: 1 State: ff --- Not Found  <=================== BITFT Not Found !
+            #####################
+            #    > lsusb -v -d 16c0:05df
+            # - output looks just like on https://github.com/darrylb123/usbrelay
+            #####################
+            #    > sudo usbrelay
+            #    Device Found
+            #      type: 16c0 05df
+            #      path: /dev/hidraw2
+            #      serial_number:
+            #      Manufacturer: www.dcttech.com
+            #      Product:      USBRelay1
+            #      Release:      100
+            #      Interface:    0
+            #      Number of Relays = 1
+            #    HW348_1=0  <================================== OK, use HW348_1 not BITFT_1 ==========
+            # https://www.npmjs.com/package/node-red-contrib-usb-hid-relay/v/0.2.3
+            # says also available are
+            #    HW-348
+            #    HW-343
+            #    HW-341
+            #    Models with USB-Relay-1, USB-Relay-2 or USB-Relay-4 printed on the PCB
+            #os.system('sudo usbrelay HW348_1=0')        # works !
+
+            # also may be helpful ?:
+            #   Human Interface Device (HID)
+            #   http://vusb.wikidot.com/project:driver-less-usb-relays-hid-interface
+            #       https://github.com/pavel-a/usb-relay-hid
+            #       http://vusb.wikidot.com/hosted-projects
+            #           http://vusb.wikidot.com/examples
+            #               https://www.workinprogress.ca/v-usb-tutorial-software-only-usb-for-mega-tiny/
+            #   https://www.giga.co.za/ocart/index.php?route=product/product&product_id=229
+            #       - part is out of stock, but has pictures and links to
+            #           https://github.com/pavel-a/usb-relay-hid
+            #           http://www.giga.co.za/Kit_Drivers/USB_Relay2.zip
+            #           https://github.com/darrylb123/usbrelay
+            #           and says
+            #               Here is an example how to control the relay in command line.
+            #               CommandApp_USBRelay.exe [device id] [close / open] [relay nr]
+            #                   CommandApp_USBRelay.exe J34EL close 01
+            #                   CommandApp_USBRelay.exe J34EL open 01
+
+            if ezColUsbRelay == 1:
+                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                ##os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
+                #os.system('sudo usbrelay HW348_1=0')        # works !
+                # define relay command strings
+                # the linux command line
+                #      sudo usbrelay
+                # returned
+                #      Device Found
+                #        type: 16c0 05df
+                #        path: /dev/hidraw3
+                #        serial_number: 
+                #        Manufacturer: www.dcttech.com
+                #        Product:      USBRelay1
+                #        Release:      100
+                #        Interface:    0
+                #        Number of Relays = 1
+                #      HW348_1=0
+                # because of that last line, I use:
+                relayOff0 = 'sudo usbrelay HW348_1=0'
+                relayOff1 = ''
+                relayOn0  = 'sudo usbrelay HW348_1=1'
+                relayOn1  = ''
+                # initialize relays
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                if relayOff1:
+                    os.system(relayOff1)
+                    sleep(0.5) # Sleep for 0.5 seconds
+            elif ezColUsbRelay == 2:
+                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                # define relay command strings
+                # the linux command line
+                #      sudo usbrelay
+                # returned
+                #      Device Found
+                #        type: 16c0 05df
+                #        path: /dev/hidraw3
+                #        serial_number: 
+                #        Manufacturer: www.dcttech.com
+                #        Product:      USBRelay2
+                #        Release:      100
+                #        Interface:    0
+                #        Number of Relays = 2
+                #      BITFT_1=0
+                #      BITFT_2=0
+                # because of those 2 last lines, I use:
+                relayOff0 = 'sudo usbrelay BITFT_1=0 BITFT_2=0'
+                relayOff1 = 'sudo usbrelay BITFT_1=0 BITFT_2=0'
+                relayOn0  = 'sudo usbrelay BITFT_1=1 BITFT_2=0'
+                relayOn1  = 'sudo usbrelay BITFT_1=0 BITFT_2=1'
+
+                # initialize relays
+                # both relays off
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                os.system(relayOff1)
+                sleep(0.5) # Sleep for 0.5 seconds
+
+                # pulse 'off relay' 0 once to latch feedRef OFF
+                os.system(relayOn0)
+                sleep(0.5) # Sleep for 0.5 seconds
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for 0.5 seconds
+            elif ezColUsbRelay == 3:
+                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                pass                    # linux: not yet implemented
+
+    sdrProgramState = 0     # to enter While loop
+    feedRef = 0             # assume last sample was ANT sample
+    antB4Ref = 0            # number of ANT samples before next REF sample
+    dataFlagsS = ' '
+    while sdrProgramState <= 1:
         #print('Running sdrProcess')
-        # update status of Collect/Pause/Exit
-        if not sdrStatusQueue.empty():
-            currentSDRstatus = sdrStatusQueue.get_nowait()
+        # update status of 0/1/2 = Collect/Pause/Exit
+        if not programStateQueue.empty():
+            sdrProgramState = programStateQueue.get_nowait()
 
-        if currentSDRstatus == 2: 
+        if sdrProgramState == 2: 
             sys.exit(0)
 
-        if currentSDRstatus == 0: 
-            #reset the center frequency if needed
-            if not centerFreqQueue.empty():
-                sdr.center_freq = centerFreqQueue.get_nowait()
+        elif sdrProgramState == 0: 
 
-            # create tuple with Power Spectral Density (PSD), values averaged from ezColIntegQty datasets
+            if not ezColIntegQtyQueue.empty():
+                sdrEzColIntegQty = ezColIntegQtyQueue.get_nowait()
+
+            if centerFreqRefHz:         # if REF samples requested
+                if feedRef:
+                    # last sample had feedRef ON
+                    if ezColUsbRelay:
+                        # https://stackoverflow.com/questions/1854/python-what-os-am-i-running-on
+                        if os.name == 'nt':     # Windows
+                            if ezColUsbRelay == 1:
+                                # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                                os.system(relayOff0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                            elif ezColUsbRelay == 2:
+                                # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                                # pulse 'off relay' 0 once to latch feedRef OFF
+                                os.system(relayOn0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                                os.system(relayOff0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                            elif ezColUsbRelay == 3:
+                                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                                os.system(relayOff0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                        else:                   # (posix) Linux assumed
+                            if ezColUsbRelay == 1:
+                                # ezColUsbRelay = 1: 1 SPST relay, driving feedRef ON or OFF
+                                os.system(relayOff0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                            elif ezColUsbRelay == 2:
+                                # ezColUsbRelay = 2: 2 SPST relays, driving a latching feedRef relay with pulses
+                                # pulse 'off relay' 0 once to latch feedRef OFF
+                                os.system(relayOn0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                                os.system(relayOff0)
+                                sleep(0.5) # Sleep for 0.5 seconds
+                            elif ezColUsbRelay == 3:
+                                # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                                pass                    # not implemented
+
+                    antB4Ref = ezColAntBtwnRef - 1  # reset number of Ant samples before next Ref sample
+                    sdr.center_freq = centerFreqAntHz                   # in integer Hz
+                    feedRef = 0         # this sample will be with feedRef OFF
+                    dataFlagsS = ' '
+                else:
+                    # last sample had feedRef OFF
+                    # prepare for REF only if necessary
+                    if 0 < antB4Ref:                # if ANT samples before next REF sample
+                        antB4Ref -= 1               #   decrement number of ANT samples before next REF sample
+                    else:                           # if no ANT samples before next REF sample
+                        # Reference sample if enabled
+                        if ezColUsbRelay:
+                            if os.name == 'nt':     # Windows
+                                if ezColUsbRelay == 1:
+                                    # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                                    # set Relay1 on for feedRef on
+                                    os.system(relayOn0)
+                                    sleep(0.5) # Sleep for 0.5 seconds
+                                elif ezColUsbRelay == 2:
+                                    # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                                    # pulse 'on relay' 1 once to latch feedRef ON
+                                    os.system(relayOn1)
+                                    sleep(0.5) # Sleep for 0.5 seconds
+                                    os.system(relayOff1)
+                                    sleep(0.5) # Sleep for 0.5 seconds
+                                elif ezColUsbRelay == 3:
+                                    # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                                    # set Relay1 on for feedRef on
+                                    os.system(relayOn0)
+                                    sleep(0.5) # Sleep for 0.5 seconds
+                            else:                   # Linux assumed
+                                if ezColUsbRelay == 1:
+                                    # ezColUsbRelay = 1: 1 SPST HID relay, driving feedRef ON or OFF
+                                    # set Relay1 on for feedRef on
+                                    os.system(relayOn0)
+                                    sleep(0.5) # Sleep for 0.5 seconds
+                                elif ezColUsbRelay == 2:
+                                    # ezColUsbRelay = 2: 2 SPST HID relays, driving a latching feedRef relay with pulses
+                                    # pulse 'on relay' 1 once to latch feedRef ON
+                                    os.system(relayOn1)
+                                    sleep(0.5) # Sleep for 0.5 seconds
+                                    os.system(relayOff1)
+                                    sleep(0.5) # Sleep for 0.5 seconds
+                                elif ezColUsbRelay == 3:
+                                    # ezColUsbRelay = 3: 1 SPST non-HID relay with serialSend.exe
+                                    pass                    # not implemented
+
+                        sdr.center_freq = centerFreqRefHz                   # in integer Hz
+                        feedRef = 1         # this sample will be with feedRef ON
+                        dataFlagsS = ' R'
+
+            # create tuple with Power Spectral Density (PSD), values averaged from sdrEzColIntegQty datasets
             psdSummed = (0, ) * freqBinQty
-            for __ in range(ezColIntegQty):
+            for __ in range(sdrEzColIntegQty):
                 # for more convenient (and faster) data values,
                 #   uncalibrated __relative__ RMS power can ignore FFT gain constants,
                 #   and ignore normalizing amplitude
@@ -1731,12 +1714,14 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, ezColIntegQty, centerFreqQueue, 
                 psd = np.abs(np.fft.fft(sdr.read_samples(freqBinQty))) # dashboard values displayed using less space
                 psdSummed = tuple(map(operator.add, psdSummed, np.fft.fftshift(psd * psd)))     # sum so far
 
-            # create tuple with Root Mean Squared (RMS) power frequency spectrum from those ezColIntegQty readings
+            # create tuple with Root Mean Squared (RMS) power frequency spectrum from those sdrEzColIntegQty readings
             # https://en.wikipedia.org/wiki/Root_mean_square
             #   Root Mean Squared (RMS) power = sqrt((x1*x1 + x2*x2 + x3*x3 + ... + xn*xn) / n)
-            rmsSpectrum = tuple(sqrt(i / ezColIntegQty) for i in psdSummed)                # square root
+            rmsSpectrum = tuple(sqrt(i / sdrEzColIntegQty) for i in psdSummed)                # square root
 
-            sdrSpectrumQueue.put(rmsSpectrum)
+            sdrOut = rmsSpectrum = (sdrGain, rmsSpectrum, dataFlagsS)
+
+            sdrOutQueue.put(sdrOut)
 
 #run the main process
 if __name__ == "__main__":
