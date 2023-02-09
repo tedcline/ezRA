@@ -11,7 +11,8 @@ The open source programs run on the Python3 programming language, on Windows and
 The ezRA set of programs are still in development, but mostly work well.
 
 Interested folks on [GitHub](https://github.com/tedcline/ezRA)
-would left-click on the top right Green button and probably choose "Download ZIP" (about 30 MB).
+would left-click on the top right Green "Code" button and probably choose "Download ZIP"
+(about 30 MBytes, probably as "ezRA-master.zip" into your local "Downloads" directory).
 
 =============================================
 
@@ -109,6 +110,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Feb-6-2023
+Feb-9-2023
 
 ---
