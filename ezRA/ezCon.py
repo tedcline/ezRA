@@ -1,4 +1,4 @@
-programName = 'ezCon221202a.py'
+programName = 'ezCon230209a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy Data CONdenser - ezCon
@@ -10,6 +10,10 @@ programRevision = programName
 #       when unsupport .sdre text data file ?
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezCon230209a.py, for ezCon520velGLonPolar.png and ezCon521velGLonPolarCount.png,
+#   "MatplotlibDeprecationWarning: Auto-removal of grids by pcolor() and
+#   pcolormesh() is deprecated since 3.5 and will be removed two minor releases later;
+#   please call grid(False) first.", so put "plt.grid(0)" in front of each "im = plt.pcolormesh("
 # ezCon221202a.py, ezConAstroMath=1 calculates wrong Right Ascension values,
 #   default changed to the slower ezConAstroMath=2
 # ezCon221126a.py, if not start with '-ezCon', allow unrecognized words on command line
@@ -6933,12 +6937,13 @@ def plotEzCon520velGLonPolar():
         azm = np.linspace(0, np.pi + np.pi, 361, endpoint=True)
 
         r, theta = np.meshgrid(rad, azm)
+        plt.grid(0)
         im = plt.pcolormesh(theta, r, velGLonP180.T, cmap=plt.get_cmap('gnuplot'), shading='auto')
 
         fig.colorbar(im, ax=ax, pad=0.1)
 
         polarPlot = plt.plot(azm, r, color='black', linestyle='none')
-        plt.grid()
+        plt.grid(1)
 
         plt.title(titleS)
 
@@ -6990,12 +6995,13 @@ def plotEzCon521velGLonPolarCount():
             if velGLonP180Count[gLonP180]:
                 velGLonP180CountPolar[gLonP180, :] += velGLonP180Count[gLonP180]
 
+        plt.grid(0)
         im = plt.pcolormesh(theta, r, velGLonP180CountPolar, cmap=plt.get_cmap('gnuplot'), shading='auto')
 
         fig.colorbar(im, ax=ax, pad=0.1)
 
         polarPlot = plt.plot(azm, r, color='black', linestyle='none')
-        plt.grid()
+        plt.grid(1)
 
         plt.title(titleS)
 
@@ -7286,10 +7292,14 @@ def plotEzCon560antXTVTMaxIdxGLon():
         #    s=1, marker='|', c='violet', cmap=plt.get_cmap('gnuplot'))
         #pts = plt.scatter(ezConOut[:, 4]+360., velMaxIndex-120,
         #    s=1, marker='|', c='red', cmap=plt.get_cmap('gnuplot'))
+        #pts = plt.scatter(ezConOut[:, 4], antXTVTMaxIndex,
+        #    s=1, marker='|', c='violet', cmap=plt.get_cmap('gnuplot'))
+        #pts = plt.scatter(ezConOut[:, 4]+360., antXTVTMaxIndex,
+        #    s=1, marker='|', c='red', cmap=plt.get_cmap('gnuplot'))
         pts = plt.scatter(ezConOut[:, 4], antXTVTMaxIndex,
-            s=1, marker='|', c='violet', cmap=plt.get_cmap('gnuplot'))
+            s=1, marker='|', c='violet')
         pts = plt.scatter(ezConOut[:, 4]+360., antXTVTMaxIndex,
-            s=1, marker='|', c='red', cmap=plt.get_cmap('gnuplot'))
+            s=1, marker='|', c='red')
 
         plt.title(titleS)
         plt.grid(0)
