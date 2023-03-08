@@ -35,7 +35,7 @@ please see these introductory PDFs from the ezRA directory:
 		Or convert previous radio data with ezColBAA, ezColHay, ezColIFAvg,
 		ezColSc, etc.
 
-		ezFix - remove unwanted samples from, combine, edit, and split frequency spectrum
+		ezFix - remove or separate samples, combine, edit, and split frequency spectrum
 		ezRA .txt data files.
 
 	ezCon - CONdense one or more frequency spectrum data .txt files into
@@ -74,6 +74,11 @@ please see these introductory PDFs from the ezRA directory:
     ezRA_24_ezSky.pdf
     ezRA_25_ezGal.pdf
 
+Videos:
+
+    [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
+    [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
+
 ---
 
 ## Status:
@@ -82,6 +87,8 @@ Known bugs:
 
     ezCon's "-ezConAstroMath  1" calculates wrong Right Ascension values.
     ezCon's default now changed to the slower "-ezConAstroMath  2".
+
+    ezCon calculates wrong VLSR values.
 
 Thanks to Todd Ullery, the  ezColX.py  was an experimental multiple process version of  ezCol.py , to improve dashboard responsiveness.
 <br>
@@ -96,8 +103,6 @@ These files need lots of cleanup, but should work or be helpful:
     ezColIFAvg.py
     ezColSc.py
 
-    ezFix.py
-
 Always need more documentation.
 
 --
@@ -110,6 +115,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Feb-9-2023
+Mar-8-2023
 
 ---

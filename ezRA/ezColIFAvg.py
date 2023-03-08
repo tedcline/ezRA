@@ -1,30 +1,51 @@
-pgmName = 'ezColIFAvg220930a.py'
-#pgmRev  = pgmName + ' (N0RQV)'
-pgmRev  = pgmName
+programName = 'ezColIFAvg220930a.py'
+programRevision  = programName
 
-'''
-ezColIFAvg220930a.py, prep for Git
-ezColIFAvg01N.py, sort input file directory,
-ezColIFAvg01L.py, first try, convert one "IF Average Plugin" .txt output radio spectrum data file
-        to ezRA .txt radio spectrum data file.
-    The "IF Average Plugin" radio spectrum data collection method is described in the "cheap-and-easy" post,
-        https://www.rtl-sdr.com/cheap-and-easy-hydrogen-line-radio-astronomy-with-a-rtl-sdr-wifi-parabolic-
-            grid-dish-lna-and-sdrsharp/
-    The "IF Average Plugin" radio spectrum data collection method is delivered with the 
-        Society of Amateur Radio Astronomers (SARA) introductory Scope-in-a-Box,
-        https://www.radio-astronomy.org/store/projects/scope-in-a-box
-    The "IF Average Plugin" .txt output radio spectrum data file looks like,
-        4/28/2021 6:43:57 AM  Counts:451000
-        1419.205000000  0.322551440
-        1419.207343750  0.320824318
-        1419.209687500  0.318060119
-        ...
-        1421.597968750  0.327361641
-        1421.600312500  0.326069956
-        1421.602656250  0.323774396
+# ezRA - Easy Radio Astronomy ezColIFAvg Data COLlector program,
+#   converting data from the "IF Average Plugin" radio spectrum data
+#   collection method from "cheap-and-easy" post .txt data format.
+#   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
+# https://github.com/tedcline/ezRA
 
-    Write output files into 'data' directory.  Assumes 'data' directory exists.
-'''
+# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+# ezColIFAvg230305a.py, boilerplate from ezSky
+# ===========skipping ezColIFAvg221126a.py, create new 'data' directory if needed
+# ezColIFAvg220930a.py, prep for Git
+# ezColIFAvg01N.py, sort input file directory,
+# ezColIFAvg01L.py, first try, convert one "IF Average Plugin" .txt output radio spectrum data file
+#         to ezRA .txt radio spectrum data file.
+#     The "IF Average Plugin" radio spectrum data collection method is described in the "cheap-and-easy" post,
+#         https://www.rtl-sdr.com/cheap-and-easy-hydrogen-line-radio-astronomy-with-a-rtl-sdr-wifi-parabolic-
+#             grid-dish-lna-and-sdrsharp/
+#     The "IF Average Plugin" radio spectrum data collection method is delivered with the 
+#         Society of Amateur Radio Astronomers (SARA) introductory Scope-in-a-Box,
+#         https://www.radio-astronomy.org/store/projects/scope-in-a-box
+#     The "IF Average Plugin" .txt output radio spectrum data file looks like,
+#         4/28/2021 6:43:57 AM  Counts:451000
+#         1419.205000000  0.322551440
+#         1419.207343750  0.320824318
+#         1419.209687500  0.318060119
+#         ...
+#         1421.597968750  0.327361641
+#         1421.600312500  0.326069956
+#         1421.602656250  0.323774396
+# 
+#     Write output files into 'data' directory.  Assumes 'data' directory exists.
 
 import os                       # used to grab all files in the current directory
 import sys                
@@ -39,7 +60,7 @@ import numpy as np
 
 def printHello():
 
-    global pgmRev                   # string
+    global programRevision          # string
     global cmd                      # string
 
     #print(' startTime = ', startTime)
@@ -50,7 +71,7 @@ def printHello():
     #print(' Local time = %s ' % time.asctime(time.localtime()))
     print(' Local time =', time.asctime(time.localtime()))
 
-    print(' pgmRev =', pgmRev)
+    print(' programRevision =', programRevision)
     print()
 
     #print(sys.argv)
@@ -66,7 +87,7 @@ def printHello():
 def ezColArgumentsFileRead(ezColArgumentsFileNameInput):
     # process arguments from file
 
-    #global pgmRev                           # string
+    #global programRevision                  # string
     #global cmd                              # string
 
     global ezRAObsName                      # string
@@ -199,7 +220,7 @@ def ezColArgumentsFileRead(ezColArgumentsFileNameInput):
 def ezColArgumentsCommandLine():
     # process arguments from command line
 
-    #global pgmRev                           # string
+    #global programRevision                  # string
     global cmd                              # string
 
     global ezRAObsName                      # string
@@ -309,7 +330,7 @@ def ezColArgumentsCommandLine():
 def ezColArguments():
     # argument: (Computing) a value or address passed to a procedure or function at the time of call
 
-    #global pgmRev                           # string
+    #global programRevision                  # string
     #global cmd                              # string
 
     global ezRAObsName                      # string
@@ -409,7 +430,7 @@ def printUsage():
     print('    -ezDefaultsFile ..\\bigDish8.txt     (Additional file of default arguments)')
     print()
     print()
-    print(' pgmRev =', pgmRev)
+    print(' programRevision =', programRevision)
     print()
     print()
     print()
@@ -431,7 +452,7 @@ def printUsage():
 
 def printGoodbye(startTime):
 
-    global pgmRev                   # string
+    global programRevision          # string
     global cmd                      # string
 
     if 1:
@@ -457,7 +478,7 @@ def printGoodbye(startTime):
 
     #print(' Helpful commands:')
     print()
-    print(' ( pgmRev =', pgmRev, ')')
+    print(' ( programRevision =', programRevision, ')')
     print()
     print()
     print()
@@ -477,7 +498,7 @@ def printGoodbye(startTime):
 # Main method
 def main():
 
-    #global pgmRev                           # string
+    #global programRevision                  # string
     #global cmd                              # string
 
     global ezRAObsName                      # string
@@ -497,7 +518,7 @@ def main():
     startTime = time.time()
 
     print()
-    print(pgmRev)
+    print(programRevision)
     print()
 
     printHello()
@@ -844,7 +865,7 @@ def main():
                         ## 2022-03-01T06:32:55 10.523690382 10.570080895 10.535587705 10.527403187 ... C
                         ## 2022-03-01T06:33:56 10.558290361 10.551762452 10.545512521 10.539835481 ...
                         ## ...
-                        #fileWrite.write('from ' + pgmRev  \
+                        #fileWrite.write('from ' + programRevision  \
                         #    + '\nlat {:g}'.format(sdrQthLat) \
                         #    + ' long {:g}'.format(sdrQthLon) \
                         #    + ' amsl ' + str(sdrQthAmsl) \
@@ -856,7 +877,7 @@ def main():
                         #    + ' el {:g}'.format(elevationThis) \
                         #    + '\n# times are in UTC\n')
                         fileWrite.write(
-                            'from ' + pgmRev \
+                            'from ' + programRevision \
                             + '\nlat {:g} long {:g} amsl {:g} name '.format( \
                             ezRAObsLat, ezRAObsLon, ezRAObsAmsl) \
                             + ezRAObsName \

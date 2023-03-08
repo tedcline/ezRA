@@ -1,15 +1,50 @@
-programName = 'ezCon230209a.py'
+programName = 'ezCon230305a.py'
 programRevision = programName
 
-# ezRA - Easy Radio Astronomy Data CONdenser - ezCon
+# ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
 #   CONdense one or more frequency spectrum data .txt files into
 #   one .ezb (and .sdre) text data file, and perhaps one GALaxy *Gal.npz data file.
+# https://github.com/tedcline/ezRA
+
+# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
 #       when unsupport .sdre text data file ?
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezCon230305a.py, boilerplate from ezSky
+# ezCon230304a.py, help: 'remove' to 'ignore'
+# ezCon230303a.py, improved ezConAntFreqBinSmooth help and comments
+# ezCon230302a.py, freqBin study to plotEzCon307antByFreqBinAvg() and plotEzCon327refByFreqBinAvg(),
+#   always plotCountdown-=1, print plotting {plotName} only if intending to plot
+# ezCon230301a.py, ezConAntAvgSnipNumL to ezConAntAvgSnipQtyL, ezConRefAvgSnipNumL to ezConRefAvgSnipQtyL, 
+#   ezConAntAvgKeepFracL to ezConAntAvgSnipFracL, ezConRefAvgKeepFracL to ezConRefAvgSnipFracL,
+#   timeUtcMjdDBetweenAnt to timeUtcMjdDBetweenAntRaw, timeUtcMjdDBetweenRef to timeUtcMjdDBetweenRefRaw
+# ezCon230228a.py, ezConAntSamplesUseLDo() now forces new xTickLabelsHeatAntL
+# ezCon230226e.py, antLen cleanup, works, need a VLSR
+# ezCon230226d.py, ezConAntAvgSnipNumL = [] to disable
+# ezCon230226d.py, ezConAntAvgKeepFracL = [] to disable
+# ezCon230226c.py, update ezConRefAvgTrimFracL parts to ezConRefAvgKeepFracL
+# ezCon230226b.py, update ezConRefAvgTrimFracL parts to ezConRefAvgKeepFracL
+# ezCon230226a.py, ezConAntAvgTrimFracL to ezConAntAvgKeepFracL, works with "0 0.9999999",
+#   ezConAntSamplesUseLDo() and ezConAntAvgKeepFracLDo() now force new xTickLocsAnt
+# ezCon230225a.py, in ezConAntAvgTrimFracLDo antAvgTrimMask trimming 2 extra so change < to <=
+# ezCon230223a.py, optional ezCon201GrawAntRef connecting lines for ant and ref
 # ezCon230209a.py, for ezCon520velGLonPolar.png and ezCon521velGLonPolarCount.png,
 #   "MatplotlibDeprecationWarning: Auto-removal of grids by pcolor() and
 #   pcolormesh() is deprecated since 3.5 and will be removed two minor releases later;
@@ -110,12 +145,12 @@ def printUsage():
     print("    -ezConAddElDeg        -2.6       (add to data file's recorded Elevation (degrees))")
     print()
     print('    -ezConRawSamplesUseL  0 100      (first Raw Sample number    last Raw Sample number)')
-    #print('    -ezConRawSampleSnip    29        (remove Raw Sample number)')
+    #print('    -ezConRawSampleSnip    29        ( Raw Sample number)')
     #print('    -ezConRawAvgTrimFracL  .01  .98')
     #print('         (trim Raw samples with RawAvg values outside low high (as fractions of sorted rawLen))')
     print('    -ezConRawFreqBinHide  129        (hide Raw freqBin 129 by copying from freqBin 128)')
-    #print('    -ezConRawFreqBinSmooth 0.02      ',
-    #    '(RFI spur Limiter: max limit muliplier over 4 neighboring freqBin)')
+    #print('    -ezConRawFreqBinSmooth 1,1       ',
+    #    '(RFI spur limiter: maximum muliplier over 4 neighboring freqBin of same Raw sample)')
     print()
     print('    -ezConRefMode 1                  (Dicke Reference sample creation method, default = 10)')
     print('      -ezConRefMode N < 0: REF = spectrum from -Nth ANT sample')
@@ -126,18 +161,24 @@ def printUsage():
     print('      -ezConRefMode    10: REF = last REF sample marked in data, if none will use sample 0')
     #print('      -ezConRefMode    20: REF detection by ezCon software (for refPulser hardware)')
     print()
-    print('    -ezConAntSamplesUseL   25 102    (first Ant Sample number    last Ant Sample number)')
-    print('    -ezConAntSampleSnip    29        (remove Ant Sample number)')
-    print('    -ezConAntAvgTrimFracL  .01  .98')
-    print('         (trim Ant samples with AntAvg values outside low high (as fractions of sorted antLen))')
+    print('    -ezConAntSamplesUseL   25   102  (first Ant Sample number    last Ant Sample number)')
+    print('    -ezConAntSampleSnip    29        (Snip (ignore) Ant Sample number)')
+    print('    -ezConAntAvgSnipQtyL   3    5')
+    print('         (Snip (ignore) Ant samples with the 3 Quantity lowest, and 5 highest, sorted AntAvg values)')
+    print('    -ezConAntAvgSnipFracL  .02  .03')
+    print('         (Snip (ignore) Ant samples with the lowest 2% and highest 3% AntAvg values (antLen Fractions))')
     #print('    -ezConAntFreqBinHide  129        (hide Ant freqBin 129 by copying from freqBin 128)')
-    print('    -ezConAntFreqBinSmooth 0.02      ',
-        '(RFI spur Limiter: max limit muliplier over 4 neighboring freqBin)')
+    print('    -ezConAntFreqBinSmooth 1.1       ',
+        '(RFI spur limiter: maximum muliplier over 4 neighboring freqBin of same Ant sample)')
     print()
+    print('    -ezConRefAvgSnipQtyL   3    5')
+    print('         (Snip (ignore) Ref samples with the 3 Quantity lowest, and 5 highest, sorted RefAvg values)')
+    print('    -ezConRefAvgSnipFracL  .02  .03')
+    print('         (Snip (ignore) Ref samples with the lowest 2% and highest 3% RefAvg values (antLen Fractions))')
     #print('    -ezConRefFreqBinHide  129        (hide Ref freqBin 129 by copying from freqBin 128)')
-    #print('    -ezConRefFreqBinSmooth 0.02      ',
-    #    '(RFI spur Limiter: max limit muliplier over 4 neighboring freqBin)')
-    #print()
+    #print('    -ezConRefFreqBinSmooth 1.1       ',
+    #    '(RFI spur limiter: maximum muliplier over 4 neighboring freqBin of same Ref sample)')
+    print()
     print('    -ezConAntBaselineFreqBinsFracL   0  0.2344  0.7657  1')
     print('         (AntBaseline        FreqBin bands: start stop start stop (as fractions of bandwidth))')
     print()
@@ -174,6 +215,9 @@ def printUsage():
     print('         (velGLon level for plotEzCon430velGLonEdges, if 0 then use only ezConVelGLonEdgeFrac)')
     print()
     print('    -ezDefaultsFile ../bigDish8.txt     (additional file of ezRA arguments)')
+    print()
+    print('    -ezezIgonoreThisWholeOneWord')
+    print('         (any one word starting with -ezez is ignored, handy for long command line editing)')
     print()
     print()
     print(' programRevision =', programRevision)
@@ -233,13 +277,16 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConUseVlsr                     # integer
 
     global ezConRawSamplesUseL              # integer list
+    global ezConRawFreqBinHideL             # integer list
+
     global ezConAntSamplesUseL              # integer list
     global ezConAntSampleSnipL              # integer list
-
-    global ezConRawFreqBinHideL             # integer list
-    global ezConAntAvgTrimFracL             # float list
-    global ezConRefAvgTrimFracL             # float list
+    global ezConAntAvgSnipQtyL              # integer list
+    global ezConAntAvgSnipFracL             # float list
     global ezConAntFreqBinSmooth            # float - RFI spur limiter: max muliplier over 4 neighboring freqBin
+
+    global ezConRefAvgSnipQtyL              # integer list
+    global ezConRefAvgSnipFracL             # float list
     global ezConRefMode                     # integer
 
     global ezConAntBaselineFreqBinsFracL    # float list
@@ -355,13 +402,21 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
                 ezConAntSamplesUseL.append(int(thisLine[1]))
                 ezConAntSamplesUseL.append(int(thisLine[2]))
 
-            elif thisLine0Lower == '-ezConAntAvgTrimFracL'.lower():
-                ezConAntAvgTrimFracL[0] = float(thisLine[1])
-                ezConAntAvgTrimFracL[1] = float(thisLine[2])
+            elif thisLine0Lower == '-ezConAntAvgSnipQtyL'.lower():
+                ezConAntAvgSnipQtyL.append(int(thisLine[1]))
+                ezConAntAvgSnipQtyL.append(int(thisLine[2]))
 
-            elif thisLine0Lower == '-ezConRefAvgTrimFracL'.lower():
-                ezConRefAvgTrimFracL[0] = float(thisLine[1])
-                ezConRefAvgTrimFracL[1] = float(thisLine[2])
+            elif thisLine0Lower == '-ezConAntAvgSnipFracL'.lower():
+                ezConAntAvgSnipFracL.append(float(thisLine[1]))
+                ezConAntAvgSnipFracL.append(float(thisLine[2]))
+
+            elif thisLine0Lower == '-ezConRefAvgSnipQtyL'.lower():
+                ezConRefAvgSnipQtyL.append(int(thisLine[1]))
+                ezConRefAvgSnipQtyL.append(int(thisLine[2]))
+
+            elif thisLine0Lower == '-ezConRefAvgSnipFracL'.lower():
+                ezConRefAvgSnipFracL.append(float(thisLine[1]))
+                ezConRefAvgSnipFracL.append(float(thisLine[2]))
 
             elif thisLine0Lower == '-ezConAntBaselineFreqBinsFracL'.lower():
                 ezConAntBaselineFreqBinsFracL[0] = float(thisLine[1])
@@ -437,13 +492,16 @@ def ezConArgumentsCommandLine():
     global ezConUseVlsr                     # integer
 
     global ezConRawSamplesUseL              # integer list
+    global ezConRawFreqBinHideL             # integer list
+
     global ezConAntSamplesUseL              # integer list
     global ezConAntSampleSnipL              # integer list
-
-    global ezConRawFreqBinHideL             # integer list
-    global ezConAntAvgTrimFracL             # float list
-    global ezConRefAvgTrimFracL             # float list
+    global ezConAntAvgSnipQtyL              # integer list
+    global ezConAntAvgSnipFracL             # float list
     global ezConAntFreqBinSmooth            # float - RFI spur limiter: max muliplier over 4 neighboring freqBin
+
+    global ezConRefAvgSnipQtyL              # integer list
+    global ezConRefAvgSnipFracL             # float list
     global ezConRefMode                     # integer
 
     global ezConAntBaselineFreqBinsFracL    # float list
@@ -598,17 +656,29 @@ def ezConArgumentsCommandLine():
                 cmdLineSplitIndex += 1
                 ezConAntSamplesUseL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
-            elif cmdLineArgLower == '-ezConAntAvgTrimFracL'.lower():
+            elif cmdLineArgLower == '-ezConAntAvgSnipQtyL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConAntAvgTrimFracL[0] = float(cmdLineSplit[cmdLineSplitIndex])
+                ezConAntAvgSnipQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
                 cmdLineSplitIndex += 1
-                ezConAntAvgTrimFracL[1] = float(cmdLineSplit[cmdLineSplitIndex])
+                ezConAntAvgSnipQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
-            elif cmdLineArgLower == '-ezConRefAvgTrimFracL'.lower():
+            elif cmdLineArgLower == '-ezConAntAvgSnipFracL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConRefAvgTrimFracL[0] = float(cmdLineSplit[cmdLineSplitIndex])
+                ezConAntAvgSnipFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
                 cmdLineSplitIndex += 1
-                ezConRefAvgTrimFracL[1] = float(cmdLineSplit[cmdLineSplitIndex])
+                ezConAntAvgSnipFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == '-ezConRefAvgSnipQtyL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConRefAvgSnipQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezConRefAvgSnipQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == '-ezConRefAvgSnipFracL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConRefAvgSnipFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezConRefAvgSnipFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
 
             elif cmdLineArgLower == '-ezConAntBaselineFreqBinsFracL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -708,13 +778,16 @@ def ezConArguments():
     global ezConUseVlsr                     # integer
 
     global ezConRawSamplesUseL              # integer list
+    global ezConRawFreqBinHideL             # integer list
+
     global ezConAntSamplesUseL              # integer list
     global ezConAntSampleSnipL              # integer list
-
-    global ezConRawFreqBinHideL             # integer list
-    global ezConAntAvgTrimFracL             # float list
-    global ezConRefAvgTrimFracL             # float list
+    global ezConAntAvgSnipQtyL              # integer list
+    global ezConAntAvgSnipFracL             # float list
     global ezConAntFreqBinSmooth            # float - RFI spur limiter: max muliplier over 4 neighboring freqBin
+
+    global ezConRefAvgSnipQtyL              # integer list
+    global ezConRefAvgSnipFracL             # float list
     global ezConRefMode                     # integer
 
     global ezConAntBaselineFreqBinsFracL    # float list
@@ -745,8 +818,6 @@ def ezConArguments():
         #ezRAObsName = 'LebanonKS'
         ezRAObsName = ''                    # silly name
 
-        ezConRawSamplesUseL   = []
-
         ezConAntXInput    = 0               # default = 0 for auto choice: AntB or if 1 < refQty then AntRB
 
         ezConUseVlsr      = 1
@@ -757,14 +828,17 @@ def ezConArguments():
         ezConAddAzDeg  = 0.
         ezConAddElDeg  = 0.
 
-        ezConRawFreqBinHideL = []
+        ezConRawSamplesUseL   = []          # empty to disable
+        ezConRawFreqBinHideL  = []          # empty to disable
 
-        ezConAntSamplesUseL = []
-        ezConAntSampleSnipL = []
-        ezConAntAvgTrimFracL  = [0., 0.]    # second value is a silly number
+        ezConAntSamplesUseL   = []          # empty to disable
+        ezConAntSampleSnipL   = []          # empty to disable
+        ezConAntAvgSnipQtyL   = []          # empty to disable
+        ezConAntAvgSnipFracL  = []          # empty to disable
         ezConAntFreqBinSmooth = 999999.     # RFI spur limiter: max muliplier over 4 neighboring freqBin
 
-        ezConRefAvgTrimFracL  = [0., 0.]    # high number is silly number
+        ezConRefAvgSnipQtyL   = []          # empty to disable
+        ezConRefAvgSnipFracL  = []          # empty to disable
 
         # to average, specify low and high freqBin of total freqBin,
         # 60 low of 256 freqBin like (60 / 256 = 0.2344) or (150 / 1024 = 0.1465),
@@ -782,7 +856,7 @@ def ezConArguments():
         ezConDispGrid    = 0
         ezConDispFreqBin = 0
 
-        ezConAstroMath = 2
+        ezConAstroMath = 2              # 2 = astropy math = slow but authoritative
 
         ezConRefMode = 10
 
@@ -838,10 +912,12 @@ def ezConArguments():
         print()
         print('   ezConAntSamplesUseL   =', ezConAntSamplesUseL)
         print('   ezConAntSampleSnipL   =', ezConAntSampleSnipL)
-        print('   ezConAntAvgTrimFracL  =', ezConAntAvgTrimFracL)
+        print('   ezConAntAvgSnipQtyL   =', ezConAntAvgSnipQtyL)
+        print('   ezConAntAvgSnipFracL  =', ezConAntAvgSnipFracL)
         print('   ezConAntFreqBinSmooth =', ezConAntFreqBinSmooth)
         print()
-        print('   ezConRefAvgTrimFracL  =', ezConRefAvgTrimFracL)
+        print('   ezConRefAvgSnipQtyL   =', ezConRefAvgSnipQtyL)
+        print('   ezConRefAvgSnipFracL  =', ezConRefAvgSnipFracL)
         print()
         print('   ezConAntBaselineFreqBinsFracL   =', ezConAntBaselineFreqBinsFracL)
         print('   ezConAntRABaselineFreqBinsFracL =', ezConAntRABaselineFreqBinsFracL)
@@ -1471,39 +1547,181 @@ def rawPlotPrep():
     byFreqBinX = np.arange(fileFreqBinQty) * freqStep - dopplerSpanD2
 
 
-def refAvgTrimFrac():
+
+def ezConRefAvgSnipQtyLDo():
+
+    #global azimuth                  # float array
+    #global elevation                # float array
+    #global dataTimeUtc              # 'astropy.time.core.Time' object array
+    #global ant                      # float 2d array
+    global ref                      # float 2d array
+    #global rawIndex                 # integer array     may be thinned ??????????????????????????????????????
+    global antLen                   # integer
+    #global refLen                   # integer
+    #global refLenM1                 # integer
+
+    global ezConRefAvgSnipQtyL      # float list
+
+
+    if not ezConRefAvgSnipQtyL:     # if empty, no snipping needed
+        return(1)
+
+    #print(f'   before ezConRefAvgSnipQtyL, refLen = ', {refLen:,}')
+
+    print()
+    print('   ezConRefAvgSnipQtyLDo ===============')
+
+    print('   np.shape(ref)[0] =', np.shape(ref)[0])
+    print('   np.shape(ref)[1] =', np.shape(ref)[1])
+
+    # create refAvg
+    refAvg = np.mean(ref, axis=0)
+    #print('   refAvg =', refAvg)
+    print(f'   len(refAvg) = {len(refAvg):,}')
+    print()
+
+    # get indexes of refAvg with increasing values
+    refAvgIdxByIncreasing = refAvg.argsort()
+    #print('   refAvgIdxByIncreasing =', refAvgIdxByIncreasing)
+    print(f'   len(refAvgIdxByIncreasing) = {len(refAvgIdxByIncreasing):,}')
+    print()
+
+    print('   ezConRefAvgSnipQtyL =', ezConRefAvgSnipQtyL)
+    print()
+
+    # assume want to keep all refAvg samples
+    refAvgSnipNumKeepMask = np.ones_like(refAvg, dtype=bool)
+
+    # mask off requested lowest-valued refAvg samples
+    for i in range(ezConRefAvgSnipQtyL[0]):                 # i increases up from 0
+        refAvgSnipNumKeepMask[refAvgIdxByIncreasing[i]] = False
+
+    # mask off requested highest-valued refAvg samples
+    for i in reversed(range(ezConRefAvgSnipQtyL[1])):       # i decreases down to 0
+        refAvgSnipNumKeepMask[refAvgIdxByIncreasing[-1-i]] = False
+
+    # replace the Ref of not-kept REF samples
+    if not refAvgSnipNumKeepMask[0]:
+        # Ref index is 0
+        # Matching ANT needs to use next future kept REF sample.
+        # Use Ref from lowest index of True in refAvgSnipNumKeepMask.
+        indexFirstKept = np.where(refAvgSnipNumKeepMask)[0][0]
+        print('   indexFirstKept =', indexFirstKept)
+        ref[:, 0] = ref[:, indexFirstKept]
+    for i in range(1, len(refAvgSnipNumKeepMask)):          # i increases up from 1
+        # Ref index is greater than 0
+        if not refAvgSnipNumKeepMask[i]:                    # if Ref not to be kept
+            # replace the Ref with next older REF sample
+            ref[:, i] = ref[:, i-1]
+
+    print('   refAvgSnipNumKeepMask =', refAvgSnipNumKeepMask)
+    print('   refAvgSnipNumKeepMask.sum() =', refAvgSnipNumKeepMask.sum())
+    print(f'   len(refAvgSnipNumKeepMask) = {len(refAvgSnipNumKeepMask):,}')
+
+    #azimuth     = azimuth    [refAvgSnipNumKeepMask]
+    #elevation   = elevation  [refAvgSnipNumKeepMask]
+    #dataTimeUtc = dataTimeUtc[refAvgSnipNumKeepMask]
+    ##rawIndex    = rawIndex   [refAvgSnipNumKeepMask]
+    #ant         = ant     [:, refAvgSnipNumKeepMask]
+    #ref         = ref     [:, refAvgSnipNumKeepMask]
+    #antLen = ant.shape[1]
+    #antLenM1 = antLen - 1
+    refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'   antLen = {antLen:,}')
+    print(f'   refLen = {refLen:,}')
+
+
+
+def ezConRefAvgSnipFracLDo():
+
 
     global azimuth                  # float array
     global elevation                # float array
     global dataTimeUtc              # 'astropy.time.core.Time' object array
-    global ant                      # float 2d array    creation
-    global ref                      # float 2d array    creation
+    global ant                      # float 2d array
+    global ref                      # float 2d array
     #global rawIndex                 # integer array     may be thinned ??????????????????????????????????????
-    global antLen                   # integer           creation
+    #global antLen                   # integer
+    #global antLenM1                 # integer
+    #global refLen                   # integer
+    #global refLenM1                 # integer
+    global xTickLocsAnt             # float array
 
-    global ezConRefAvgTrimFracL     # float array
+    global ezConRefAvgSnipFracL     # float list
 
-    if not ezConRefAvgTrimFracL:
-        return(1)                   # no trimming needed
+
+    if not ezConRefAvgSnipFracL:    # if empty, no snipping needed
+        return(1)
+
+    #print(f'   before ezConRefAvgSnipFracLDo, antLen = ', {antLen:,}')
 
     print()
-    print('   refAvgTrimFrac ===============')
+    print('   ezConRefAvgSnipFracLDo ===============')
 
-    antAvg = np.mean(ant, axis=0)
-    antAvgSort = np.sort(antAvg)    # sorted by value
+    print('   np.shape(ref)[0] =', np.shape(ref)[0])
+    print('   np.shape(ref)[1] =', np.shape(ref)[1])
 
-    antAvgTrimValue0 = antAvgSort[int(antLen * ezConRefAvgTrimFracL[0])]
-    antAvgTrimValue1 = antAvgSort[int(antLen * ezConRefAvgTrimFracL[1])]
+    # create refAvgSort spectrum of increasing refAvg values
+    refAvg = np.mean(ref, axis=0)
+    #print('   refAvg =', refAvg)
+    print(f'   len(refAvg) = {len(refAvg):,}')
+    print()
 
-    antAvgTrimMask = np.logical_and(antAvgTrimValue0 < antAvg, antAvg < antAvgTrimValue0)
+    # get indexes of increasing refAvg
+    refAvgIdxByIncreasing = refAvg.argsort()
+    #print('   refAvgIdxByIncreasing =', refAvgIdxByIncreasing)
+    print(f'   len(refAvgIdxByIncreasing) = {len(refAvgIdxByIncreasing):,}')
+    print()
 
-    # thin most data arrays to only antAvgTrimMask samples
-    azimuth     = azimuth    [antAvgTrimMask]
-    elevation   = elevation  [antAvgTrimMask]
-    dataTimeUtc = dataTimeUtc[antAvgTrimMask]
-    #rawIndex    = rawIndex   [antAvgTrimMask]
-    ant         = ant     [:, antAvgTrimMask]
-    ref         = ref     [:, antAvgTrimMask]
+    print('   ezConRefAvgSnipFracL =', ezConRefAvgSnipFracL)
+    print()
+
+    # snap down to next integer
+    refLenM1 = ref.shape[1] - 1
+    refAvgSnipFracQty0 = int(refLenM1 * ezConRefAvgSnipFracL[0])
+    refAvgSnipFracQty1 = int(refLenM1 * ezConRefAvgSnipFracL[1])
+
+    # assume want to keep all refAvg samples
+    refAvgSnipFracKeepMask = np.ones_like(refAvg, dtype=bool)
+
+    # mask off requested lowest-valued refAvg samples
+    for i in range(refAvgSnipFracQty0):     # i starts with 0
+        refAvgSnipFracKeepMask[refAvgIdxByIncreasing[i]] = False
+    # mask off requested highest-valued refAvg samples
+    for i in range(refAvgSnipFracQty1):     # i starts with 0
+        refAvgSnipFracKeepMask[refAvgIdxByIncreasing[-1-i]] = False
+
+    # replace the Ref of not-kept REF samples
+    if not refAvgSnipFracKeepMask[0]:
+        # Ref index is 0
+        # Matching ANT needs to use next future kept REF sample.
+        # Use Ref from lowest index of True in refAvgSnipFracKeepMask.
+        indexFirstKept = np.where(refAvgSnipFracKeepMask)[0][0]
+        print('   indexFirstKept =', indexFirstKept)
+        ref[:, 0] = ref[:, indexFirstKept]
+    for i in range(1, len(refAvgSnipFracKeepMask)):          # i increases up from 1
+        # Ref index is greater than 0
+        if not refAvgSnipFracKeepMask[i]:                    # if Ref not to be kept
+            # replace the Ref with next older REF sample
+            ref[:, i] = ref[:, i-1]
+
+    print('   refAvgSnipFracKeepMask =', refAvgSnipFracKeepMask)
+    print('   refAvgSnipFracKeepMask.sum() =', refAvgSnipFracKeepMask.sum())
+    print(f'   len(refAvgSnipFracKeepMask) = {len(refAvgSnipFracKeepMask):,}')
+
+    #azimuth     = azimuth    [refAvgSnipFracKeepMask]
+    #elevation   = elevation  [refAvgSnipFracKeepMask]
+    #dataTimeUtc = dataTimeUtc[refAvgSnipFracKeepMask]
+    ##rawIndex    = rawIndex   [refAvgSnipFracKeepMask]
+    #ant         = ant     [:, refAvgSnipFracKeepMask]
+    #ref         = ref     [:, refAvgSnipFracKeepMask]
+    #antLen = ant.shape[1]
+    #antLenM1 = antLen - 1
+    refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'   antLen = {antLen:,}')
+    print(f'   refLen = {refLen:,}')
 
 
 
@@ -1574,7 +1792,7 @@ def createRefNeg(ezConRefMode):
     # raw plots for ezConRefMode < 0
     plotEzCon201GrawAntRef()                    # using raw, maskRawAnt and maskRawRef
     plotEzCon201HtimeUtcMjdDBetweenRaw()        # using raw and dataTimeUtc
-    plotEzCon201ItimeUtcMjdDBetweenAnt()        # using raw, dataTimeUtc, and maskRawAnt
+    plotEzCon201ItimeUtcMjdDBetweenAntRaw()     # using raw, dataTimeUtc, and maskRawAnt
 
 
 
@@ -1615,8 +1833,8 @@ def createRef00antSampleZero():
     # raw plots for ezConRefMode == 0
     plotEzCon201GrawAntRef()                    # using raw, maskRawAnt and maskRawRef
     plotEzCon201HtimeUtcMjdDBetweenRaw()        # using raw and dataTimeUtc
-    plotEzCon201ItimeUtcMjdDBetweenAnt()        # using raw, dataTimeUtc, and maskRawAnt
-    plotEzCon201JtimeUtcMjdDBetweenRef()        # using raw, dataTimeUtc, and maskRawRef
+    plotEzCon201ItimeUtcMjdDBetweenAntRaw()     # using raw, dataTimeUtc, and maskRawAnt
+    plotEzCon201JtimeUtcMjdDBetweenRefRaw()     # using raw, dataTimeUtc, and maskRawRef
 
 
 
@@ -1654,8 +1872,8 @@ def createRef01refIsOne():
     # raw plots for ezConRefMode == 1
     plotEzCon201GrawAntRef()                    # using raw, maskRawAnt and maskRawRef
     plotEzCon201HtimeUtcMjdDBetweenRaw()        # using raw and dataTimeUtc
-    plotEzCon201ItimeUtcMjdDBetweenAnt()        # using raw, dataTimeUtc, and maskRawAnt
-    plotEzCon201JtimeUtcMjdDBetweenRef()        # using raw, dataTimeUtc, and maskRawRef
+    plotEzCon201ItimeUtcMjdDBetweenAntRaw()     # using raw, dataTimeUtc, and maskRawAnt
+    plotEzCon201JtimeUtcMjdDBetweenRefRaw()     # using raw, dataTimeUtc, and maskRawRef
 
 
 
@@ -1691,7 +1909,7 @@ def createRef02rawByFreqBinAvg():
     # raw plots for ezConRefMode == 2
     plotEzCon201GrawAntRef()                    # using raw, maskRawAnt and maskRawRef
     plotEzCon201HtimeUtcMjdDBetweenRaw()        # using raw and dataTimeUtc
-    plotEzCon201ItimeUtcMjdDBetweenAnt()        # using raw, dataTimeUtc, and maskRawAnt
+    plotEzCon201ItimeUtcMjdDBetweenAntRaw()     # using raw, dataTimeUtc, and maskRawAnt
 
 
 
@@ -1708,7 +1926,7 @@ def createRef04closestQuietRAAnt():
     global ref                      # float 2d array    creation
     global rawLen                   # integer
     global antLen                   # integer           creation
-    global antLenM1                 # integer           creation
+    #global antLenM1                 # integer           creation
 
     global maskRawAnt               # Boolean array     creation
     global maskRawRef               # Boolean array     creation
@@ -1960,8 +2178,8 @@ def createRef07minimumAntBAvgAnt():
     # raw plots for ezConRefMode == 7
     plotEzCon201GrawAntRef()                    # using raw, maskRawAnt and maskRawRef
     plotEzCon201HtimeUtcMjdDBetweenRaw()        # using raw and dataTimeUtc
-    plotEzCon201ItimeUtcMjdDBetweenAnt()        # using raw, dataTimeUtc, and maskRawAnt
-    plotEzCon201JtimeUtcMjdDBetweenRef()        # using raw, dataTimeUtc, and maskRawRef
+    plotEzCon201ItimeUtcMjdDBetweenAntRaw()     # using raw, dataTimeUtc, and maskRawAnt
+    plotEzCon201JtimeUtcMjdDBetweenRefRaw()     # using raw, dataTimeUtc, and maskRawRef
 
 
 
@@ -1981,10 +2199,10 @@ def createRef10lastRefMarkedInData():
     global rawLen                   # integer
     global antLen                   # integer           creation
     global antLenM1                 # integer           creation
-    global refLen                   # integer
-    global refLenM1                 # integer
+    #global refLen                   # integer
+    #global refLenM1                 # integer
 
-    global ezConRefAvgTrimFracL     # float array
+    global ezConRefAvgSnipFracL     # float array
     global maskRawAnt               # Boolean array     creation
     global maskRawRef               # Boolean array     creation
 
@@ -1998,67 +2216,68 @@ def createRef10lastRefMarkedInData():
     print(f' antLen = {antLen:,}')
     antLenM1 = antLen - 1                       # creation
 
-    if ezConRefAvgTrimFracL[1]:         # if high number is not silly
-        # remove those bad raw samples which would be REF samples, using ezConRefAvgTrimFracL
+    #if ezConRefAvgKeepFracL:                    # if snipping requested
+    if 0:
+        # remove those bad raw samples which would be REF samples, using ezConRefAvgKeepFracL
         
         print()
-        print(f'   before refAvgTrimFrac, rawLen = {len(elevation):,}')
+        print(f'   before refAvgKeepFrac, rawLen = {len(elevation):,}')
         refLen = sum((maskRawRef + 0))          # temporary refLen,   ignored later
         refLenM1 = refLen - 1                   # temporary refLenM1, ignored later
-        print(f'   before refAvgTrimFrac, refLen = {refLen:,}')
+        print(f'   before refAvgKeepFrac, refLen = {refLen:,}')
 
         print()
-        print('   === refAvgTrimFrac ===============')
+        print('   === refAvgKeepFrac ===============')
 
         ref = raw[:, maskRawRef]                # temporary ref array, ignored later
         print('   np.shape(ref)[0] =', np.shape(ref)[0])
         print('   np.shape(ref)[1] =', np.shape(ref)[1])
 
-        # on spectrum of refAvg values, find ezConRefAvgTrimFracL fraction values
+        # on spectrum of refAvg values, find ezConRefAvgKeepFracL fraction values
         refAvg = np.mean(ref, axis=0)
         print(f'   len(refAvg) = {len(refAvg):,}')
         refAvgSort = np.sort(refAvg)            # sorted by value
         print('   refAvgSort =', refAvgSort)
         print(f'   len(refAvgSort) = {len(refAvgSort):,}')
 
-        refAvgTrimValue0 = refAvgSort[int(refLenM1 * ezConRefAvgTrimFracL[0])]
-        refAvgTrimValue1 = refAvgSort[int(refLenM1 * ezConRefAvgTrimFracL[1])]
-        print('   refAvgTrimValue0 =', refAvgTrimValue0)
-        print('   refAvgTrimValue1 =', refAvgTrimValue1)
+        refAvgKeepValue0 = refAvgSort[int(antLenM1 * ezConRefAvgKeepFracL[0])]
+        refAvgKeepValue1 = refAvgSort[int(antLenM1 * ezConRefAvgKeepFracL[1])]
+        print('   refAvgKeepValue0 =', refAvgKeepValue0)
+        print('   refAvgKeepValue1 =', refAvgKeepValue1)
 
-        # find RAW samples whose rawAvg is between refAvgTrimValue0 and refAvgTrimValue1
+        # find RAW samples whose rawAvg is between refAvgKeepValue0 and refAvgKeepValue1
         rawAvg = np.mean(raw, axis=0)
-        refAvgTrimMask = np.logical_and(refAvgTrimValue0 < rawAvg, rawAvg < refAvgTrimValue1)
+        refAvgKeepMask = np.logical_and(refAvgKeepValue0 < rawAvg, rawAvg < refAvgKeepValue1)
         # and is a REF sample
-        refAvgTrimMask = np.logical_and(refAvgTrimMask, maskRawRef)     # but only REF samples
+        refAvgKeepMask = np.logical_and(refAvgKeepMask, maskRawRef)     # but only REF samples
         # but allow all ANT samples
-        refAvgTrimMask = np.logical_or(refAvgTrimMask, maskRawAnt)
-        print('   refAvgTrimMask =', refAvgTrimMask)
-        print(f'   refAvgTrimMask.sum() = {refAvgTrimMask.sum():,}')
-        print(f'   len(refAvgTrimMask) = {len(refAvgTrimMask):,}')
+        refAvgKeepMask = np.logical_or(refAvgKeepMask, maskRawAnt)
+        print('   refAvgKeepMask =', refAvgKeepMask)
+        print(f'   refAvgKeepMask.sum() = {refAvgKeepMask.sum():,}')
+        print(f'   len(refAvgKeepMask) = {len(refAvgKeepMask):,}')
 
-        # thin most data arrays to only refAvgTrimMask samples
-        azimuth     = azimuth    [refAvgTrimMask]
-        elevation   = elevation  [refAvgTrimMask]
-        dataTimeUtc = dataTimeUtc[refAvgTrimMask]
-        rawIndex    = rawIndex   [refAvgTrimMask]
-        maskRawAnt  = maskRawAnt [refAvgTrimMask]
-        maskRawRef  = maskRawRef [refAvgTrimMask]
-        raw         = raw     [:, refAvgTrimMask]
+        # thin most data arrays to only refAvgKeepMask samples
+        azimuth     = azimuth    [refAvgKeepMask]
+        elevation   = elevation  [refAvgKeepMask]
+        dataTimeUtc = dataTimeUtc[refAvgKeepMask]
+        rawIndex    = rawIndex   [refAvgKeepMask]
+        maskRawAnt  = maskRawAnt [refAvgKeepMask]
+        maskRawRef  = maskRawRef [refAvgKeepMask]
+        raw         = raw     [:, refAvgKeepMask]
         rawLen = np.shape(raw)[1]
         print(f'   rawLen = {rawLen:,}')
 
         print()
-        print(f'   after  refAvgTrimFrac, rawLen = {len(elevation):,}')
+        print(f'   after  refAvgKeepFrac, rawLen = {len(elevation):,}')
         refLen = sum((maskRawRef + 0))          # temporary refLen, ignored later
-        print(f'   after  refAvgTrimFrac, refLen = {refLen:,}')
+        print(f'   after  refAvgKeepFrac, refLen = {refLen:,}')
 
 
     # raw plots for ezConRefMode == 10 (before data thinning soon)
     plotEzCon201GrawAntRef()                    # using raw, maskRawAnt and maskRawRef
     plotEzCon201HtimeUtcMjdDBetweenRaw()        # using raw and dataTimeUtc
-    plotEzCon201ItimeUtcMjdDBetweenAnt()        # using raw, dataTimeUtc, and maskRawAnt
-    plotEzCon201JtimeUtcMjdDBetweenRef()        # using raw, dataTimeUtc, and maskRawRef
+    plotEzCon201ItimeUtcMjdDBetweenAntRaw()     # using raw, dataTimeUtc, and maskRawAnt
+    plotEzCon201JtimeUtcMjdDBetweenRefRaw()     # using raw, dataTimeUtc, and maskRawRef
 
     # create ref: for every ant, the last REF raw spectrum
     ref = np.empty_like(raw)                    # to be thinned soon, to just the ANT samples
@@ -2459,8 +2678,8 @@ def createRef20refPulser():
     # raw plots for ezConRefMode == 20 (before data thinning soon)
     plotEzCon201GrawAntRef()                    # using raw, maskRawAnt and maskRawRef
     plotEzCon201HtimeUtcMjdDBetweenRaw()        # using raw and dataTimeUtc
-    plotEzCon201ItimeUtcMjdDBetweenAnt()        # using raw, dataTimeUtc, and maskRawAnt
-    plotEzCon201JtimeUtcMjdDBetweenRef()        # using raw, dataTimeUtc, and maskRawRef
+    plotEzCon201ItimeUtcMjdDBetweenAntRaw()     # using raw, dataTimeUtc, and maskRawAnt
+    plotEzCon201JtimeUtcMjdDBetweenRefRaw()     # using raw, dataTimeUtc, and maskRawRef
 
     #    # for a REF next to a REF, mark the lesser deviation REF as BAD.
     #    # Find REFs that follow a REF
@@ -2637,7 +2856,7 @@ def createRef():
 
 
 
-def ezConAntAvgTrimFracLDo():
+def ezConAntAvgSnipQtyLDo():
 
     global azimuth                  # float array
     global elevation                # float array
@@ -2647,59 +2866,151 @@ def ezConAntAvgTrimFracLDo():
     #global rawIndex                 # integer array     may be thinned ??????????????????????????????????????
     global antLen                   # integer
     global antLenM1                 # integer
-    global refLen                   # integer
-    global refLenM1                 # integer
+    #global refLen                   # integer
+    #global refLenM1                 # integer
+    global xTickLocsAnt             # float array
 
-    global ezConAntAvgTrimFracL     # float array
+    global ezConAntAvgSnipQtyL      # float list
 
-    if not ezConAntAvgTrimFracL[1]: # if silly zero, no trimming needed
+
+    if not ezConAntAvgSnipQtyL:     # if empty, no snipping needed
         return(1)
 
-    print()
-    print(f'   before ezConAntAvgTrimFracLDo, antLen = {antLen:,}')
+    #print(f'   before ezConAntAvgSnipQtyL, antLen = ', {antLen:,}')
 
     print()
-    print('   ezConAntAvgTrimFracLDo ===============')
+    print('   ezConAntAvgSnipQtyLDo ===============')
 
     print('   np.shape(ant)[0] =', np.shape(ant)[0])
     print('   np.shape(ant)[1] =', np.shape(ant)[1])
 
-    # on spectrum of antAvg values, find ezConAntAvgTrimFracL fraction values
+    # create antAvgSort spectrum of increasing antAvg values
     antAvg = np.mean(ant, axis=0)
+    #print('   antAvg =', antAvg)
     print(f'   len(antAvg) = {len(antAvg):,}')
-    antAvgSort = np.sort(antAvg)    # sorted by value
-    print('   antAvgSort =', antAvgSort)
-    print(f'   len(antAvgSort) = {len(antAvgSort):,}')
-    antAvgTrimValue0 = antAvgSort[int(antLenM1 * ezConAntAvgTrimFracL[0])]
-    antAvgTrimValue1 = antAvgSort[int(antLenM1 * ezConAntAvgTrimFracL[1])]
-    print('   antAvgTrimValue0 =', antAvgTrimValue0)
-    print('   antAvgTrimValue1 =', antAvgTrimValue1)
+    print()
 
-    # find ANT samples whose antAvg is between antAvgTrimValue0 and antAvgTrimValue1
-    antAvgTrimMask = np.logical_and(antAvgTrimValue0 < antAvg, antAvg < antAvgTrimValue1)
-    print('   antAvgTrimMask =', antAvgTrimMask)
-    print('   antAvgTrimMask.sum() =', antAvgTrimMask.sum())
-    print(f'   len(antAvgTrimMask) = {len(antAvgTrimMask):,}')
+    # get indexes of increasing antAvg
+    antAvgIdxByIncreasing = antAvg.argsort()
+    #print('   antAvgIdxByIncreasing =', antAvgIdxByIncreasing)
+    print(f'   len(antAvgIdxByIncreasing) = {len(antAvgIdxByIncreasing):,}')
+    print()
 
-    # thin most data arrays to only antAvgTrimMask samples
-    azimuth     = azimuth    [antAvgTrimMask]
-    elevation   = elevation  [antAvgTrimMask]
-    dataTimeUtc = dataTimeUtc[antAvgTrimMask]
-    #rawIndex    = rawIndex   [antAvgTrimMask]
-    ant         = ant     [:, antAvgTrimMask]
-    ref         = ref     [:, antAvgTrimMask]
+    print('   ezConAntAvgSnipQtyL =', ezConAntAvgSnipQtyL)
+    print()
+
+    # assume want to keep all antAvg samples
+    antAvgSnipNumKeepMask = np.ones_like(antAvg, dtype=bool)
+
+    # mask off requested lowest-valued antAvg samples
+    for i in range(ezConAntAvgSnipQtyL[0]):     # i starts with 0
+        antAvgSnipNumKeepMask[antAvgIdxByIncreasing[i]] = False
+    # mask off requested highest-valued antAvg samples
+    for i in range(ezConAntAvgSnipQtyL[1]):     # i starts with 0
+        antAvgSnipNumKeepMask[antAvgIdxByIncreasing[-1-i]] = False
+
+    print('   antAvgSnipNumKeepMask =', antAvgSnipNumKeepMask)
+    print('   antAvgSnipNumKeepMask.sum() =', antAvgSnipNumKeepMask.sum())
+    print(f'   len(antAvgSnipNumKeepMask) = {len(antAvgSnipNumKeepMask):,}')
+
+    # thin most data arrays to keep only antAvgSnipNumKeepMask samples
+    azimuth     = azimuth    [antAvgSnipNumKeepMask]
+    elevation   = elevation  [antAvgSnipNumKeepMask]
+    dataTimeUtc = dataTimeUtc[antAvgSnipNumKeepMask]
+    #rawIndex    = rawIndex   [antAvgSnipNumKeepMask]
+    ant         = ant     [:, antAvgSnipNumKeepMask]
+    ref         = ref     [:, antAvgSnipNumKeepMask]
     antLen = ant.shape[1]
     antLenM1 = antLen - 1
     refLen = ref.shape[1]
-    refLenM1 = refLen - 1
+    #refLenM1 = refLen - 1
     print(f'   antLen = {antLen:,}')
     print(f'   refLen = {refLen:,}')
+    xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
+
+
+
+def ezConAntAvgSnipFracLDo():
+
+    global azimuth                  # float array
+    global elevation                # float array
+    global dataTimeUtc              # 'astropy.time.core.Time' object array
+    global ant                      # float 2d array
+    global ref                      # float 2d array
+    #global rawIndex                 # integer array     may be thinned ??????????????????????????????????????
+    global antLen                   # integer
+    global antLenM1                 # integer
+    #global refLen                   # integer
+    #global refLenM1                 # integer
+    global xTickLocsAnt             # float array
+
+    global ezConAntAvgSnipFracL     # float list
+
+
+    if not ezConAntAvgSnipFracL:    # if empty, no snipping needed
+        return(1)
+
+    #print(f'   before ezConAntAvgSnipFracLDo, antLen = ', {antLen:,}')
+
+    print()
+    print('   ezConAntAvgSnipFracLDo ===============')
+
+    print('   np.shape(ant)[0] =', np.shape(ant)[0])
+    print('   np.shape(ant)[1] =', np.shape(ant)[1])
+
+    # create antAvgSort spectrum of increasing antAvg values
+    antAvg = np.mean(ant, axis=0)
+    #print('   antAvg =', antAvg)
+    print(f'   len(antAvg) = {len(antAvg):,}')
+    print()
+
+    # get indexes of increasing antAvg
+    antAvgIdxByIncreasing = antAvg.argsort()
+    #print('   antAvgIdxByIncreasing =', antAvgIdxByIncreasing)
+    print(f'   len(antAvgIdxByIncreasing) = {len(antAvgIdxByIncreasing):,}')
+    print()
+
+    print('   ezConAntAvgSnipFracL =', ezConAntAvgSnipFracL)
+    print()
+
+    # snap down to next integer
+    antAvgSnipFracQty0 = int(antLenM1 * ezConAntAvgSnipFracL[0])
+    antAvgSnipFracQty1 = int(antLenM1 * ezConAntAvgSnipFracL[1])
+
+    # assume want to keep all antAvg samples
+    antAvgSnipFracKeepMask = np.ones_like(antAvg, dtype=bool)
+
+    # mask off requested lowest-valued antAvg samples
+    for i in range(antAvgSnipFracQty0):     # i starts with 0
+        antAvgSnipFracKeepMask[antAvgIdxByIncreasing[i]] = False
+    # mask off requested highest-valued antAvg samples
+    for i in range(antAvgSnipFracQty1):     # i starts with 0
+        antAvgSnipFracKeepMask[antAvgIdxByIncreasing[-1-i]] = False
+
+    print('   antAvgSnipFracKeepMask =', antAvgSnipFracKeepMask)
+    print('   antAvgSnipFracKeepMask.sum() =', antAvgSnipFracKeepMask.sum())
+    print(f'   len(antAvgSnipFracKeepMask) = {len(antAvgSnipFracKeepMask):,}')
+
+    # thin most data arrays to keep only antAvgSnipFracKeepMask samples
+    azimuth     = azimuth    [antAvgSnipFracKeepMask]
+    elevation   = elevation  [antAvgSnipFracKeepMask]
+    dataTimeUtc = dataTimeUtc[antAvgSnipFracKeepMask]
+    #rawIndex    = rawIndex   [antAvgSnipFracKeepMask]
+    ant         = ant     [:, antAvgSnipFracKeepMask]
+    ref         = ref     [:, antAvgSnipFracKeepMask]
+    antLen = ant.shape[1]
+    antLenM1 = antLen - 1
+    refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'   antLen = {antLen:,}')
+    print(f'   refLen = {refLen:,}')
+    xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
 
 
 
 def ezConAntFreqBinSmoothDo():
     # ant RFI spur removal with ezConAntFreqBinSmooth
-    # for each spectrum, no ant should be > ezConAntFreqBinSmooth * average of its 4 ant spectrum neighbors
+    # for each Ant sample, no freqBin should be > ezConAntFreqBinSmooth * average of its 4 freqBin neighbor values
 
     global fileFreqBinQty           # integer
     global ant                      # float 2d array
@@ -2776,14 +3087,17 @@ def ezConAntSamplesUseLDo():
     #global rawIndex                 # integer array     may be thinned ??????????????????????????????????????
     global antLen                   # integer
     global antLenM1                 # integer
-    global refLen                   # integer
-    global refLenM1                 # integer
+    #global refLen                   # integer
+    #global refLenM1                 # integer
+
+    global xTickLabelsHeatAntL      # string list
+    global xTickLocsAnt             # float array
 
     global ezConAntSamplesUseL      # integer list
     global ezConAntSampleSnipL      # integer list
 
-    print()
-    print(f'   before ezConAntSamplesUseLDo, antLen = {antLen:,}')
+    #print(f'   before ezConAntSamplesUseLDo, antLen = ', {antLen:,}')
+    
     print()
     print('   ezConAntSamplesUseLDo ===============')
 
@@ -2809,6 +3123,10 @@ def ezConAntSamplesUseLDo():
         useSamplesAntMask = np.ones([antLen], dtype = bool)
 
     if ezConAntSampleSnipL:
+        # This loop processes the requests in given order.
+        # Each snip changes the index of the higher indexes (all higher samples move left).
+        # Like a chain anchored at the left, and removing one link: total chain is shorter and the right side of the chain moves left by one link.
+        # This why it is easier to request ezConAntSampleSnipL values in decreasing order !
         for n in ezConAntSampleSnipL:
             useSamplesAntMask[n] = False
 
@@ -2816,7 +3134,7 @@ def ezConAntSamplesUseLDo():
     print('                         useSamplesAntMask.sum() =', (useSamplesAntMask + 0).sum())
     print('                         len(useSamplesAntMask) =', len(useSamplesAntMask))
 
-    # thin most data arrays to only antAvgTrimMask samples
+    # thin most data arrays to only antAvgKeepMask samples
     azimuth     = azimuth    [useSamplesAntMask]
     elevation   = elevation  [useSamplesAntMask]
     dataTimeUtc = dataTimeUtc[useSamplesAntMask]
@@ -2826,9 +3144,11 @@ def ezConAntSamplesUseLDo():
     antLen = ant.shape[1]
     antLenM1 = antLen - 1
     refLen = ref.shape[1]
-    refLenM1 = refLen - 1
+    #refLenM1 = refLen - 1
     print(f'                         antLen = {antLen:,}')
     print(f'                         refLen = {refLen:,}')
+    xTickLabelsHeatAntL = []        # probably just changed antLen, force new xTickLabelsHeatAntL
+    xTickLocsAnt        = []        # probably just changed antLen, force new xTickLocsAnt
 
 
 
@@ -3088,7 +3408,7 @@ def createEzConOutEzb():
 
         else:
             # ezConAstroMath == 0:
-            # fill with suspicious harmless values, to be ignored, faster ?
+            # fill with suspicious harmless values, to be ignored, faster if not needed for plots ?
             raHThis     = 0.        # hours
             decDegThis  = 0.        # degrees
             gLatDegThis = 0.        # degrees
@@ -3178,6 +3498,7 @@ def writeFileSdre():
     global fileWriteSdre            # file handle
 
     global ezConOut                 # float and int 2d array
+    global antLen                   # integer
 
     print()
     print('   writeFileSdre ===============')
@@ -3257,6 +3578,7 @@ def writeFileEzb():
     global fileWriteEzb             # file handle
 
     global ezConOut                 # float and int 2d array
+    global antLen                   # integer
 
     print()
     print('   writeFileEzb ===============')
@@ -3327,6 +3649,7 @@ def writeFileGal():
     # write velocity data arrays to file
 
     global antXTV                   # float 2d array
+    global antLen                   # integer
     global velGLonP180              # float 2d array     creation
     global velGLonP180Count         # integer array      creation
     global velGLonP180CountSum      # integer            creation
@@ -3503,7 +3826,7 @@ def printGoodbye(startTime):
 
     global rawLen                   # integer
     global antLen                   # integer
-    global refLen                   # integer
+    #global refLen                   # integer
     global programRevision          # string
     global commandString            # string
 
@@ -3527,10 +3850,12 @@ def printGoodbye(startTime):
         print()
         print('   ezConAntSamplesUseL   =', ezConAntSamplesUseL)
         print('   ezConAntSampleSnipL   =', ezConAntSampleSnipL)
-        print('   ezConAntAvgTrimFracL  =', ezConAntAvgTrimFracL)
+        print('   ezConAntAvgSnipQtyL   =', ezConAntAvgSnipQtyL)
+        print('   ezConAntAvgSnipFracL  =', ezConAntAvgSnipFracL)
         print('   ezConAntFreqBinSmooth =', ezConAntFreqBinSmooth)
         print()
-        print('   ezConRefAvgTrimFracL  =', ezConRefAvgTrimFracL)
+        print('   ezConRefAvgSnipQtyL   =', ezConRefAvgSnipQtyL)
+        print('   ezConRefAvgSnipFracL  =', ezConRefAvgSnipFracL)
         print()
         print('   ezConAntBaselineFreqBinsFracL   =', ezConAntBaselineFreqBinsFracL)
         print('   ezConAntRABaselineFreqBinsFracL =', ezConAntRABaselineFreqBinsFracL)
@@ -3819,15 +4144,17 @@ def plotEzCon000rawRaw():
     global xTickLabelsHeatAntL                  # string list
 
     global raw                                  # float 2d array
-
-    if 0 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 0:
-        plotCountdown -= 1
-        return(1)
+    global rawLen                               # integer
 
     plotName = 'ezCon000rawRaw.png'
+
+    plotCountdown -= 1
+
+    if 0 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 0:
+        return(1)
+
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     # force new xTickLabelsHeatAntL before and after plotting
     xTickLabelsHeatAntL = []
@@ -3844,15 +4171,17 @@ def plotEzCon001raw():
     global xTickLabelsHeatAntL                  # string list
 
     global raw                                  # float 2d array
-
-    if 1 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 1:
-        plotCountdown -= 1
-        return(1)
+    global rawLen                               # integer
 
     plotName = 'ezCon001raw.png'
+
+    plotCountdown -= 1
+
+    if 1 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 1:
+        return(1)
+
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     # force new xTickLabelsHeatAntL before and after plotting
     xTickLabelsHeatAntL = []
@@ -3869,17 +4198,19 @@ def plotEzCon002antRaw():
 
     global ant                                  # float 2d array
     global antMax                               # float array       creation
+    global antLenM1                             # integer
+
+    plotName = 'ezCon002antRaw.png'
 
     antMax = np.amax(ant, axis=0)               # creation
 
+    plotCountdown -= 1
+
     if 2 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 2:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon002antRaw.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, ant, 'Ant', antLenM1, 'AntRaw', 0)
     
@@ -3892,15 +4223,17 @@ def plotEzCon007ant():
     global ezConPlotRangeL                      # integer list
 
     global ant                                  # float 2d array
-
-    if 7 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 7:
-        plotCountdown -= 1
-        return(1)
+    global antLenM1                             # integer
 
     plotName = 'ezCon007ant.png'
+
+    plotCountdown -= 1
+
+    if 7 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 7:
+        return(1)
+
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, ant, 'Ant', antLenM1, 'Ant', 0)
 
@@ -3913,15 +4246,17 @@ def plotEzCon017antMax2d():
     global ezConPlotRangeL                      # integer list
 
     global ant                                  # float 2d array
-
-    if 17 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 17:
-        plotCountdown -= 1
-        return(1)
+    global antLenM1                             # integer
 
     plotName = 'ezCon017antMax.png'
+
+    plotCountdown -= 1
+
+    if 17 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 17:
+        return(1)
+
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, ant, 'Ant', antLenM1, 'AntMax', 1)
 
@@ -3934,17 +4269,20 @@ def plotEzCon022refRaw():
     global ezConPlotRangeL                      # integer list
 
     global ref                                  # float 2d array
-
-    if 22 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 22:
-        plotCountdown -= 1
-        return(1)
+    #global refLenM1                             # integer
+    global antLenM1                             # integer
 
     plotName = 'ezCon022refRaw.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
-    plotEzCon2dSamples(plotName, ref, 'Ant', antLenM1, 'RefRaw', 0)
+    if 22 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 22:
+        return(1)
+
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    plotEzCon2dSamples(plotName, ref, 'Ref', antLenM1, 'RefRaw', 0)
 
 
 
@@ -3955,17 +4293,20 @@ def plotEzCon027ref():
     global ezConPlotRangeL                      # integer list
 
     global ref                                  # float 2d array
-
-    if 27 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 27:
-        plotCountdown -= 1
-        return(1)
+    #global refLenM1                             # integer
+    global antLenM1                             # integer
 
     plotName = 'ezCon027ref.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
-    plotEzCon2dSamples(plotName, ref, 'Ant', antLenM1, 'Ref', 0)
+    if 27 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 27:
+        return(1)
+
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    plotEzCon2dSamples(plotName, ref, 'Ref', antLenM1, 'Ref', 0)
 
 
 
@@ -3976,17 +4317,20 @@ def plotEzCon037refMax2d():
     global ezConPlotRangeL                      # integer list
 
     global ref                                  # float 2d array
-
-    if 37 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 37:
-        plotCountdown -= 1
-        return(1)
+    #global refLenM1                             # integer
+    global antLenM1                             # integer
 
     plotName = 'ezCon037refMax.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
-    plotEzCon2dSamples(plotName, ref, 'Ant', antLenM1, 'RefMax', 1)
+    if 37 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 37:
+        return(1)
+
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    plotEzCon2dSamples(plotName, ref, 'Ref', antLenM1, 'RefMax', 1)
 
 
 
@@ -4001,17 +4345,19 @@ def plotEzCon047antB():
     global ant                                  # float 2d array
     global antBaseline                          # float array
     global antB                                 # float 2d array        creation
+    global antLenM1                             # integer
+
+    plotName = 'ezCon047antB.png'
 
     antB = ant / antBaseline                    # creation
 
+    plotCountdown -= 1
+
     if 47 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 47:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon047antB.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antBAvgMax = ', antB.max())
     print('                         antBAvgAvg =', np.mean(antB))
@@ -4027,15 +4373,17 @@ def plotEzCon057antBMax2d():
     global ezConPlotRangeL                      # integer list
 
     global antB                                 # float 2d array
-
-    if 57 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 57:
-        plotCountdown -= 1
-        return(1)
+    global antLenM1                             # integer
 
     plotName = 'ezCon057antBMax.png'
+
+    plotCountdown -= 1
+
+    if 57 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 57:
+        return(1)
+
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, antB, 'Ant', antLenM1, 'AntBMax', 1)
 
@@ -4051,6 +4399,9 @@ def plotEzCon061antRA():
     global ant                                  # float 2d array
     global ref                                  # float 2d array
     global antRA                                # float 2d array        creation
+    global antLenM1                             # integer
+
+    plotName = 'ezCon061antRA.png'
 
     # create antRA
     # before division, if any ref is zero, then add tiny number to all ref
@@ -4058,14 +4409,13 @@ def plotEzCon061antRA():
         ref += 1e-14
     antRA = np.true_divide(ant, ref)            # creation
 
+    plotCountdown -= 1
+
     if 61 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 61:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon061antRA.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, antRA, 'Ant', antLenM1, 'AntRA', 0)
         
@@ -4081,17 +4431,19 @@ def plotEzCon067antRB():
     global antRA                                # float 2d array
     global antRABaseline                        # float array
     global antRB                                # float 2d array        creation
+    global antLenM1                             # integer
+
+    plotName = 'ezCon067antRB.png'
 
     antRB = antRA / antRABaseline               # creation
 
+    plotCountdown -= 1
+
     if 67 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 67:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon067antRB.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, antRB, 'Ant', antLenM1, 'AntRB', 0)
 
@@ -4104,15 +4456,17 @@ def plotEzCon077antRBMax2d():
     global ezConPlotRangeL                      # integer list
 
     global antRB                                # float 2d array
-
-    if 77 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 77:
-        plotCountdown -= 1
-        return(1)
+    global antLenM1                             # integer
 
     plotName = 'ezCon077antRBMax.png'
+
+    plotCountdown -= 1
+
+    if 77 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 77:
+        return(1)
+
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, antRB, 'Ant', antLenM1, 'AntRBMax', 1)
         
@@ -4126,6 +4480,10 @@ def plotEzCon081antXT():
 
     global antX                                 # float 2d array
     global antXT                                # float 2d array        creation
+    global antLen                               # integer
+    global antLenM1                             # integer
+
+    plotName = 'ezCon081antXT.png'
 
     # Each antX[:, n] is a spectrum, normally from Doppler -1.2 to +1.2 MHz.
     # The low and high frequency extremes, they rise up, and they mislead.
@@ -4175,14 +4533,13 @@ def plotEzCon081antXT():
     antX = None
     del antX
 
+    plotCountdown -= 1
+
     if 81 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 81:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon081antXT.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, antXT, 'Ant', antLenM1, 'AntXT', 0)
 
@@ -4196,6 +4553,10 @@ def plotEzCon082antXTV():
 
     global antXT                                # float 2d array
     global antXTV                               # float 2d array        creation
+    global antLen                               # integer
+    global antLenM1                             # integer
+
+    plotName = 'ezCon082antXTV.png'
 
     # create antXTV
     antXTV = np.empty_like(antXT)   # antXTV is like antXT but corrected by Vlsr
@@ -4232,14 +4593,13 @@ def plotEzCon082antXTV():
         antXTV[:, n] = antXTVThis
 
 
+    plotCountdown -= 1
+
     if 82 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 82:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon082antXTV.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, antXTV, 'Ant', antLenM1, 'AntXTV', 0)
 
@@ -4253,6 +4613,10 @@ def plotEzCon087antXTVT():
 
     global antXTV                               # float 2d array
     global antXTVT                              # float 2d array        creation
+    global antLen                               # integer
+    global antLenM1                             # integer
+
+    plotName = 'ezCon087antXTVT.png'
 
     # Each antXTV[:, n] is a spectrum, normally from Doppler -1.2 to +1.2 MHz.
     # The low and high frequency extremes, they rise up, and they mislead.
@@ -4298,14 +4662,13 @@ def plotEzCon087antXTVT():
             = antXTV[ezConAntXTVFreqBin0:ezConAntXTVFreqBin1P1, n] / antXTVTThisDivisor
         antXTVT[:, n] = antXTVTThis
 
+    plotCountdown -= 1
+
     if 87 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 87:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon087antXTVT.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVT', 0)
 
@@ -4318,15 +4681,17 @@ def plotEzCon097antXTVTMax2d():
     global ezConPlotRangeL                      # integer list
 
     global antXTVT                              # float 2d array
-
-    if 97 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 97:
-        plotCountdown -= 1
-        return(1)
+    global antLenM1                             # integer
 
     plotName = 'ezCon097antXTVTMax.png'
+
+    plotCountdown -= 1
+
+    if 97 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 97:
+        return(1)
+
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVTMax', 1)
         
@@ -4341,15 +4706,17 @@ def plotEzCon100timeUtcMjd():
     global ezConPlotRangeL                      # integer list
 
     global ezConOut                             # float and int 2d array
-
-    if 100 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 100:
-        plotCountdown -= 1
-        return(1)
+    global antLen                               # integer
 
     plotName = 'ezCon100timeUtcMjd.png'
+
+    plotCountdown -= 1
+
+    if 100 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 100:
+        return(1)
+
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     timeUtcMjdMax = ezConOut[:, 0].max()
     timeUtcMjdMin = ezConOut[:, 0].min()
@@ -4378,15 +4745,15 @@ def plotEzCon101raH():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon101raH.png'
+
+    plotCountdown -= 1
 
     if 101 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 101:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon101raH.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         raHMax =', ezConOut[:, 1].max())
     print('                         raHAvg =', np.mean(ezConOut[:, 1]))
@@ -4405,14 +4772,15 @@ def plotEzCon102decDeg():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon102decDeg.png'
+
+    plotCountdown -= 1
+
     if 102 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 102:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon102decDeg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         decDegMax =', ezConOut[:, 2].max())
     print('                         decDegAvg =', np.mean(ezConOut[:, 2]))
@@ -4431,14 +4799,15 @@ def plotEzCon103gLatDeg():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon103gLatDeg.png'
+
+    plotCountdown -= 1
+
     if 103 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 103:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon103gLatDeg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         gLatDegMax =', ezConOut[:, 3].max())
     print('                         gLatDegAvg =', np.mean(ezConOut[:, 3]))
@@ -4457,14 +4826,15 @@ def plotEzCon104gLonDeg():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon104gLonDeg.png'
+
+    plotCountdown -= 1
+
     if 104 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 104:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon104gLonDeg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         gLonDegMax =', ezConOut[:, 4].max())
     print('                         gLonDegAvg =', np.mean(ezConOut[:, 4]))
@@ -4483,14 +4853,15 @@ def plotEzCon105vlsr():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon105vlsr.png'
+
+    plotCountdown -= 1
+
     if 105 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 105:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon105vlsr.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         vlsrMax =', ezConOut[:, 5].max())
     print('                         vlsrAvg =', np.mean(ezConOut[:, 5]))
@@ -4509,14 +4880,15 @@ def plotEzCon106count():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon106count.png'
+
+    plotCountdown -= 1
+
     if 106 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 106:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon106count.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plotEzCon1dSamplesAnt(plotName, ezConOut[:, 6], [], 'green',
         'Count')
@@ -4531,14 +4903,15 @@ def plotEzCon110antAvg():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon110antAvg.png'
+
+    plotCountdown -= 1
+
     if 110 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 110:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon110antAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antAvgMax =', ezConOut[:, 10].max())
     print('                         antAvgAvg =', np.mean(ezConOut[:, 10]))
@@ -4557,14 +4930,15 @@ def plotEzCon112refAvg():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon112refAvg.png'
+
+    plotCountdown -= 1
+
     if 112 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 112:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon112refAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         refAvgMax =', ezConOut[:, 12].max())
     print('                         refAvgAvg =', np.mean(ezConOut[:, 12]))
@@ -4583,14 +4957,15 @@ def plotEzCon114antBAvg():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon114antBAvg.png'
+
+    plotCountdown -= 1
+
     if 114 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 114:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon114antBAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antBAvgMax =', ezConOut[:, 14].max())
     print('                         antBAvgAvg =', np.mean(ezConOut[:, 14]))
@@ -4609,14 +4984,15 @@ def plotEzCon116antRBAvg():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon116antRBAvg.png'
+
+    plotCountdown -= 1
+
     if 116 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 116:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon116antRBAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antRBAvgMax =', ezConOut[:, 16].max())
     print('                         antRBAvgAvg =', np.mean(ezConOut[:, 16]))
@@ -4635,14 +5011,15 @@ def plotEzCon118antXTVTAvg():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon118antXTVTAvg.png'
+
+    plotCountdown -= 1
+
     if 118 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 118:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon118antXTVTAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antXTVTAvgMax =', ezConOut[:, 18].max())
     print('                         antXTVTAvgAvg =', np.mean(ezConOut[:, 18]))
@@ -4661,14 +5038,15 @@ def plotEzCon111antMax():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon111antMax.png'
+
+    plotCountdown -= 1
+
     if 111 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 111:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon111antMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antMaxMax =', ezConOut[:, 11].max())
     print('                         antMaxAvg =', np.mean(ezConOut[:, 11]))
@@ -4687,14 +5065,15 @@ def plotEzCon113refMax():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon113refMax.png'
+
+    plotCountdown -= 1
+
     if 113 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 113:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon113refMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         refMaxMax =', ezConOut[:, 13].max())
     print('                         refMaxAvg =', np.mean(ezConOut[:, 13]))
@@ -4713,14 +5092,15 @@ def plotEzCon115antBMax():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon115antBMax.png'
+
+    plotCountdown -= 1
+
     if 115 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 115:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon115antBMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antBMaxMax =', ezConOut[:, 15].max())
     print('                         antBMaxAvg =', np.mean(ezConOut[:, 15]))
@@ -4739,14 +5119,15 @@ def plotEzCon117antRBMax():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon117antRBMax.png'
+
+    plotCountdown -= 1
+
     if 117 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 117:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon117antRBMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antBRMaxMax =', ezConOut[:, 17].max())
     print('                         antBRMaxAvg =', np.mean(ezConOut[:, 17]))
@@ -4765,14 +5146,15 @@ def plotEzCon119antXTVTMax():
 
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon119antXTVTMax.png'
+
+    plotCountdown -= 1
+
     if 119 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 119:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon119antXTVTMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antXTVTMaxMax =', ezConOut[:, 19].max())
     print('                         antXTVTMaxAvg =', np.mean(ezConOut[:, 19]))
@@ -4805,8 +5187,11 @@ def plotEzCon191sigProg():
     global antRABaseline            # float array
     global antXTVAvg                # float array       creation
 
+    plotName = 'ezCon191sigProg.png'     # Signal Computation Progression
+
+    plotCountdown -= 1
+
     if 191 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 191:
-        plotCountdown -= 1
         # free antRawAvg memory
         antRawAvg = []
         antRawAvg = None
@@ -4833,10 +5218,8 @@ def plotEzCon191sigProg():
         del antXTVAvg
         return(1)
 
-    plotName = 'ezCon191sigProg.png'     # Signal Computation Progression
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     plt.clf()
 
@@ -4877,6 +5260,10 @@ def plotEzCon191sigProg():
             
     plt.plot(gLatDegY, c='blue')
 
+
+    # If Ant samples are snip filtered (ignored), this unsnipped antRawAvg will no longer align vertically on this plot.
+    # No good solution, because comparing antRawLen samples to a now shorter antLen.
+    # But usually hard to see, because only snipping a few samples compared to a large number of antLen.
 
     # using antRawAvg, calculate a gain to fit it within -100 to +100 of its average
     antRawAvgMax = antRawAvg.max()
@@ -5236,18 +5623,19 @@ def plotEzCon198azimuth():
 
     global azimuth                              # float array
 
+    plotName = 'ezCon198azimuth.png'
+
+    plotCountdown -= 1
+
     if 198 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 198:
-        plotCountdown -= 1
         # free azimuth memory
         azimuth = []
         azimuth = None
         del azimuth
         return(1)
 
-    plotName = 'ezCon198azimuth.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         azimuthMax =', azimuth.max())
     print('                         azimuthAvg =', np.mean(azimuth))
@@ -5271,18 +5659,19 @@ def plotEzCon199elevation():
 
     global elevation                            # float array
 
+    plotName = 'ezCon199elevation.png'
+
+    plotCountdown -= 1
+
     if 199 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 199:
-        plotCountdown -= 1
         # free elevation memory
         elevation = []
         elevation = None
         del elevation
         return(1)
 
-    plotName = 'ezCon199elevation.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         elevationMax =', elevation.max())
     print('                         elevationAvg =', np.mean(elevation))
@@ -5316,17 +5705,20 @@ def plotEzCon200rawRawAvg():
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon200rawRawAvg.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
-    # create rawAvg array: for each raw sample, the average of that sample's spectrum values
-    rawAvg = np.mean(raw, axis=0)
-    print('                         rawRawAvgMax =', rawAvg.max())
-    print('                         rawRawAvgAvg =', np.mean(rawAvg))
-    print('                         rawRawAvgMin =', rawAvg.min())
-
     if ezConPlotRangeL[0] <= 200 and 200 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+        # create rawAvg array: for each raw sample, the average of that sample's spectrum values
+        rawAvg = np.mean(raw, axis=0)
+        print('                         rawRawAvgMax =', rawAvg.max())
+        print('                         rawRawAvgAvg =', np.mean(rawAvg))
+        print('                         rawRawAvgMin =', rawAvg.min())
+
         plt.clf()
 
         # plot all raw data as connected green dots
@@ -5392,17 +5784,20 @@ def plotEzCon201ArawAvg():
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon201ArawAvg.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
-    # create rawAvg array: for each raw sample, the average of that sample's spectrum values
-    rawAvg = np.mean(raw, axis=0)
-    print('                         rawAvgMax =', rawAvg.max())
-    print('                         rawAvgAvg =', np.mean(rawAvg))
-    print('                         rawAvgMin =', rawAvg.min())
-
     if ezConPlotRangeL[0] <= 201 and 201 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+        # create rawAvg array: for each raw sample, the average of that sample's spectrum values
+        rawAvg = np.mean(raw, axis=0)
+        print('                         rawAvgMax =', rawAvg.max())
+        print('                         rawAvgAvg =', np.mean(rawAvg))
+        print('                         rawAvgMin =', rawAvg.min())
+
         plt.clf()
 
         # plot all raw data as connected green dots
@@ -5467,10 +5862,12 @@ def plotEzCon201EsampleRefAgain():
     global xTickLabelsRaw           # string list
 
     plotName = 'ezCon201EsampleRefAgain.png'
-    print()
-    print('   plotting ' + plotName + ' ================================')
 
     if ezConPlotRangeL[0] <= 201 and 201 <= ezConPlotRangeL[1]:
+
+        print()
+        print('   plotting ' + plotName + ' ================================')
+
         plt.clf()
 
         print('                         sampleRefAgainMax =', sampleRefAgain.max())
@@ -5518,12 +5915,14 @@ def plotEzCon201GrawAntRef():
     global xTickLocsRaw             # float array
     global xTickLabelsRaw           # string list
 
+    plotName = 'ezCon201GrawAntRef.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 201 and 201 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon201GrawAntRef.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         # create rawAvg array: for each raw sample, the average of that sample's spectrum values
         rawAvg = np.mean(raw, axis=0)
@@ -5558,11 +5957,43 @@ def plotEzCon201GrawAntRef():
         # plot all raw data as connected green dots
         plt.plot(rawAvg, 'go-')
 
-        # plot just ant data as blue dots
-        plt.plot(rawAvgAnt, 'bo')
+        #print('             rawAvgRef =', rawAvgRef)
+        # rawAvgRef = [ 1.15663404  nan  1.1568708  ...  1.13110415  nan  1.13264854 ]
+        #print('             rawAvgAnt =', rawAvgAnt)
+        # rawAvgAnt = [ nan  0.95682753  nan  ...  nan  0.94020758  nan ]
+        if 0:
+            # ref red dots unconnected and ant blue dots unconnected
+            # plot just ref data as red dots
+            plt.plot(rawAvgRef, 'ro')
 
-        # plot just ref data as red dots
-        plt.plot(rawAvgRef, 'ro')
+            # plot just ant data as blue dots
+            plt.plot(rawAvgAnt, 'bo')
+
+        else:
+            # ref red dots connected and ant blue dots connected
+            # create rawAvgRefNoGap like rawAvgRef, but without np.nan values
+            rawAvgRefNoGap = rawAvgRef + 0
+            if np.isnan(rawAvgRefNoGap[0]):
+                # copy from future by 1
+                rawAvgRefNoGap[0] = rawAvgRefNoGap[1]
+            for i in range(1, rawLen):
+                if np.isnan(rawAvgRefNoGap[i]):
+                    # copy from past by 1
+                    rawAvgRefNoGap[i] = rawAvgRefNoGap[i-1]
+            # plot rawAvgRefNoGap as connected red dots
+            plt.plot(rawAvgRefNoGap, 'ro-')
+
+            # create rawAvgAntNoGap like rawAvgAnt, but without np.nan values
+            rawAvgAntNoGap = rawAvgAnt + 0
+            if np.isnan(rawAvgAntNoGap[0]):
+                # copy from future by 1
+                rawAvgAntNoGap[0] = rawAvgAntNoGap[1]
+            for i in range(1, rawLen):
+                if np.isnan(rawAvgAntNoGap[i]):
+                    # copy from past by 1
+                    rawAvgAntNoGap[i] = rawAvgAntNoGap[i-1]
+            # plot rawAvgAntNoGap as connected blue dots
+            plt.plot(rawAvgAntNoGap, 'bo-')
 
         plt.title(titleS)
         plt.grid(ezConDispGrid)
@@ -5594,11 +6025,14 @@ def plotEzCon201HtimeUtcMjdDBetweenRaw():
     global xTickLabelsRaw           # string list
 
     plotName = 'ezCon201HtimeUtcMjdDBetweenRaw.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
     if ezConPlotRangeL[0] <= 201 and 201 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         # 24 * 60 * 60 = 86400 seconds in one MJD Day
@@ -5633,7 +6067,7 @@ def plotEzCon201HtimeUtcMjdDBetweenRaw():
 
 
 
-def plotEzCon201ItimeUtcMjdDBetweenAnt():
+def plotEzCon201ItimeUtcMjdDBetweenAntRaw():
 
     global fileNameLast             # string
     global plotCountdown            # integer
@@ -5645,9 +6079,8 @@ def plotEzCon201ItimeUtcMjdDBetweenAnt():
 
     global maskRawAnt               # Boolean array
 
-    plotName = 'ezCon201ItimeUtcMjdDBetweenAnt.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotName = 'ezCon201ItimeUtcMjdDBetweenAntRaw.png'
+
     plotCountdown -= 1
 
     print(f'   rawLen = {rawLen:,}')
@@ -5656,6 +6089,10 @@ def plotEzCon201ItimeUtcMjdDBetweenAnt():
         timeUtcMjdRaw[i] = dataTimeUtc[i].mjd       # convert to MJD numbers
 
     if ezConPlotRangeL[0] <= 201 and 201 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         # mask off all but ANT samples
@@ -5674,7 +6111,7 @@ def plotEzCon201ItimeUtcMjdDBetweenAnt():
 
         plt.xlim(0, antLenM1 - 1)
 
-        plt.ylabel('Seconds Between ' + str(antLen) + ' Ant Samples' \
+        plt.ylabel('Seconds Between ' + str(antLen) + ' AntRaw Samples' \
             + '\n\nMedian=' + str(int(np.median(timeUtcMjdDBetweenRawAnt) + 0.5)) \
             + '  Mean=' + str(timeUtcMjdDBetweenRawAntAvg) \
             + '  Span=' + str(timeUtcMjdDBetweenRawAntSpan))
@@ -5685,7 +6122,7 @@ def plotEzCon201ItimeUtcMjdDBetweenAnt():
 
 
 
-def plotEzCon201JtimeUtcMjdDBetweenRef():
+def plotEzCon201JtimeUtcMjdDBetweenRefRaw():
 
     global fileNameLast             # string
     global plotCountdown            # integer
@@ -5695,12 +6132,15 @@ def plotEzCon201JtimeUtcMjdDBetweenRef():
 
     global maskRawRef               # Boolean array
 
-    plotName = 'ezCon201JtimeUtcMjdDBetweenRef.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotName = 'ezCon201JtimeUtcMjdDBetweenRefRaw.png'
+
     plotCountdown -= 1
 
     if ezConPlotRangeL[0] <= 201 and 201 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         refQty = np.sum((maskRawRef + 0))          # might be different than antLen
@@ -5722,7 +6162,7 @@ def plotEzCon201JtimeUtcMjdDBetweenRef():
             plt.xlim(0, 1)
             plt.ylim(0, 1)
 
-            plt.ylabel('Seconds Between ' + str(refQty) + ' Ref Samples\n\n')
+            plt.ylabel('Seconds Between ' + str(refQty) + ' RefRaw Samples\n\n')
 
             plt.text(0, 0.5, '      Warning: Can not create this plot with less than 2 Ref samples')
             
@@ -5742,7 +6182,7 @@ def plotEzCon201JtimeUtcMjdDBetweenRef():
 
             plt.xlim(0, refQty - 2)
 
-            plt.ylabel('Seconds Between ' + str(refQty) + ' Ref Samples' \
+            plt.ylabel('Seconds Between ' + str(refQty) + ' RefRaw Samples' \
                 + '\n\nMedian=' + str(int(np.median(timeUtcMjdDBetweenRawRef) + 0.5)) \
                 + '  Mean=' + str(timeUtcMjdDBetweenRawRefAvg) \
                 + '  Span=' + str(timeUtcMjdDBetweenRawRefSpan))
@@ -5765,16 +6205,17 @@ def plotEzCon202antRawAvg():
     global ant                                  # float 2d array
     global antRawAvg                            # float array       creation
 
+    plotName = 'ezCon202antRawAvg.png'
+
     antRawAvg = np.mean(ant, axis=0)            # creation
 
+    plotCountdown -= 1
+
     if 202 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 202:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon202antRawAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antRawAvgMax =', antRawAvg.max())
     print('                         antRawAvgAvg =', np.mean(antRawAvg))
@@ -5795,16 +6236,17 @@ def plotEzCon207antAvg():
     global ant                                  # float 2d array
     global antAvg                               # float array       creation
 
+    plotName = 'ezCon207antAvg.png'
+
     antAvg = np.mean(ant, axis=0)               # creation
 
+    plotCountdown -= 1
+
     if 207 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 207:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon207antAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antAvgMax =', antAvg.max())
     print('                         antAvgAvg =', np.mean(antAvg))
@@ -5824,16 +6266,17 @@ def plotEzCon217antMax():
     global ant                                  # float 2d array
     global antMax                               # float array       creation
 
+    plotName = 'ezCon217antMax.png'
+
     antMax = np.amax(ant, axis=0)               # creation
 
+    plotCountdown -= 1
+
     if 217 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 217:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon217antMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antMaxMax =', antMax.max())
     print('                         antMaxAvg =', np.mean(antMax))
@@ -5853,20 +6296,21 @@ def plotEzCon222refRawAvg():
     global ref                                  # float 2d array
     global refRawAvg                            # float array       creation
 
+    plotName = 'ezCon222refRawAvg.png'
+
+    plotCountdown -= 1
+
     if 222 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 222:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon222refRawAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         refRawAvgMax =', refRawAvg.max())
     print('                         refRawAvgAvg =', np.mean(refRawAvg))
     print('                         refRawAvgMin =', refRawAvg.min())
 
-    plotEzCon1dSamplesAnt(plotName, antRawAvg, [], 'red',
+    plotEzCon1dSamplesAnt(plotName, refRawAvg, [], 'red',
         'RefRaw Antenna Spectrum Average')
 
 
@@ -5881,16 +6325,17 @@ def plotEzCon227refAvg():
     global ref                                  # float 2d array
     global refAvg                               # float array       creation
 
+    plotName = 'ezCon227refAvg.png'
+
     refAvg = np.mean(ref, axis=0)               # creation
 
+    plotCountdown -= 1
+
     if 227 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 227:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon227refAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         refAvgMax =', refAvg.max())
     print('                         refAvgAvg =', np.mean(refAvg))
@@ -5910,16 +6355,17 @@ def plotEzCon237refMax():
     global ref                                  # float 2d array
     global refMax                               # float array       creation
 
+    plotName = 'ezCon237refMax.png'
+
     refMax = np.amax(ref, axis=0)               # creation
 
+    plotCountdown -= 1
+
     if 237 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 237:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon237refMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         refMaxMax =', refMax.max())
     print('                         refMaxAvg =', np.mean(refMax))
@@ -5941,6 +6387,8 @@ def plotEzCon241antBaseline():
     global antBaseline                          # float array       creation
     global ezConAntBaselineFreqBinsFracL        # float list
 
+    plotName = 'ezCon241antBaseline.png'
+
     # In each ant sample spectrum, hydrogen appears in the center frequencies,
     # so average the low and high frequency values.
     # Create antBaseline with ant, and ezConAntBaselineFreqBinsFracL .
@@ -5953,14 +6401,13 @@ def plotEzCon241antBaseline():
         / ((ezConAntBaselineFreqBin[1] - ezConAntBaselineFreqBin[0]) \
         + (ezConAntBaselineFreqBin[3] - ezConAntBaselineFreqBin[2]))
 
+    plotCountdown -= 1
+
     if 241 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 241:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon241antBaseline.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antBasMax =', antBaseline.max())
     print('                         antBasAvg =', np.mean(antBaseline))
@@ -5981,16 +6428,17 @@ def plotEzCon247antBAvg():
     global antB                                 # float 2d array
     global antBAvg                              # float array       creation
 
+    plotName = 'ezCon247antBAvg.png'
+
     antBAvg = np.mean(antB, axis=0)             # creation
 
+    plotCountdown -= 1
+
     if 247 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 247:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon247antBAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     antBAvgMax = antBAvg.max()
     antBAvgMin = antBAvg.min()
@@ -6012,16 +6460,17 @@ def plotEzCon257antBMax():
     global antB                                 # float 2d array
     global antBMax                              # float array       creation
 
+    plotName = 'ezCon257antBMax.png'
+
     antBMax = np.amax(antB, axis=0)             # creation
 
+    plotCountdown -= 1
+
     if 257 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 257:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon257antBMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antBMaxMax =', antBMax.max())
     print('                         antBMaxAvg =', np.mean(antBMax))
@@ -6041,16 +6490,17 @@ def plotEzCon261antRAAvg():
     global antRA                                # float 2d array
     global antRAAvg                             # float array       creation
 
+    plotName = 'ezCon261antRAAvg.png'
+
     antRAAvg = np.mean(antRA, axis=0)           # creation
 
+    plotCountdown -= 1
+
     if 261 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 261:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon261antRAAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antRAAvgMax =', antRAAvg.max())
     print('                         antRAAvgAvg =', np.mean(antRAAvg))
@@ -6072,6 +6522,8 @@ def plotEzCon262antRABaseline():
     global antRABaseline                        # float array       creation
     global ezConAntRABaselineFreqBinsFracL      # float list
 
+    plotName = 'ezCon262antRABasAvg.png'
+
     # In each antRA sample spectrum, hydrogen appears in the center frequencies,
     # so average the low and high frequency values.
     # Create antRABaseline with antRA, and ezConAntRABaselineFreqBinsFracL .
@@ -6084,14 +6536,13 @@ def plotEzCon262antRABaseline():
         / ((ezConAntRABaselineFreqBin[1] - ezConAntRABaselineFreqBin[0]) \
         + (ezConAntRABaselineFreqBin[3] - ezConAntRABaselineFreqBin[2]))
 
+    plotCountdown -= 1
+
     if 262 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 262:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon262antRABasAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antRABasMax =', antRABaseline.max())
     print('                         antRABasAvg =', np.mean(antRABaseline))
@@ -6111,16 +6562,17 @@ def plotEzCon267antRBAvg():
     global antRB                                # float 2d array
     global antRBAvg                             # float array       creation
 
+    plotName = 'ezCon267antRBAvg.png'
+
     antRBAvg = np.mean(antRB, axis=0)           # creation
 
+    plotCountdown -= 1
+
     if 267 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 267:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon267antRBAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antRBAvgMax =', antRBAvg.max())
     print('                         antRBAvgAvg =', np.mean(antRBAvg))
@@ -6140,16 +6592,17 @@ def plotEzCon277antRBMax():
     global antRB                                # float 2d array
     global antRBMax                             # float array       creation
 
+    plotName = 'ezCon277antRBMax.png'
+
     antRBMax = np.amax(antRB, axis=0)           # creation
 
+    plotCountdown -= 1
+
     if 277 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 277:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon277antRBMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antRBMaxMax =', antRBMax.max())
     print('                         antRBMaxAvg =', np.mean(antRBMax))
@@ -6169,16 +6622,17 @@ def plotEzCon281antXTAvg():
     global antXT                                # float 2d array
     global antXTAvg                             # float array       creation
 
+    plotName = 'ezCon281antXTAvg.png'
+
     antXTAvg = np.mean(antXT, axis=0)           # creation
 
+    plotCountdown -= 1
+
     if 281 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 281:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon281antXTAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antXTAvgMax =', antXTAvg.max())
     print('                         antXTAvgAvg =', np.mean(antXTAvg))
@@ -6199,16 +6653,17 @@ def plotEzCon282antXTVAvg():
     global antXTV                               # float 2d array
     global antXTVAvg                            # float array       creation
 
+    plotName = 'ezCon282antXTVAvg.png'
+
     antXTVAvg = np.mean(antXTV, axis=0)         # creation
 
+    plotCountdown -= 1
+
     if 282 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 282:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon282antXTVAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antXTVAvgMax =', antXTVAvg.max())
     print('                         antXTVAvgAvg =', np.mean(antXTVAvg))
@@ -6229,16 +6684,17 @@ def plotEzCon287antXTVTAvg():
     global antXTVT                              # float 2d array
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon287antXTVTAvg.png'
+
     ezConOut[:, 18] = np.mean(antXTVT, axis=0)  # creation of antXTVTAvg into ezConOut[:, 18]
 
+    plotCountdown -= 1
+
     if 287 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 287:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon287antXTVTAvg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antXTVTAvgMax =', ezConOut[:, 18].max())
     print('                         antXTVTAvgAvg =', np.mean(ezConOut[:, 18]))
@@ -6258,16 +6714,17 @@ def plotEzCon297antXTVTMax():
     global antXTVT                              # float 2d array
     global ezConOut                             # float and int 2d array
 
+    plotName = 'ezCon297antXTVTMax.png'
+
     ezConOut[:, 19] = np.amax(antXTVT, axis=0)  # creation of antXTVTMax into ezConOut[:, 19]
 
+    plotCountdown -= 1
+
     if 297 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 297:
-        plotCountdown -= 1
         return(1)
 
-    plotName = 'ezCon297antXTVTMax.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         antXTVTMaxMax =', ezConOut[:, 19].max())
     print('                         antXTVTMaxAvg =', np.mean(ezConOut[:, 19]))
@@ -6285,12 +6742,14 @@ def plotEzCon300rawRawByFreqBinAvg():
     global plotCountdown            # integer
     global raw                      # float 2d array
 
+    plotName = 'ezCon300rawRawByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 300 and 300 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon300rawRawByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         # calculate average by Freq Bin and plot by Doppler
         plotEzCon1dByFreqBin(plotName, np.mean(raw, axis=1), 'green',
@@ -6305,12 +6764,14 @@ def plotEzCon301rawByFreqBinAvg():
     global plotCountdown            # integer
     global raw                      # float 2d array
 
+    plotName = 'ezCon301rawByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 301 and 301 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon301rawByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         # calculate average by Freq Bin and plot by Doppler
         plotEzCon1dByFreqBin(plotName, np.mean(raw, axis=1), 'green',
@@ -6325,12 +6786,14 @@ def plotEzCon302antRawByFreqBinAvg():
     global plotCountdown            # integer
     global ant                      # float 2d array
 
+    plotName = 'ezCon302antRawByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 302 and 302 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon302antRawByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.mean(ant, axis=1), 'blue',
             'AntRaw Average Spectrum')
@@ -6345,14 +6808,81 @@ def plotEzCon307antByFreqBinAvg():
     global plotCountdown            # integer
     global ant                      # float 2d array
 
+    plotName = 'ezCon307antByFreqBinAvg.png'
+
+    if 1:
+        print()
+        print(f'  {fileNameLast}  ======================================== Frequency study of Ant')
+
+        antByFreqBinSumAvg = np.mean(ant, axis=1)
+        antByFreqBinSumAvgMin = min(antByFreqBinSumAvg)
+        antByFreqBinSumAvgMax = max(antByFreqBinSumAvg)
+        antByFreqBinSumAvgSpanD100 \
+            = (antByFreqBinSumAvgMax - antByFreqBinSumAvgMin) / 100.
+        # to allow division by antByFreqBinSumAvgSpanD100
+        if not antByFreqBinSumAvgSpanD100:
+            antByFreqBinSumAvgSpanD100 = 1e-14
+
+        print()
+        print(' FreqBin indexes of 5 highest-values of Ant:')
+        antByFreqBinSumAvgIdxbyValueHigh5 = np.array(antByFreqBinSumAvg).argsort()[::-1][:5]
+        for i in range(len(antByFreqBinSumAvgIdxbyValueHigh5)):
+            antByFreqBinSumAvgThis = \
+                antByFreqBinSumAvg[antByFreqBinSumAvgIdxbyValueHigh5[i]]
+            antByFreqBinSumAvgThisPercent = \
+                (antByFreqBinSumAvgThis - antByFreqBinSumAvgMin) / antByFreqBinSumAvgSpanD100
+            if antByFreqBinSumAvgThisPercent < 95:
+                print(' i =', i,
+                    '      FreqBin =', antByFreqBinSumAvgIdxbyValueHigh5[i],
+                    '      antByFreqBinSumAvg =', antByFreqBinSumAvgThis,
+                    '      ', (antByFreqBinSumAvgThis - antByFreqBinSumAvgMin) \
+                    / antByFreqBinSumAvgSpanD100, '%  <=========== < 95%')
+            else:
+                print(' i =', i,
+                    '      FreqBin =', antByFreqBinSumAvgIdxbyValueHigh5[i],
+                    '      antByFreqBinSumAvg =', antByFreqBinSumAvgThis,
+                    '      ', (antByFreqBinSumAvgThis - antByFreqBinSumAvgMin) \
+                    / antByFreqBinSumAvgSpanD100, '%')
+        print('                 Maybe try arguments like    -ezConRawFreqBinHide',
+            antByFreqBinSumAvgIdxbyValueHigh5[0])
+
+        print()
+        print(' FreqBin indexes of 5 lowest-values of Ant:')
+        antByFreqBinSumAvgIdxbyValueLow5 = np.array(antByFreqBinSumAvg).argsort()[:5]
+        for i in range(len(antByFreqBinSumAvgIdxbyValueLow5)):
+            antByFreqBinSumAvgThis = \
+                antByFreqBinSumAvg[antByFreqBinSumAvgIdxbyValueLow5[i]]
+            print(' i =', i,
+                '      FreqBin =', antByFreqBinSumAvgIdxbyValueLow5[i],
+                '      antByFreqBinSumAvg =', antByFreqBinSumAvgThis,
+                '      ', (antByFreqBinSumAvgThis - antByFreqBinSumAvgMin) \
+                / antByFreqBinSumAvgSpanD100, '%')
+        print('                 Maybe try arguments like    -ezConRawFreqBinHide',
+            antByFreqBinSumAvgIdxbyValueLow5[0])
+
+        print()
+        print(' FreqBin indexes of 5 largest change values of Ant:')
+        antByFreqBinSumAvgIdxbyValueDeltaHigh5m1 \
+            = np.array(abs(antByFreqBinSumAvg[1:] - antByFreqBinSumAvg[:-1])).argsort()[::-1][:5]
+        for i in range(len(antByFreqBinSumAvgIdxbyValueDeltaHigh5m1)):
+            antByFreqBinSumAvgDeltaThis = \
+                antByFreqBinSumAvg[antByFreqBinSumAvgIdxbyValueDeltaHigh5m1[i] + 1] \
+                - antByFreqBinSumAvg[antByFreqBinSumAvgIdxbyValueDeltaHigh5m1[i]]
+            print(' i =', i,
+                '      FreqBin =', antByFreqBinSumAvgIdxbyValueDeltaHigh5m1[i] + 1,
+                '      antByFreqBinSumAvgDelta =', antByFreqBinSumAvgDeltaThis,
+                '      ', antByFreqBinSumAvgDeltaThis / antByFreqBinSumAvgSpanD100, '%')
+        print('                 Maybe try arguments like    -ezConRawFreqBinHide',
+            antByFreqBinSumAvgIdxbyValueDeltaHigh5m1[0] + 1)
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 307 and 307 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon307antByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
-        plotEzCon1dByFreqBin(plotName, np.mean(ant, axis=1), 'blue',
+        plotEzCon1dByFreqBin(plotName, antByFreqBinSumAvg, 'blue',
             'Ant Average Spectrum')
 
 
@@ -6365,14 +6895,81 @@ def plotEzCon317antByFreqBinMax():
     global plotCountdown            # integer
     global ant                      # float 2d array
 
+    plotName = 'ezCon317antByFreqBinMax.png'
+
+    if 1:
+        print()
+        print(f'  {fileNameLast}  ============================ Frequency study of AntByFreqBinMax')
+
+        antByFreqBinMax = np.amax(ant, axis=1)
+        antByFreqBinMaxMin = min(antByFreqBinMax)
+        antByFreqBinMaxMax = max(antByFreqBinMax)
+        antByFreqBinMaxSpanD100 \
+            = (antByFreqBinMaxMax - antByFreqBinMaxMin) / 100.
+        # to allow division by antByFreqBinMaxSpanD100
+        if not antByFreqBinMaxSpanD100:
+            antByFreqBinMaxSpanD100 = 1e-14
+
+        print()
+        print(' FreqBin indexes of 5 highest-values of AntByFreqBinMax:')
+        antByFreqBinMaxIdxbyValueHigh5 = np.array(antByFreqBinMax).argsort()[::-1][:5]
+        for i in range(len(antByFreqBinMaxIdxbyValueHigh5)):
+            antByFreqBinMaxThis = \
+                antByFreqBinMax[antByFreqBinMaxIdxbyValueHigh5[i]]
+            antByFreqBinMaxThisPercent = \
+                (antByFreqBinMaxThis - antByFreqBinMaxMin) / antByFreqBinMaxSpanD100
+            if antByFreqBinMaxThisPercent < 95:
+                print(' i =', i,
+                    '      FreqBin =', antByFreqBinMaxIdxbyValueHigh5[i],
+                    '      antByFreqBinMax =', antByFreqBinMaxThis,
+                    '      ', (antByFreqBinMaxThis - antByFreqBinMaxMin) \
+                    / antByFreqBinMaxSpanD100, '%  <=========== < 95%')
+            else:
+                print(' i =', i,
+                    '      FreqBin =', antByFreqBinMaxIdxbyValueHigh5[i],
+                    '      antByFreqBinMax =', antByFreqBinMaxThis,
+                    '      ', (antByFreqBinMaxThis - antByFreqBinMaxMin) \
+                    / antByFreqBinMaxSpanD100, '%')
+        print('                 Maybe try arguments like    -ezConRawFreqBinHide',
+            antByFreqBinMaxIdxbyValueHigh5[0])
+
+        print()
+        print(' FreqBin indexes of 5 lowest-values of AntByFreqBinMax:')
+        antByFreqBinMaxIdxbyValueLow5 = np.array(antByFreqBinMax).argsort()[:5]
+        for i in range(len(antByFreqBinMaxIdxbyValueLow5)):
+            antByFreqBinMaxThis = \
+                antByFreqBinMax[antByFreqBinMaxIdxbyValueLow5[i]]
+            print(' i =', i,
+                '      FreqBin =', antByFreqBinMaxIdxbyValueLow5[i],
+                '      antByFreqBinMax =', antByFreqBinMaxThis,
+                '      ', (antByFreqBinMaxThis - antByFreqBinMaxMin) \
+                / antByFreqBinMaxSpanD100, '%')
+        print('                 Maybe try arguments like    -ezConRawFreqBinHide',
+            antByFreqBinMaxIdxbyValueLow5[0])
+
+        print()
+        print(' FreqBin indexes of 5 largest change values of AntByFreqBinMax:')
+        antByFreqBinMaxIdxbyValueDeltaHigh5m1 \
+            = np.array(abs(antByFreqBinMax[1:] - antByFreqBinMax[:-1])).argsort()[::-1][:5]
+        for i in range(len(antByFreqBinMaxIdxbyValueDeltaHigh5m1)):
+            antByFreqBinMaxDeltaThis = \
+                antByFreqBinMax[antByFreqBinMaxIdxbyValueDeltaHigh5m1[i] + 1] \
+                - antByFreqBinMax[antByFreqBinMaxIdxbyValueDeltaHigh5m1[i]]
+            print(' i =', i,
+                '      FreqBin =', antByFreqBinMaxIdxbyValueDeltaHigh5m1[i] + 1,
+                '      antByFreqBinMaxDelta =', antByFreqBinMaxDeltaThis,
+                '      ', antByFreqBinMaxDeltaThis / antByFreqBinMaxSpanD100, '%')
+        print('                 Maybe try arguments like    -ezConRawFreqBinHide',
+            antByFreqBinMaxIdxbyValueDeltaHigh5m1[0] + 1)
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 317 and 317 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon317antByFreqBinMax.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
-        plotEzCon1dByFreqBin(plotName, np.amax(ant, axis=1), 'blue',
+        plotEzCon1dByFreqBin(plotName, antByFreqBinMax, 'blue',
             'Ant Maximum Spectrum')
 
 
@@ -6384,12 +6981,14 @@ def plotEzCon322refRawByFreqBinAvg():
     global plotCountdown            # integer
     global ref                      # float 2d array
 
+    plotName = 'ezCon322refRawByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 322 and 322 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon322refRawByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.mean(ref, axis=1), 'red',
             'RefRaw Average Spectrum')
@@ -6403,14 +7002,81 @@ def plotEzCon327refByFreqBinAvg():
     global plotCountdown            # integer
     global ref                      # float 2d array
 
+    plotName = 'ezCon327refByFreqBinAvg.png'
+
+    if 1:
+        print()
+        print(f'  {fileNameLast}  ======================================== Frequency study of Ref')
+
+        refByFreqBinSumAvg = np.mean(ref, axis=1)
+        refByFreqBinSumAvgMin = min(refByFreqBinSumAvg)
+        refByFreqBinSumAvgMax = max(refByFreqBinSumAvg)
+        refByFreqBinSumAvgSpanD100 \
+            = (refByFreqBinSumAvgMax - refByFreqBinSumAvgMin) / 100.
+        # to allow division by refByFreqBinSumAvgSpanD100
+        if not refByFreqBinSumAvgSpanD100:
+            refByFreqBinSumAvgSpanD100 = 1e-14
+
+        print()
+        print(' FreqBin indexes of 5 highest-values of Ref:')
+        refByFreqBinSumAvgIdxbyValueHigh5 = np.array(refByFreqBinSumAvg).argsort()[::-1][:5]
+        for i in range(len(refByFreqBinSumAvgIdxbyValueHigh5)):
+            refByFreqBinSumAvgThis = \
+                refByFreqBinSumAvg[refByFreqBinSumAvgIdxbyValueHigh5[i]]
+            refByFreqBinSumAvgThisPercent = \
+                (refByFreqBinSumAvgThis - refByFreqBinSumAvgMin) / refByFreqBinSumAvgSpanD100
+            if refByFreqBinSumAvgThisPercent < 95:
+                print(' i =', i,
+                    '      FreqBin =', refByFreqBinSumAvgIdxbyValueHigh5[i],
+                    '      refByFreqBinSumAvg =', refByFreqBinSumAvgThis,
+                    '      ', (refByFreqBinSumAvgThis - refByFreqBinSumAvgMin) \
+                    / refByFreqBinSumAvgSpanD100, '%  <=========== < 95%')
+            else:
+                print(' i =', i,
+                    '      FreqBin =', refByFreqBinSumAvgIdxbyValueHigh5[i],
+                    '      refByFreqBinSumAvg =', refByFreqBinSumAvgThis,
+                    '      ', (refByFreqBinSumAvgThis - refByFreqBinSumAvgMin) \
+                    / refByFreqBinSumAvgSpanD100, '%')
+        print('                 Maybe try arguments like    -ezConRawFreqBinHide',
+            refByFreqBinSumAvgIdxbyValueHigh5[0])
+
+        print()
+        print(' FreqBin indexes of 5 lowest-values of Ref:')
+        refByFreqBinSumAvgIdxbyValueLow5 = np.array(refByFreqBinSumAvg).argsort()[:5]
+        for i in range(len(refByFreqBinSumAvgIdxbyValueLow5)):
+            refByFreqBinSumAvgThis = \
+                refByFreqBinSumAvg[refByFreqBinSumAvgIdxbyValueLow5[i]]
+            print(' i =', i,
+                '      FreqBin =', refByFreqBinSumAvgIdxbyValueLow5[i],
+                '      refByFreqBinSumAvg =', refByFreqBinSumAvgThis,
+                '      ', (refByFreqBinSumAvgThis - refByFreqBinSumAvgMin) \
+                / refByFreqBinSumAvgSpanD100, '%')
+        print('                 Maybe try arguments like    -ezConRawFreqBinHide',
+            refByFreqBinSumAvgIdxbyValueLow5[0])
+
+        print()
+        print(' FreqBin indexes of 5 largest change values of Ref:')
+        refByFreqBinSumAvgIdxbyValueDeltaHigh5m1 \
+            = np.array(abs(refByFreqBinSumAvg[1:] - refByFreqBinSumAvg[:-1])).argsort()[::-1][:5]
+        for i in range(len(refByFreqBinSumAvgIdxbyValueDeltaHigh5m1)):
+            refByFreqBinSumAvgDeltaThis = \
+                refByFreqBinSumAvg[refByFreqBinSumAvgIdxbyValueDeltaHigh5m1[i] + 1] \
+                - refByFreqBinSumAvg[refByFreqBinSumAvgIdxbyValueDeltaHigh5m1[i]]
+            print(' i =', i,
+                '      FreqBin =', refByFreqBinSumAvgIdxbyValueDeltaHigh5m1[i] + 1,
+                '      refByFreqBinSumAvgDelta =', refByFreqBinSumAvgDeltaThis,
+                '      ', refByFreqBinSumAvgDeltaThis / refByFreqBinSumAvgSpanD100, '%')
+        print('                 Maybe try arguments like    -ezConRawFreqBinHide',
+            refByFreqBinSumAvgIdxbyValueDeltaHigh5m1[0] + 1)
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 327 and 327 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon327refByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
-        plotEzCon1dByFreqBin(plotName, np.mean(ref, axis=1), 'red',
+        plotEzCon1dByFreqBin(plotName, refByFreqBinSumAvg, 'red',
             'Ref Average Spectrum')
 
 
@@ -6422,12 +7088,14 @@ def plotEzCon337refByFreqBinMax():
     global plotCountdown            # integer
     global ref                      # float 2d array
 
+    plotName = 'ezCon337refByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 337 and 337 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon337refByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.amax(ref, axis=1), 'red',
             'Ref Maximum Spectrum')
@@ -6441,12 +7109,14 @@ def plotEzCon347antBByFreqBinAvg():
     global plotCountdown            # integer
     global antB                     # float 2d array
 
+    plotName = 'ezCon347antBByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 347 and 347 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon347antBByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.mean(antB, axis=1), 'green',
             'AntB Average Spectrum')
@@ -6460,12 +7130,14 @@ def plotEzCon357antBByFreqBinMax():
     global plotCountdown            # integer
     global antB                     # float 2d array
 
+    plotName = 'ezCon357antBByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 357 and 357 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon357antBByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.amax(antB, axis=1), 'green',
             'AntB Maximum Spectrum')
@@ -6479,12 +7151,14 @@ def plotEzCon361antRAByFreqBinAvg():
     global plotCountdown            # integer
     global antRA                    # float 2d array
 
+    plotName = 'ezCon361antRAByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 361 and 361 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon361antRAByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.mean(antRA, axis=1), 'orange',
             'AntRA Average Spectrum')
@@ -6498,12 +7172,14 @@ def plotEzCon367antRBByFreqBinAvg():
     global plotCountdown            # integer
     global antRB                    # float 2d array
 
+    plotName = 'ezCon367antRBByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 367 and 367 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon367antRBByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.mean(antRB, axis=1), 'orange',
             'AntRB Average Spectrum')
@@ -6517,12 +7193,14 @@ def plotEzCon377antRBByFreqBinMax():
     global plotCountdown            # integer
     global antRB                    # float 2d array
 
+    plotName = 'ezCon377antRBByFreqBinMax.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 377 and 377 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon377antRBByFreqBinMax.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.amax(antRB, axis=1), 'orange',
             'AntRB Maximum Spectrum')
@@ -6536,12 +7214,14 @@ def plotEzCon381antXTByFreqBinAvg():
     global plotCountdown            # integer
     global antXT                    # float 2d array
 
+    plotName = 'ezCon381antXTByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 381 and 381 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon381antXTByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.mean(antXT, axis=1), 'violet',
             'AntXT Average Spectrum')
@@ -6555,12 +7235,14 @@ def plotEzCon382antXTVByFreqBinAvg():
     global plotCountdown            # integer
     global antXTV                   # float 2d array
 
+    plotName = 'ezCon382antXTVByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 382 and 382 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon382antXTVByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.mean(antXTV, axis=1), 'violet',
             'AntXTV Average Spectrum')
@@ -6574,12 +7256,14 @@ def plotEzCon387antXTVTByFreqBinAvg():
     global plotCountdown            # integer
     global antXTVT                  # float 2d array
 
+    plotName = 'ezCon387antXTVTByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 387 and 387 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon387antXTVTByFreqBinAvg.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.mean(antXTVT, axis=1), 'violet',
             'AntXTVT Average Spectrum')
@@ -6595,16 +7279,12 @@ def plotEzCon388antXTByFreqBinAvgRfi():
     global dopplerSpanD2            # float
     global fileFreqBinQty           # integer
     global antXT                    # float 2d array
-    global antLen                   # integer
+    #global antLen                   # integer
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon388antXTByFreqBinAvgRfi.png'
     # for RFI filtering, to help create ezDefaults.txt ezConHideFreqBin arguments, 
     # print freqBin indexes of 5 highest-values of antXTByFreqBinSum
-
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     if 1:
         print()
@@ -6617,7 +7297,7 @@ def plotEzCon388antXTByFreqBinAvgRfi():
             = (antXTByFreqBinSumAvgMax - antXTByFreqBinSumAvgMin) / 100.
 
         print()
-        print(' FreqBin indexes of 5 highest-values of antXT:')
+        print(' FreqBin indexes of 5 highest-values of AntXT:')
         antXTByFreqBinSumAvgIdxbyValueHigh5 = np.array(antXTByFreqBinSumAvg).argsort()[::-1][:5]
         for i in range(len(antXTByFreqBinSumAvgIdxbyValueHigh5)):
             antXTByFreqBinSumAvgThis = \
@@ -6631,7 +7311,7 @@ def plotEzCon388antXTByFreqBinAvgRfi():
             antXTByFreqBinSumAvgIdxbyValueHigh5[0])
 
         print()
-        print(' FreqBin indexes of 5 lowest-values of antXT:')
+        print(' FreqBin indexes of 5 lowest-values of AntXT:')
         antXTByFreqBinSumAvgIdxbyValueLow5 = np.array(antXTByFreqBinSumAvg).argsort()[:5]
         for i in range(len(antXTByFreqBinSumAvgIdxbyValueLow5)):
             antXTByFreqBinSumAvgThis = \
@@ -6645,7 +7325,7 @@ def plotEzCon388antXTByFreqBinAvgRfi():
             antXTByFreqBinSumAvgIdxbyValueLow5[0])
 
         print()
-        print(' FreqBin indexes of 5 largest change values of antXT:')
+        print(' FreqBin indexes of 5 largest change values of AntXT:')
         antXTByFreqBinSumAvgIdxbyValueDeltaHigh5m1 \
             = np.array(abs(antXTByFreqBinSumAvg[1:] - antXTByFreqBinSumAvg[:-1])).argsort()[::-1][:5]
         for i in range(len(antXTByFreqBinSumAvgIdxbyValueDeltaHigh5m1)):
@@ -6659,11 +7339,17 @@ def plotEzCon388antXTByFreqBinAvgRfi():
         print('                 Maybe try arguments like    -ezConRawFreqBinHide',
             antXTByFreqBinSumAvgIdxbyValueDeltaHigh5m1[0] + 1)
 
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 388 and 388 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         # calculate average by Freq Bin and plot by Doppler
-        plt.plot(np.mean(antXT, axis=1), range(fileFreqBinQty), 'violet')
+        plt.plot(antXTByFreqBinSumAvg, range(fileFreqBinQty), 'violet')
 
         plt.title(titleS)
         plt.grid(1)
@@ -6689,12 +7375,14 @@ def plotEzCon397antXTVTByFreqBinMax():
     global plotCountdown            # integer
     global antXTVT                  # float 2d array
 
+    plotName = 'ezCon397antXTVTByFreqBinMax.png'
+
+    plotCountdown -= 1
+
     if ezConPlotRangeL[0] <= 397 and 397 <= ezConPlotRangeL[1]:
 
-        plotName = 'ezCon397antXTVTByFreqBinMax.png'
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-        plotCountdown -= 1
 
         plotEzCon1dByFreqBin(plotName, np.amax(antXTVT, axis=1), 'violet',
             'AntXTVT Maximum Spectrum')
@@ -6720,12 +7408,15 @@ def plotEzCon510velGLon():
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon510velGLon.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
     # if anything in velGLonP180 to save or plot
     if ezConPlotRangeL[0] <= 510 and 510 <= ezConPlotRangeL[1] and velGLonP180CountSum:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         # if any Galactic plane crossings, velGLonP180 has been (partially?) filled with averages
@@ -6803,12 +7494,15 @@ def plotEzCon511velGLonCount():
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon511velGLonCount.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
     # if anything in velGLonP180 to plot
     if ezConPlotRangeL[0] <= 511 and 511 <= ezConPlotRangeL[1] and velGLonP180CountSum:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
         plt.plot(np.arange(-180, +181, 1), velGLonP180Count)
 
@@ -6919,12 +7613,15 @@ def plotEzCon520velGLonPolar():
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon520velGLonPolar.png'     # Velocity by Galactic Longitude with pcolormesh
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
     # if anything in velGLonP180 to plot
     if ezConPlotRangeL[0] <= 520 and 520 <= ezConPlotRangeL[1] and velGLonP180CountSum:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
         
         #    # https://matplotlib.org/stable/gallery/pie_and_polar_charts/polar_demo.html
@@ -6975,12 +7672,15 @@ def plotEzCon521velGLonPolarCount():
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon521velGLonPolarCount.png'     # Velocity by Galactic Longitude with pcolormesh
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
     # if anything in velGLonP180 to plot
     if ezConPlotRangeL[0] <= 521 and 521 <= ezConPlotRangeL[1] and velGLonP180CountSum:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         fig = plt.figure()
@@ -7040,12 +7740,15 @@ def plotEzCon530galDecGLon():
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon530galDecGLon.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
     # if anything in velGLonP180 to plot
     if ezConPlotRangeL[0] <= 530 and 530 <= ezConPlotRangeL[1] and velGLonP180CountSum:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         xi = np.arange(-180, +181, 1)           # +180 thru -180 degrees in degrees, galaxy centered
@@ -7112,12 +7815,15 @@ def plotEzCon541velGLonEdges():
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon541velGLonEdges.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
     # If anything in velGLonP180 to plot.
     if ezConPlotRangeL[0] <= 541 and 541 <= ezConPlotRangeL[1] and velGLonP180CountSum:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         print(' ezConVelGLonEdgeFrac  =', ezConVelGLonEdgeFrac)
@@ -7211,13 +7917,16 @@ def plotEzCon541velGLonEdges():
     # since need same velGLonUEdge, merged plotEzCon550galRot() into plotEzCon541velGLonEdges()
     #def plotEzCon550galRot():
     plotName = 'ezCon550galRot.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
     # If anything in velGLonP180 to plot.
     # This ezCon531galRot.png requires ezCon530velGLonEdges.png to run.
     if ezConPlotRangeL[0] <= 550 and 550 <= ezConPlotRangeL[1] and velGLonP180CountSum:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         # Status: for Galactic plane crossings, velGLonUEdge are max velocities vs Galactic longitude.
@@ -7273,11 +7982,14 @@ def plotEzCon560antXTVTMaxIdxGLon():
     global ezConPlotRangeL          # integer list
 
     plotName = 'ezCon560antXTVTMaxIdxGLon.png'
-    print()
-    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
     plotCountdown -= 1
 
     if ezConPlotRangeL[0] <= 560 and 560 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
         plt.clf()
 
         #velMaxIndex = np.empty(antLen, dtype=int)
@@ -7335,12 +8047,12 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
     global byFreqBinX               # float array
     global ezConPlotRangeL          # integer list
 
-    print()
-    print('   plotEzCon690gLonDegP180_nnnByFreqBinAvg ===============')
-
     # if anything in velGLonP180 to plot
     if ezConPlotRangeL[0] <= 690 and 690 <= ezConPlotRangeL[1] and velGLonP180CountSum:
         plotCountdown += np.count_nonzero(velGLonP180Count)
+
+        print()
+        print('   plotEzCon690gLonDegP180_nnnByFreqBinAvg ===============')
 
         if 1:
             # same ylim for all ezCon690GLonDegP180_nnnByFreqBinAvg plots
@@ -7353,6 +8065,9 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
             # for small antLen, that ezCon690yLimMax may be nan
 
         for gLonP180 in range(361):                 # for every column, RtoL
+
+            plotCountdown -= 1
+
             if velGLonP180Count[gLonP180]:      # if column used
 
                 # create plotName with form of 'ezCon690GLonDegP180_nnnByFreqBinAvg.png'
@@ -7363,7 +8078,6 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
                 print(' gLonP180 =', gLonP180)
                 print(' gLonP180 - 180 =', gLonP180 - 180)
                 print(' velGLonP180Count[gLonP180] =', velGLonP180Count[gLonP180])
-                plotCountdown -= 1
                 plt.clf()
                 
                 # velGLonP180 stores increasing velocity, but X axis is increasing freq, so use -byFreqBinX
@@ -7469,8 +8183,8 @@ def main():
     #    rawAntRef                                     201G*
     #
     #    timeUtcMjdDBetweenRaw                         201H*
-    #    timeUtcMjdDBetweenAnt                         201I
-    #    timeUtcMjdDBetweenRef                         201J
+    #    timeUtcMjdDBetweenAntRaw                      201I
+    #    timeUtcMjdDBetweenRefRaw                      201J
     #
     #    timeUtcMjd                         100
     #    raH                                101
@@ -7670,8 +8384,8 @@ def main():
     ####plotEzCon201FsampleBad()
     ####plotEzCon201GrawAntRef()                    # using raw, maskRawAnt and maskRawRef
     ####plotEzCon201HtimeUtcMjdDBetweenRaw()        # using raw and dataTimeUtc
-    ####plotEzCon201ItimeUtcMjdDBetweenAnt()        # using raw, dataTimeUtc, and maskRawAnt
-    ####plotEzCon201JtimeUtcMjdDBetweenRef()        # using raw, dataTimeUtc, and maskRawRef
+    ####plotEzCon201ItimeUtcMjdDBetweenAntRaw()     # using raw, dataTimeUtc, and maskRawAnt
+    ####plotEzCon201JtimeUtcMjdDBetweenRefRaw()     # using raw, dataTimeUtc, and maskRawRef
     # free raw memory
     raw = []
     raw = None
@@ -7681,9 +8395,9 @@ def main():
     ####### ant
 
     # if any ant filtering, plot antRaw before the filtering
-    #if ezConAntSamplesUseL or ezConAntSampleSnipL or ezConAntAvgTrimFracL or ezConAntFreqBinHideL \
+    #if ezConAntSamplesUseL or ezConAntSampleSnipL or ezConAntAvgSnipFracL or ezConAntFreqBinHideL \
     #    or ezConAntFreqBinSmooth:
-    if ezConAntSamplesUseL or ezConAntSampleSnipL or ezConAntFreqBinSmooth or ezConAntAvgTrimFracL:
+    if ezConAntSamplesUseL or ezConAntSampleSnipL or ezConAntFreqBinSmooth or ezConAntAvgSnipQtyL or ezConAntAvgSnipFracL:
             plotEzCon002antRaw()
             plotEzCon202antRawAvg()
             plotEzCon302antRawByFreqBinAvg()
@@ -7691,14 +8405,17 @@ def main():
     if ezConAntSamplesUseL or ezConAntSampleSnipL:
         ezConAntSamplesUseLDo()
 
+    if ezConAntAvgSnipQtyL:
+        ezConAntAvgSnipQtyLDo()
+
+    if ezConAntAvgSnipFracL:
+        ezConAntAvgSnipFracLDo()
+
     #if ezConAntFreqBinHideL: ???????????????????????
     #    ezConAntFreqBinHideLDo()
 
     if ezConAntFreqBinSmooth < 999998.:
         ezConAntFreqBinSmoothDo()
-
-    if ezConAntAvgTrimFracL:
-        ezConAntAvgTrimFracLDo()
 
     plotEzCon007ant()
     plotEzCon207antAvg()                # creates antAvg
@@ -7714,8 +8431,8 @@ def main():
     refRawAvg = np.mean(ref, axis=0)            # creation,  needed for plotEzCon191sigProg()
 
     # if any ref filtering, plot refRaw before the filtering
-    #if ezConRefAvgTrimFracL or ezConRefFreqBinHideL or ezConRefFreqBinSmooth:
-    if 0:
+    #if ezConRefAvgSnipQtyL or ezConRefAvgSnipFracL or ezConRefFreqBinHideL or ezConRefFreqBinSmooth:
+    if ezConRefAvgSnipQtyL or ezConRefAvgSnipFracL:
             plotEzCon022refRaw()
             plotEzCon222refRawAvg()
             plotEzCon322refRawByFreqBinAvg()
@@ -7726,8 +8443,11 @@ def main():
     #if ezConRefFreqBinSmooth:
     #    ezConRefFreqBinSmoothDo()
 
-    #if ezConRefAvgTrimFracL:
-    #    ezConRefAvgTrimFracLDo()
+    if ezConRefAvgSnipQtyL:
+        ezConRefAvgSnipQtyLDo()
+
+    if ezConRefAvgSnipFracL:
+        ezConRefAvgSnipFracLDo()
 
     plotEzCon027ref()
     plotEzCon227refAvg()                # creates refAvg

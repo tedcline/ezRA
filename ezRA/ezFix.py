@@ -1,16 +1,54 @@
-pgmName = 'ezFix221122a.py'
-#pgmRev  = pgmName + ' N0RQV'
-pgmRev  = pgmName
+programName = 'ezFix230305a.py'
+programRevision = programName
 
-'''
-TTD:
-dataTimeUtcVlsr2000.mjd = 51544.0
+# ezRA - Easy Radio Astronomy ezFix frequency spectrum data ezRA .txt file editor program.
+# https://github.com/tedcline/ezRA
 
-ezFix221122a.py, -ET sign of 'sHH' to ezFixTimeShiftMM and ezFixTimeShiftSS
-ezFix220930a.py, prep for Git
-ezFix10z05u.py, ezDefaults.txt, ezCon to ezFix,
+# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
 
-'''
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+# TTD:
+# dataTimeUtcVlsr2000.mjd = 51544.0
+# Log what ezFix is doing
+
+# ezFix230305a.py, boilerplate from ezSky
+# ezFix230301a.py, -ezez help wording
+# ezFix230228a.py, -EM and -ES and many code improvements
+# ezFix230226a.py, 
+# ezFix230225b.py, 
+# ezFix230225a.py, 
+# ezFix230223d.py, 
+# ezFix230223c.py, RG, RL, RAG, and RAL needs dataType
+# ezFix230223b.py, 
+# ezFix230223a.py, many code improvements
+# ezFix230222b.py, many changes
+# ezFix230222a.py, many changes
+# ezFix230221b.py,
+#   -EM  A 123 456 0 9999 2.1  (Edit Multiply: Ant (Any/Ant/Ref=1/A/R) samples 123 through 456,
+#       freqBin 0 through 9999, multiply spectrum values by 2.1
+#   -ES  R 123 456 0 9999 2.1  (Edit Set:      Ref (Any/Ant/Ref=1/A/R) samples 123 through 456,
+#       freqBin 0 through 9999, set spectrum values to 2.1
+# ezFix230221a.py, 
+#   Edit Multiply: -EM AnyAntRef1AR sampleFirst sampleLast freqBinFirst freqBinLast Multiplier
+# ezFix230216a.py, revised help screen
+# ezFix230215a.py, -EG to -EC (Edit Ceiling), -EL to -EF (Edit Floor),
+#   -EGS (Edit Gain Samples), -EGF (Edit Gain Frequency bin)
+# ezFix221122a.py, -ET sign of 'sHH' to ezFixTimeShiftMM and ezFixTimeShiftSS
+# ezFix220930a.py, prep for Git
+# ezFix10z05u.py, ezDefaults.txt, ezCon to ezFix,
 
 #import seaborn as sb
 
@@ -34,13 +72,163 @@ import time
 #from scipy.interpolate import griddata
 #from scipy.ndimage.filters import gaussian_filter
 
-#import math
+import math
+#math.isfinite
+#from math import isfinite
+
+
+
+def printUsage():
+
+    print()
+    print()
+    print('##############################################################################################')
+    print()
+    print('USAGE:')
+    print('  Windows:   py      ezFix.py [optional arguments] radioDataFileDirectories')
+    print('  Linux:     python3 ezFix.py [optional arguments] radioDataFileDirectories')
+    print()
+    print('  Easy Radio Astronomy (ezRA) ezFix data file changer program')
+    print('  to remove unwanted samples from, combine, edit,')
+    print('  and split frequency spectrum data ezRA .txt files,')
+    print('  and write one or two "data" directory frequency spectrum data ezRA .txt files.')
+    print('  ezFix will create a "data" directory if neccessary.')
+    print()
+    print('  "radioDataFileDirectories" may be one or more .txt radio data files:')
+    print('         py  ezFix.py  bigDish220320_05.txt')
+    print('         py  ezFix.py  bigDish220320_05.txt bigDish220321_00.txt')
+    print('         py  ezFix.py  bigDish22032*.txt')
+    print('  "radioDataFileDirectories" may be one or more directories:')
+    print('         py  ezFix.py  bigDish2203')
+    print('         py  ezFix.py  bigDish2203 bigDish2204')
+    print('         py  ezFix.py  bigDish22*')
+    print('  "radioDataFileDirectories" may be a mix of .txt radio data files and directories')
+    print()
+    print('  Arguments and "radioDataFileDirectories" may be in any mixed order.')
+    print()
+    print('  Arguments are read first from inside the ezFix program,')
+    print('  then in order from the command line.  For duplicates, last read wins.')
+    print()
+    print('  Default is to create, in the "data" directory,')
+    print('  an output filename with the base of the first unremoved input filename,')
+    print('  adding one "b" character to make unique, followed by ".txt" .')
+    print('  If that filename exists, will try "c", or try "d", ... up to "z".')
+    print()
+    print('  Each sample is tested against argument criteria,')
+    print('  and is Removed away or is Edited.')
+    print()
+    print('EXAMPLES:')
+    print()
+    print('  py ezFix.py -help      (print this help)')
+    print('  py ezFix.py -h         (print this help)')
+    print()
+    print('    -KN    123  456  (Keep only Raw sample Numbers 123 through 456, inclusive)')
+    # ezFixKeepNumL
+    print()
+    print('    -RN    123  456  (Remove away Raw sample Numbers 123 through 456, inclusive)')
+    # ezFixRemoveNumL
+    print()
+    print('    -RT  R           (Remove away sample if Type is a Reference (Any/Ant/Ref=1/A/R) sample)')
+    # ezFixRemoveTypeS
+    print()
+    print('    -RG  A 0.678     (Remove away Ant (Any/Ant/Ref=1/A/R) sample if a spectrum value is Greater)')
+    # ezFixRemoveGreaterL
+    print('    -RL  A 0.678     (Remove away Ant (Any/Ant/Ref=1/A/R) sample if a spectrum value is Less   )')
+    # ezFixRemoveLessL
+    print()
+    print('    -RAG A 0.678     (Remove away Ant (Any/Ant/Ref=1/A/R) sample if spectrum Average is Greater)')
+    # ezFixRemoveAvgGreaterL
+    print('    -RAL A 0.678     (Remove away Ant (Any/Ant/Ref=1/A/R) sample if spectrum Average is Less   )')
+    # ezFixRemoveAvgLessL
+    print()
+    print()
+    print('    -ET  -07:00:00             (Edit Timestamps: add this time (sHH:MM:SS) to all timestamps)')
+    # ezFixEditTimeS
+    print()
+    print('    -EC  A 0.678               (Edit Ceiling: so no Ant (Any/Ant/Ref=1/A/R)')
+    print('                                     sample spectrum values more than 0.678)')
+    # ezFixEditCeilingL
+    print('    -EF  A 0.678               (Edit Floor:   so no Ant (Any/Ant/Ref=1/A/R)')
+    print('                                     sample spectrum values less than 0.678)')
+    # ezFixEditFloorL
+    print()
+    print()
+    print('    -EM  A 123 456 0 9999 2.1  (Edit Multiply: Ant (Any/Ant/Ref=1/A/R) samples 123 through 456,')
+    print('                                     freqBin 0 through 9999, multiply spectrum values by 2.1)')
+    # ezFixEditMultL
+    print()
+    print('    -ES  R 123 456 0 9999 2.1  (Edit Set:      Ref (Any/Ant/Ref=1/A/R) samples 123 through 456,')
+    print('                                     freqBin 0 through 9999, set spectrum values to 2.1)')
+    # ezFixEditSetL
+    print()
+    #
+    # Which data values must be parsed and converted from data strings?:
+    #      data values needed:  timeStamp   spectrum    dataFlags
+    #
+    # ezFixKeepNumL             No          No          No
+    # ezFixRemoveNumL           No          No          No
+    # ezFixRemoveTypeS                                  Y
+    #
+    # ezFixRemoveGreaterL                   Y           Y
+    # ezFixRemoveLessL                      Y           Y
+    # ezFixRemoveAvgGreaterL                Y           Y
+    # ezFixRemoveAvgLessL                   Y           Y
+    #
+    # ezFixEditTimeS            Y           Y           Y
+    #
+    # ezFixEditCeilingL         Y           Y           Y
+    # ezFixEditFloorL           Y           Y           Y
+    #
+    # ezFixEditMultL            Y           Y           Y
+    # ezFixEditSetL             Y           Y           Y
+    #
+    # for any edit, all 3 are needed to be parsed (for data line reconstruction)
+    #
+    print()
+    print('    -removed   bigDishRemoved.txt  (write removed   samples to bigDishRemoved.txt,')
+    print('                                        even if file exists)')
+    print('    -overwrite bigDishOut.txt      (write remaining samples to bigDishOut.txt,')
+    print('                                        even if file exists)')
+    print()
+    print('    -ezRAObsName     bigDish 2 (force Observatory Name - FROM THE REST OF COMMAND LINE !!!)')
+    print('    -ezRAObsLat      39.8282   (force Observatory Latitude  (degrees))')
+    print('    -ezRAObsLon      -98.5696  (force Observatory Longitude (degrees))')
+    print('    -ezRAObsAmsl     563.88    (force Observatory Above Mean Sea Level (meters))')
+    print()
+    print('    -ezFixAzimuth   180.0      (force Azimuth   (degrees))')
+    print('    -ezFixElevation 45.0       (force Elevation (degrees))')
+    print('    -ezFixAddAzDeg  9.4        (if no ezFixAzimuth,   add to all file Azimuth   (degrees))')
+    print('    -ezFixAddElDeg  -2.6       (if no ezFixElevation, add to all file Elevation (degrees))')
+    print()
+    print('    -ezDefaultsFile bigDish8.txt   (file of default arguments)')
+    print()
+    print('    -ezezIgonoreThisWholeOneWord')
+    print('         (any one word starting with -ezez is ignored, handy for long command line editing)')
+    print()
+    print()
+    print(' programRevision =', programRevision)
+    print()
+    print()
+    print()
+    print()
+    print()
+    print('       The Society of Amateur Radio Astronomers (SARA)')
+    print('                    radio-astronomy.org')
+    print()
+    print()
+    print()
+    print()
+    print()
+    print('##############################################################################################')
+    print()
+
+    exit()
 
 
 
 def printHello():
 
-    global pgmRev                   # string
+    global programRevision          # string
     global cmd                      # string
 
     #print(' startTime = ', startTime)
@@ -51,7 +239,7 @@ def printHello():
     #print(' Local time = %s ' % time.asctime(time.localtime()))
     print(' Local time =', time.asctime(time.localtime()))
 
-    print(' ( pgmRev =', pgmRev, ')')
+    print(' ( programRevision =', programRevision, ')')
     print()
 
     #print(sys.argv)
@@ -79,22 +267,23 @@ def ezFixArgumentsFile(ezDefaultsFileNameInput):
     global ezFixAddAzDeg                    # float
     global ezFixAddElDeg                    # float
 
-    global ezFixRemoveFreqBinGreater        # integer
-    global ezFixRemoveFreqBinLess           # integer
+    global ezFixKeepNumL                    # integer list
+    global ezFixRemoveNumL                  # integer list
+    global ezFixRemoveTypeS                 # string
 
-    global ezFixRemoveReference             # integer
+    global ezFixRemoveGreaterL              # string and float list
+    global ezFixRemoveLessL                 # string and float list
+    global ezFixRemoveAvgGreaterL           # string and float list
+    global ezFixRemoveAvgLessL              # string and float list
 
-    global ezFixRemoveGreater               # float
-    global ezFixRemoveLess                  # float
-    global ezFixRemoveAvgGreater            # float
-    global ezFixRemoveAvgLess               # float
+    global ezFixEditTimeS                   # string
+    
+    global ezFixEditCeilingL                # string and float list
+    global ezFixEditFloorL                  # string and float list
 
-    global ezFixEditGreater                 # float
-    global ezFixEditLess                    # float
+    global ezFixEditMultL                   # string and integer and float list
+    global ezFixEditSetL                    # string and integer and float list
 
-    global ezFixRemoveRawL                  # integer list
-
-    global ezFixTimeShiftS                  # string
     global ezFixOverwriteFilename           # string
     global ezFixRemovedWriteFilename        # string
 
@@ -139,7 +328,7 @@ def ezFixArgumentsFile(ezDefaultsFileNameInput):
 
             # ezRA arguments used by multiple programs:
             if thisLine0Lower == '-ezRAObsName'.lower():
-                # note: to allow multiple words, read in rest of line !!!!!!!!!!!
+                # note: to allow multiple words, read in the rest of line !!!!!!!!!!!
                 ezRAObsName = ' '.join(thisLine[1:])
                 #ezRAObsName = uni.encode(thisLine[1])
                 #ezRAObsName = str.encode(thisLine[1])
@@ -155,38 +344,7 @@ def ezFixArgumentsFile(ezDefaultsFileNameInput):
                 ezRAObsAmsl = float(thisLine[1])
 
 
-            # integer arguments:
-            elif thisLine0Lower == '-RFBG'.lower():
-                ezFixRemoveFreqBinGreater = int(thisLine[1])
-            
-            elif thisLine0Lower == '-RFBL'.lower():
-                ezFixRemoveFreqBinLess = int(thisLine[1])
-            
-            elif thisLine0Lower == '-RR'.lower():
-                ezFixRemoveReference = int(thisLine[1])
-
-
             # float arguments:
-            elif thisLine0Lower == '-RG'.lower():
-                ezFixRemoveGreater = float(thisLine[1])
-
-            elif thisLine0Lower == '-RL'.lower():
-                ezFixRemoveLess = float(thisLine[1])
-
-            elif thisLine0Lower == '-RAG'.lower():
-                ezFixRemoveAvgGreater = float(thisLine[1])
-
-            elif thisLine0Lower == '-RAL'.lower():
-                ezFixRemoveAvgLess = float(thisLine[1])
-
-
-            elif thisLine0Lower == '-EG'.lower():
-                ezFixEditGreater = float(thisLine[1])
-
-            elif thisLine0Lower == '-EL'.lower():
-                ezFixEditLess = float(thisLine[1])
-
-
             elif thisLine0Lower == '-ezFixAzimuth'.lower():
                 ezFixAzimuth = float(thisLine[1])
 
@@ -201,9 +359,61 @@ def ezFixArgumentsFile(ezDefaultsFileNameInput):
 
 
             # list arguments:
-            #elif thisLine0Lower == '-ezConUseSamplesRawL'.lower():
-            #    ezConUseSamplesRawL.append(int(thisLine[1]))
-            #    ezConUseSamplesRawL.append(int(thisLine[2]))
+            elif thisLine0Lower == '-KN'.lower():
+                ezFixKeepNumL.append(int(thisLine[1]))
+                ezFixKeepNumL.append(int(thisLine[2]))
+
+            elif thisLine0Lower == '-RN'.lower():
+                ezFixRemoveNumL.append(int(thisLine[1]))
+                ezFixRemoveNumL.append(int(thisLine[2]))
+
+            elif thisLine0Lower == '-RG'.lower():
+                ezFixRemoveGreaterL.append(thisLine[1])
+                ezFixRemoveGreaterL.append(float(thisLine[2]))
+
+            elif thisLine0Lower == '-RL'.lower():
+                ezFixRemoveLessL.append(thisLine[1])
+                ezFixRemoveLessL.append(float(thisLine[2]))
+
+            elif thisLine0Lower == '-RAG'.lower():
+                ezFixRemoveAvgGreaterL.append(thisLine[1])
+                ezFixRemoveAvgGreaterL.append(float(thisLine[2]))
+
+            elif thisLine0Lower == '-RAL'.lower():
+                ezFixRemoveAvgLessL.append(thisLine[1])
+                ezFixRemoveAvgLessL.append(float(thisLine[2]))
+
+            elif thisLine0Lower == '-EC'.lower():
+                ezFixEditCeilingL.append(thisLine[1])
+                ezFixEditCeilingL.append(float(thisLine[2]))
+
+            elif thisLine0Lower == '-EF'.lower():
+                ezFixEditFloorL.append(thisLine[1])
+                ezFixEditFloorL.append(float(thisLine[2]))
+
+            elif thisLine0Lower == '-EM'.lower():
+                ezFixEditMultL.append(thisLine[1])
+                ezFixEditMultL.append(int(thisLine[2]))
+                ezFixEditMultL.append(int(thisLine[3]))
+                ezFixEditMultL.append(int(thisLine[4]))
+                ezFixEditMultL.append(int(thisLine[5]))
+                ezFixEditMultL.append(float(thisLine[6]))
+
+            elif thisLine0Lower == '-ES'.lower():
+                ezFixEditSetL.append(thisLine[1])
+                ezFixEditSetL.append(int(thisLine[2]))
+                ezFixEditSetL.append(int(thisLine[3]))
+                ezFixEditSetL.append(int(thisLine[4]))
+                ezFixEditSetL.append(int(thisLine[5]))
+                ezFixEditSetL.append(float(thisLine[6]))
+
+
+            # string arguments:
+            elif thisLine0Lower == '-RT'.lower():
+                ezFixRemoveTypeS = thisLine[1]
+
+            elif thisLine0Lower == '-ET'.lower():
+                ezFixEditTimeS = thisLine[1]
 
 
             elif thisLine0Lower[:6] == '-ezFix'.lower():
@@ -262,22 +472,23 @@ def ezFixArgumentsCommandLine():
     global ezFixAddAzDeg                    # float
     global ezFixAddElDeg                    # float
 
-    global ezFixRemoveFreqBinGreater        # integer
-    global ezFixRemoveFreqBinLess           # integer
+    global ezFixKeepNumL                    # integer list
+    global ezFixRemoveNumL                  # integer list
+    global ezFixRemoveTypeS                 # string
 
-    global ezFixRemoveReference             # integer
+    global ezFixRemoveGreaterL              # string and float list
+    global ezFixRemoveLessL                 # string and float list
+    global ezFixRemoveAvgGreaterL           # string and float list
+    global ezFixRemoveAvgLessL              # string and float list
 
-    global ezFixRemoveGreater               # float
-    global ezFixRemoveLess                  # float
-    global ezFixRemoveAvgGreater            # float
-    global ezFixRemoveAvgLess               # float
+    global ezFixEditTimeS                   # string
+    
+    global ezFixEditCeilingL                # string and float list
+    global ezFixEditFloorL                  # string and float list
 
-    global ezFixEditGreater                 # float
-    global ezFixEditLess                    # float
+    global ezFixEditMultL                   # string and integer and float list
+    global ezFixEditSetL                    # string and integer and float list
 
-    global ezFixRemoveRawL                  # integer list
-
-    global ezFixTimeShiftS                  # string
     global ezFixOverwriteFilename           # string
     global ezFixRemovedWriteFilename        # string
 
@@ -335,9 +546,9 @@ def ezFixArgumentsCommandLine():
             # ezRA arguments used by multiple programs:
             elif cmdLineArgLower == 'ezRAObsName'.lower():
                 #ezRAObsName = cmdLineSplit[cmdLineSplitIndex]   # cmd line allows only one ezRAObsName word
-                # note: to allow multiple words, read in rest of command line !!!!!!!!!!!
+                # note: to allow multiple words, read in the rest of command line !!!!!!!!!!!
                 ezRAObsName = ' '.join(cmdLineSplit[cmdLineSplitIndex:])
-                cmdLineSplitIndex = 9e99    # read in rest of command line !!!!!!!!!!!
+                cmdLineSplitIndex = 9e99    # have just read in the rest of command line !!!!!!!!!!!
                 #ezRAObsName = uni.encode(thisLine[1])
                 #ezRAObsName = str.encode(thisLine[1])
 
@@ -351,38 +562,7 @@ def ezFixArgumentsCommandLine():
                 ezRAObsAmsl = float(cmdLineSplit[cmdLineSplitIndex])
 
 
-            # integer arguments:
-            elif cmdLineArgLower == 'RFBG'.lower():
-                ezFixRemoveFreqBinGreater = int(cmdLineSplit[cmdLineSplitIndex])
-
-            elif cmdLineArgLower == 'RFBL'.lower():
-                ezFixRemoveFreqBinLess    = int(cmdLineSplit[cmdLineSplitIndex])
-
-            elif cmdLineArgLower == 'RR'.lower():
-                ezFixRemoveReference      = int(cmdLineSplit[cmdLineSplitIndex])
-
-
             # float arguments:
-            elif cmdLineArgLower == 'RG'.lower():
-                ezFixRemoveGreater = float(cmdLineSplit[cmdLineSplitIndex])
-
-            elif cmdLineArgLower == 'RL'.lower():
-                ezFixRemoveLess = float(cmdLineSplit[cmdLineSplitIndex])
-
-            elif cmdLineArgLower == 'RAG'.lower():
-                ezFixRemoveAvgGreater = float(cmdLineSplit[cmdLineSplitIndex])
-
-            elif cmdLineArgLower == 'RAL'.lower():
-                ezFixRemoveAvgLess = float(cmdLineSplit[cmdLineSplitIndex])
-
-
-            elif cmdLineArgLower == 'EG'.lower():
-                ezFixEditGreater = float(cmdLineSplit[cmdLineSplitIndex])
-
-            elif cmdLineArgLower == 'EL'.lower():
-                ezFixEditLess = float(cmdLineSplit[cmdLineSplitIndex])
-
-
             elif cmdLineArgLower == 'ezFixAzimuth'.lower():
                 ezFixAzimuth = float(cmdLineSplit[cmdLineSplitIndex])
 
@@ -397,15 +577,79 @@ def ezFixArgumentsCommandLine():
 
 
             # list arguments:
-            elif cmdLineArgLower == 'RNL'.lower():
-                ezFixRemoveRawL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+            elif cmdLineArgLower == 'KN'.lower():
+                ezFixKeepNumL.append(int(cmdLineSplit[cmdLineSplitIndex]))
                 cmdLineSplitIndex += 1
-                ezFixRemoveRawL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                ezFixKeepNumL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'RN'.lower():
+                ezFixRemoveNumL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezFixRemoveNumL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'RG'.lower():
+                ezFixRemoveGreaterL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezFixRemoveGreaterL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'RL'.lower():
+                ezFixRemoveLessL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezFixRemoveLessL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'RAG'.lower():
+                ezFixRemoveAvgGreaterL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezFixRemoveAvgGreaterL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'RAL'.lower():
+                ezFixRemoveAvgLessL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezFixRemoveAvgLessL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'EC'.lower():
+                ezFixEditCeilingL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezFixEditCeilingL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'EF'.lower():
+                ezFixEditFloorL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezFixEditFloorL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'EM'.lower():
+                ezFixEditMultL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezFixEditMultL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezFixEditMultL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezFixEditMultL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezFixEditMultL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezFixEditMultL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'ES'.lower():
+                ezFixEditSetL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezFixEditSetL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezFixEditSetL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezFixEditSetL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezFixEditSetL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezFixEditSetL.append(float(cmdLineSplit[cmdLineSplitIndex]))
 
 
             # string arguments:
+            elif cmdLineArgLower == 'RT'.lower():
+                ezFixRemoveTypeS = cmdLineSplit[cmdLineSplitIndex]
+
             elif cmdLineArgLower == 'ET'.lower():
-                ezFixTimeShiftS = cmdLineSplit[cmdLineSplitIndex]
+                ezFixEditTimeS = cmdLineSplit[cmdLineSplitIndex]
 
             elif cmdLineArgLower == 'overwrite'.lower():
                 ezFixOverwriteFilename = cmdLineSplit[cmdLineSplitIndex]
@@ -452,22 +696,23 @@ def ezFixArguments():
     global ezFixAddAzDeg                    # float
     global ezFixAddElDeg                    # float
 
-    global ezFixRemoveFreqBinGreater        # integer
-    global ezFixRemoveFreqBinLess           # integer
+    global ezFixKeepNumL                    # integer list
+    global ezFixRemoveNumL                  # integer list
+    global ezFixRemoveTypeS                 # string
 
-    global ezFixRemoveReference             # integer
+    global ezFixRemoveGreaterL              # string and float list
+    global ezFixRemoveLessL                 # string and float list
+    global ezFixRemoveAvgGreaterL           # string and float list
+    global ezFixRemoveAvgLessL              # string and float list
 
-    global ezFixRemoveGreater               # float
-    global ezFixRemoveLess                  # float
-    global ezFixRemoveAvgGreater            # float
-    global ezFixRemoveAvgLess               # float
+    global ezFixEditTimeS                   # string
+    
+    global ezFixEditCeilingL                # string and float list
+    global ezFixEditFloorL                  # string and float list
 
-    global ezFixEditGreater                 # float
-    global ezFixEditLess                    # float
+    global ezFixEditMultL                   # string and integer and float list
+    global ezFixEditSetL                    # string and integer and float list
 
-    global ezFixRemoveRawL                  # integer list
-
-    global ezFixTimeShiftS                  # string
     global ezFixOverwriteFilename           # string
     global ezFixRemovedWriteFilename        # string
 
@@ -475,37 +720,36 @@ def ezFixArguments():
 
 
     # defaults
-    if 1:
-        #ezRAObsName = 'LebanonKS'
-        ezRAObsName = ''
-        ezRAObsLat                =  9e99       # silly value to disable
-        ezRAObsLon                =  9e99       # silly value to disable
-        ezRAObsAmsl               =  9e99       # silly value to disable
+    #ezRAObsName = 'LebanonKS'
+    ezRAObsName = ''
+    ezRAObsLat                =  math.inf   # silly value, to disable
+    ezRAObsLon                =  math.inf   # silly value, to disable
+    ezRAObsAmsl               =  math.inf   # silly value, to disable
 
-        ezFixAzimuth              =  9e99       # silly value to disable
-        ezFixElevation            =  9e99       # silly value to disable
-        ezFixAddAzDeg             = 0.          # ignored if ezFixAzimuth
-        ezFixAddElDeg             = 0.          # ignored if ezFixElevation
+    ezFixAzimuth              =  math.inf   # silly value, to disable
+    ezFixElevation            =  math.inf   # silly value, to disable
+    ezFixAddAzDeg             = 0.          # ignored if ezFixAzimuth
+    ezFixAddElDeg             = 0.          # ignored if ezFixElevation
 
-        ezFixRemoveGreater        =  9e99       # silly value to disable
-        ezFixRemoveLess           = -9e99       # silly value to disable
+    ezFixKeepNumL             = []          # empty, to disable
+    ezFixRemoveNumL           = []          # empty, to disable
+    ezFixRemoveTypeS          = ''          # empty, to disable
 
-        ezFixRemoveAvgGreater     =  9e99       # silly value to disable
-        ezFixRemoveAvgLess        = -9e99       # silly value to disable
+    ezFixRemoveGreaterL       = []          # empty, to disable
+    ezFixRemoveLessL          = []          # empty, to disable
+    ezFixRemoveAvgGreaterL    = []          # empty, to disable
+    ezFixRemoveAvgLessL       = []          # empty, to disable
 
-        ezFixRemoveFreqBinGreater =  9e99       # silly value to disable
-        ezFixRemoveFreqBinLess    = -9e99       # silly value to disable
+    ezFixEditTimeS            = ''          # empty, to disable
 
-        ezFixRemoveReference      =  0          # zero to disable
+    ezFixEditCeilingL         = []          # empty, to disable
+    ezFixEditFloorL           = []          # empty, to disable
 
-        ezFixEditGreater          =  9e99       # silly value to disable
-        ezFixEditLess             = -9e99       # silly value to disable
+    ezFixEditMultL            = []          # empty, to disable
+    ezFixEditSetL             = []          # empty, to disable
 
-        ezFixRemoveRawL           = []
-
-        ezFixTimeShiftS           = ''          # empty to flag not used
-        ezFixOverwriteFilename    = ''          # empty to flag not used
-        ezFixRemovedWriteFilename = ''          # empty to flag not used
+    ezFixOverwriteFilename    = ''          # empty, to disable
+    ezFixRemovedWriteFilename = ''          # empty, to disable
 
     #ezFixArgumentsFile('ezDefaults.txt')        # process arguments from ezDefaults.txt file
 
@@ -524,131 +768,26 @@ def ezFixArguments():
         print('   ezFixAddAzDeg  =', ezFixAddAzDeg)
         print('   ezFixAddElDeg  =', ezFixAddElDeg)
         print()
-        print('   ezFixRemoveFreqBinGreater =', ezFixRemoveFreqBinGreater)
-        print('   ezFixRemoveFreqBinLess    =', ezFixRemoveFreqBinLess)
+        print('   ezFixKeepNumL    =', ezFixKeepNumL)
+        print('   ezFixRemoveNumL  =', ezFixRemoveNumL)
+        print('   ezFixRemoveTypeS =', ezFixRemoveTypeS)
         print()
-        print('   ezFixRemoveReference      =', ezFixRemoveReference)
+        print('   ezFixRemoveGreaterL    =', ezFixRemoveGreaterL)
+        print('   ezFixRemoveLessL       =', ezFixRemoveLessL)
+        print('   ezFixRemoveAvgGreaterL =', ezFixRemoveAvgGreaterL)
+        print('   ezFixRemoveAvgLessL    =', ezFixRemoveAvgLessL)
         print()
-        print('   ezFixRemoveGreater    =', ezFixRemoveGreater)
-        print('   ezFixRemoveLess       =', ezFixRemoveLess)
-        print('   ezFixRemoveAvgGreater =', ezFixRemoveAvgGreater)
-        print('   ezFixRemoveAvgLess    =', ezFixRemoveAvgLess)
+        print('   ezFixEditTimeS    =', ezFixEditTimeS)
         print()
-        print('   ezFixEditGreater =', ezFixEditGreater)
-        print('   ezFixEditLess    =', ezFixEditLess)
+        print('   ezFixEditCeilingL =', ezFixEditCeilingL)
+        print('   ezFixEditFloorL   =', ezFixEditFloorL)
         print()
-        print('   ezFixRemoveRawL  =', ezFixRemoveRawL)
+        print('   ezFixEditMultL    =', ezFixEditMultL)
+        print('   ezFixEditSetL     =', ezFixEditSetL)
         print()
-        print('   ezFixTimeShiftS           =', ezFixTimeShiftS)
         print('   ezFixOverwriteFilename    =', ezFixOverwriteFilename)
         print('   ezFixRemovedWriteFilename =', ezFixRemovedWriteFilename)
         print()
-
-
-
-def printUsage():
-
-    print()
-    print()
-    print('##############################################################################################')
-    print()
-    print('USAGE:')
-    print('  Windows:   py      ezFix.py [optional arguments] radioDataFileDirectories')
-    print('  Linux:     python3 ezFix.py [optional arguments] radioDataFileDirectories')
-    print()
-    print('  Easy Radio Astronomy (ezRA) ezFix data file changer program')
-    print('  to remove unwanted samples from, combine, edit,')
-    print('  and split frequency spectrum data ezRA .txt files,')
-    print('  and write one or two "data" directory frequency spectrum data ezRA .txt files.')
-    print('  ezFix will create a "data" directory if neccessary.')
-    print()
-    print('  "radioDataFileDirectories" may be one or more .txt radio data files:')
-    print('         py  ezFix.py  bigDish220320_05.txt')
-    print('         py  ezFix.py  bigDish220320_05.txt bigDish220321_00.txt')
-    print('         py  ezFix.py  bigDish22032*.txt')
-    print('  "radioDataFileDirectories" may be one or more directories:')
-    print('         py  ezFix.py  bigDish2203')
-    print('         py  ezFix.py  bigDish2203 bigDish2204')
-    print('         py  ezFix.py  bigDish22*')
-    print('  "radioDataFileDirectories" may be a mix of .txt radio data files and directories')
-    print()
-    print('  Arguments and "radioDataFileDirectories" may be in any mixed order.')
-    print()
-    print('  Arguments are read first from inside the ezFix program,')
-    print('  then in order from the command line.  For duplicates, last read wins.')
-    print()
-    print('  Default is to create, in the "data" directory,')
-    print('  an output filename with the base of the first unremoved input filename,')
-    print('  adding one "b" character to make unique, followed by ".txt" .')
-    print('  If that filename exists, will try "c", or try "d", ... up to "z".')
-    print()
-    print('  Each sample is tested against argument criteria,')
-    print('  and is Removed away or is Edited.')
-    print()
-    print('EXAMPLES:')
-    print()
-    print('  py ezFix.py -help        (print this help)')
-    print('  py ezFix.py -h           (print this help)')
-    print()
-    print('    -RNL       123   456   (Remove away raw sample Numbers 123 through 456, inclusive)')
-    print()
-    print('    -RG        0.678       (Remove away sample if any spectrum value is equal or Greater)')
-    print('    -RL        0.678       (Remove away sample if any spectrum value is equal or Less   )')
-    print()
-    print('    -RAG       0.678       (Remove away sample if spectrum Average is equal or Greater)')
-    print('    -RAL       0.678       (Remove away sample if spectrum Average is equal or Less   )')
-    print()
-    print('    -RFBG      1024        (Remove away sample if FreqBin is Greater)')
-    print('    -RFBL      1024        (Remove away sample if FreqBin is Less)')
-    print()
-    print('    -RR        1           (Remove away sample if is a Reference sample)')
-    print()
-    print('    -EG        0.678       (Edit sample spectrum values if equal or Greater (enforce ceiling))')
-    print('    -EL        0.678       (Edit sample spectrum values if equal or Less    (enforce floor  ))')
-    print()
-    print('    -ET        -07:00:00   (Edit samples: add this time (sHH:MM:SS) to all timestamps)')
-    print()
-    print('    -overwrite bigDishOut.txt      (write remaining samples to bigDishOut.txt     , even if file exists)')
-    print('    -removed   bigDishRemoved.txt  (write removed   samples to bigDishRemoved.txt , even if file exists)')
-    print()
-    print('    -ezRAObsName     bigDish 2 (force Observatory Name - FROM REST OF COMMAND LINE !!!)')
-    print('    -ezRAObsLat      39.8282   (force Observatory Latitude  (degrees))')
-    print('    -ezRAObsLon      -98.5696  (force Observatory Longitude (degrees))')
-    print('    -ezRAObsAmsl     563.88    (force Observatory Above Mean Sea Level (meters))')
-    print()
-    print('    -ezFixAzimuth   180.0      (force Azimuth   (degrees))')
-    print('    -ezFixElevation 45.0       (force Elevation (degrees))')
-    print('    -ezFixAddAzDeg  9.4        (if no ezFixAzimuth,   add to all file Azimuth   (degrees))')
-    print('    -ezFixAddElDeg  -2.6       (if no ezFixElevation, add to all file Elevation (degrees))')
-    print()
-    print('    -ezDefaultsFile bigDish8.txt   (file of default arguments)')
-    print()
-    print('  Arguments are read first from inside the ezFix program,')
-    print('  then in order from the command line.  For duplicates, last read wins.')
-    print()
-    print(' ( pgmRev =', pgmRev, ')')
-    print()
-    print()
-    print()
-    print()
-    print()
-    print('       The Society of Amateur Radio Astronomers (SARA)')
-    print('                    radio-astronomy.org')
-    print()
-    print()
-    print()
-    print()
-    print()
-    print('##############################################################################################')
-    print()
-
-    exit()
-
-
-
-def experiment():
-    if 0:
-        import copy
 
 
 
@@ -665,22 +804,23 @@ def readDataDir():
     global ezFixAddAzDeg                    # float
     global ezFixAddElDeg                    # float
 
-    global ezFixRemoveFreqBinGreater        # integer
-    global ezFixRemoveFreqBinLess           # integer
+    global ezFixKeepNumL                    # integer list
+    global ezFixRemoveNumL                  # integer list
+    global ezFixRemoveTypeS                 # string
 
-    global ezFixRemoveReference             # integer
+    global ezFixRemoveGreaterL              # string and float list
+    global ezFixRemoveLessL                 # string and float list
+    global ezFixRemoveAvgGreaterL           # string and float list
+    global ezFixRemoveAvgLessL              # string and float list
 
-    global ezFixRemoveGreater               # float
-    global ezFixRemoveLess                  # float
-    global ezFixRemoveAvgGreater            # float
-    global ezFixRemoveAvgLess               # float
+    global ezFixEditTimeS                   # string
+    
+    global ezFixEditCeilingL                # string and float list
+    global ezFixEditFloorL                  # string and float list
 
-    global ezFixEditGreater                 # float
-    global ezFixEditLess                    # float
+    global ezFixEditMultL                   # string and integer and float list
+    global ezFixEditSetL                    # string and integer and float list
 
-    global ezFixRemoveRawL                  # integer list
-
-    global ezFixTimeShiftS                  # string
     global ezFixOverwriteFilename           # string
     global ezFixRemovedWriteFilename        # string
 
@@ -690,30 +830,21 @@ def readDataDir():
     print()
     print('   readDataDir ===============')
 
-    if ezFixTimeShiftS:
+    if ezFixEditTimeS:
+        # detect the sign and parse the ezFixEditTimeS into ezFixTimeShiftHH, ezFixTimeShiftMM, and ezFixEditTimeSS
         # -ET   -07:00:00 (Edit samples: add this time (sHH:MM:SS) to all timestamps)
-        ezFixTimeShiftSSplit = ezFixTimeShiftS.split(':')
-        ezFixTimeShiftHH = int(ezFixTimeShiftSSplit[0])     # positive or negative 'sHH'
-        # apply sign of 'sHH' to ezFixTimeShiftMM and ezFixTimeShiftSS
-        if ezFixTimeShiftSSplit[0][0] == '-':               # if 'sHH' is negative (may be '-00')
-            ezFixTimeShiftMM = -int(ezFixTimeShiftSSplit[1])
-            ezFixTimeShiftSS = -int(ezFixTimeShiftSSplit[2])
+        ezFixEditTimeSSplit = ezFixEditTimeS.split(':')
+        ezFixTimeShiftHH = int(ezFixEditTimeSSplit[0])     # positive or negative 'sHH'
+        # apply sign of 'sHH' to ezFixTimeShiftMM and ezFixEditTimeSS
+        if ezFixEditTimeSSplit[0][0] == '-':               # if 'sHH' is negative (may be '-00')
+            ezFixTimeShiftMM = -int(ezFixEditTimeSSplit[1])
+            ezFixEditTimeSS = -int(ezFixEditTimeSSplit[2])
         else:
-            ezFixTimeShiftMM = int(ezFixTimeShiftSSplit[1])
-            ezFixTimeShiftSS = int(ezFixTimeShiftSSplit[2])
+            ezFixTimeShiftMM = int(ezFixEditTimeSSplit[1])
+            ezFixEditTimeSS = int(ezFixEditTimeSSplit[2])
 
-    # if one of these reference values are not silly, may edit sample data
-    if -8e99 < ezFixEditLess or ezFixEditGreater < 8e99 or ezFixRemoveReference:
-            ezFixEditData = 1          # may edit sample data
-    else:
-            ezFixEditData = 0          # do not need to edit sample data, faster
-
-    # if one of these reference values are not silly, need the sample data as floats
-    if -8e99 < ezFixRemoveLess or ezFixRemoveGreater < 8e99 \
-        or -8e99 < ezFixRemoveAvgLess or ezFixRemoveAvgGreater < 8e99 or ezFixEditData:
-            ezFixNeedData = 1          # need the sample data as floats
-    else:
-            ezFixNeedData = 0          # do not need the sample data as floats, faster
+    # if one of these argument values are not empty, may need to reconstruct data line
+    ezFixEditedMaybe = ezFixEditTimeS or ezFixEditCeilingL or ezFixEditFloorL or ezFixEditMultL or ezFixEditSetL
 
     #    if len(sys.argv) > 1:
     #        #directoryList = sorted(sys.argv[1:])
@@ -732,6 +863,7 @@ def readDataDir():
     sampleRemovedCount = 0     # number of removed samples
     sampleOutCount     = 0     # number of unremoved samples
     sampleCount        = 0     # number of removed and unremoved samples
+    sampleEditedCount  = 0     # number of edited samples
 
     fileFreqMinLast    = 0     # 0 to flag not used yet
     fileFreqMaxLast    = 0     # 0 to flag not used yet
@@ -739,9 +871,11 @@ def readDataDir():
 
     fileWriteRemoved   = 0     # 0 to flag file is not opened yet
     fileOut            = 0     # 0 to flag file is not opened yet
-    ezFixRemoveRawLen = len(ezFixRemoveRawL)
-    fileOutNameS               = ''    # to allow printing if unused
-    timeStampUtcS              = ''    # will fill if needed
+
+    ezFixKeepNumLen   = len(ezFixKeepNumL)
+    ezFixRemoveNumLen = len(ezFixRemoveNumL)
+    fileOutNameS      = ''     # to allow printing if unused
+    timeStampUtcS     = ''     # will fill if needed
     
     # https://www.timeanddate.com/calendar/months/
     # January - 31 days
@@ -915,11 +1049,11 @@ def readDataDir():
                         print()
                         exit()
 
-                fileOut.write('from ezCol  ' + pgmRev + '\n')
+                fileOut.write('from ezCol  ' + programRevision + '\n')
                 fileOut.write('#' + thisLine)        # passthrough, now as a comment
                 # ezFixRemovedWriteFilename output does not passthrough comments
                 if ezFixRemovedWriteFilename:
-                    fileWriteRemoved.write('from ezCol  ' + pgmRev + '\n')
+                    fileWriteRemoved.write('from ezCol  ' + programRevision + '\n')
 
 
                 # read line 2 (required)
@@ -975,8 +1109,7 @@ def readDataDir():
                 fileObsName = ' '.join(thisLineSplit[7:])
                 print('   fileObsName = ', fileObsName)
 
-
-                if not ezRAObsLat < 8e99:           # if not enabled
+                if not math.isfinite(ezRAObsLat):   # if not enabled
                     ezRAObsLat = fileObsLat
                     print()
                     print('   ezRAObsLat changed to ', ezRAObsLat)
@@ -991,7 +1124,7 @@ def readDataDir():
                     print('             does NOT match current ezRAObsLat = ', ezRAObsLat)
                     print()
 
-                if not ezRAObsLon < 8e99:           # if not enabled
+                if not math.isfinite(ezRAObsLon):   # if not enabled
                     ezRAObsLon = fileObsLon
                     print()
                     print('   ezRAObsLon changed to ', ezRAObsLon)
@@ -1008,7 +1141,7 @@ def readDataDir():
                     print('             does NOT match current ezRAObsLon = ', ezRAObsLon)
                     print()
 
-                if not ezRAObsAmsl < 8e99:           # if not enabled
+                if not math.isfinite(ezRAObsAmsl):   # if not enabled
                     ezRAObsAmsl = fileObsAmsl
                     print()
                     print('   ezRAObsAmsl changed to ', ezRAObsAmsl)
@@ -1155,10 +1288,10 @@ def readDataDir():
                 print('   dataAzimuth   = ', dataAzimuth)
                 print('   dataElevation = ', dataElevation)
 
-                if ezFixAzimuth < 8e99:    # if enabled, use ezFixAzimuth
+                if math.isfinite(ezFixAzimuth):     # if enabled, use ezFixAzimuth
                     dataAzimuth = ezFixAzimuth
 
-                if ezFixElevation < 8e99:    # if enabled, use ezFixElevation
+                if math.isfinite(ezFixElevation):   # if enabled, use ezFixElevation
                     dataElevation = ezFixElevation
 
                 fileOut.write(f'az {dataAzimuth:g} el {dataElevation:g}\n')
@@ -1217,11 +1350,111 @@ def readDataDir():
 
                         # assume a data line
 
-                        # -ET  -07:00:00 (Edit samples: add this time (sHH:MM:SS) to all timestamps)
-                        if ezFixTimeShiftS:
+                        # need to remove sample ?   Before tests, assume no
+                        ezFixRemoveRawThis = 0
+
+                        # conditionals of the tests below are designed to speed execution, if ezFixRemoveRawThis, then no more tests are needed
+
+                        # -KN : Keep Raw sample Numbers only if in an ezFixKeepNumL pair range
+                        if ezFixKeepNumLen:                     # if ezFixKeepNumL enabled
+                            ezFixKeepNumThis = 0                # assume not to keep
+                            for ezFixKeepNumIndex in range(0, ezFixKeepNumLen, 2):
+                                if ezFixKeepNumL[ezFixKeepNumIndex] <= sampleCount \
+                                    and sampleCount <= ezFixKeepNumL[ezFixKeepNumIndex + 1]:
+                                        ezFixKeepNumThis = 1    # yes, keep this raw sample
+                                        break                   # get out of loop
+                            if not ezFixKeepNumThis:            # if not wanted
+                                ezFixRemoveRawThis = 1          # yes, remove this raw sample
+
+
+                        # -RN : Remove away Raw sample Numbers if in an ezFixRemoveNumL pair range
+                        if not ezFixRemoveRawThis and ezFixRemoveNumLen:          # if ezFixRemoveNumL enabled
+                            for ezFixRemoveNumIndex in range(0, ezFixRemoveNumLen, 2):
+                                if ezFixRemoveNumL[ezFixRemoveNumIndex] <= sampleCount \
+                                    and sampleCount <= ezFixRemoveNumL[ezFixRemoveNumIndex + 1]:
+                                        ezFixRemoveRawThis = 1  # yes, remove this raw sample
+                                        break                   # get out of loop
+
+
+                        # parse data flags
+                        if not ezFixRemoveRawThis and fileFreqBinQty + 2 <= thisLineSplitLen:       # if data flags
+                            dataFlagsS = (''.join(thisLineSplit[fileFreqBinQty + 1:])).lower()
+                            #print('thisLineSplit[fileFreqBinQty + 1:] = ', thisLineSplit[fileFreqBinQty + 1:], ' ==============================================')
+                            #dataFlagsS = thisLineSplit[fileFreqBinQty + 1:].lower()     # allow spaces
+                        else:
+                            dataFlagsS = ''
+                        #print('\n\ndataFlagsS = ', dataFlagsS)
+
+
+                        # -RT : Remove away sample if dataType ezFixRemoveTypeS[0][0] is a requested (Any/Ant/Ref=1/A/R) sample)
+                        if not ezFixRemoveRawThis and ezFixRemoveTypeS:          # if ezFixRemoveTypeS enabled
+                            ezFixRemoveTypeS00 = ezFixRemoveTypeS[0][0].lower()
+                            #charInDataflags = ezFixRemoveTypeS00 in dataFlagsS
+                            #print('\n\n... ezFixRemoveTypeS00 = ', ezFixRemoveTypeS00, ' =======================================')
+                            #print('\n\n... charInDataflags = ', charInDataflags, ' =======================================')
+                            if ezFixRemoveTypeS00 in dataFlagsS or (not dataFlagsS and ezFixRemoveTypeS00 == 'a') or ezFixRemoveTypeS00 == '1':
+                                ezFixRemoveRawThis = 1          # yes, remove this raw sample, no more tests needed
+                                #print('\n\n... removed: ezFixRemoveTypeS00 = ', ezFixRemoveTypeS00)
+
+
+                        # parse timeStamp and spectrum data
+                        if not ezFixRemoveRawThis:
+                            # parse timeStamp from strings
+                            timeStampUtcS = thisLineSplit[0]
+
+                            # convert spectrum data from strings
+                            radDataL = list(map(float, thisLineSplit[1:fileFreqBinQty + 1]))
+                            #print()
+                            #print('thisLineSplit =', thisLineSplit)
+                            #print('radDataL =', radDataL)
+                            #print('len(radDataL) =', len(radDataL))
+                            #print('len(thisLineSplit) =', len(thisLineSplit))
+                            #print()
+
+
+                        # -RG : Remove away (Any/Ant/Ref=1/A/R) sample if any spectrum value is Greater
+                        if not ezFixRemoveRawThis and ezFixRemoveGreaterL:
+                            # -RG dataType ezFixRemoveGreaterL[0] is not empty
+                            ezFixRemoveGreaterL00 = ezFixRemoveGreaterL[0][0].lower()
+                            if ezFixRemoveGreaterL00 in dataFlagsS or (not dataFlagsS and ezFixRemoveGreaterL00 == 'a') or ezFixRemoveGreaterL00 == '1':
+                                if ezFixRemoveGreaterL[1] < max(radDataL):
+                                    ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests needed
+
+
+                        # -RL : Remove away (Any/Ant/Ref=1/A/R) sample if any spectrum value is Less
+                        if not ezFixRemoveRawThis and ezFixRemoveLessL:
+                            # -RL dataType ezFixRemoveLessL[0] is not empty
+                            ezFixRemoveLessL00 = ezFixRemoveLessL[0][0].lower()
+                            if ezFixRemoveLessL00 in dataFlagsS or (not dataFlagsS and ezFixRemoveLessL00 == 'a') or ezFixRemoveLessL00 == '1':
+                                if min(radDataL) < ezFixRemoveLessL[1]:
+                                    ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests needed
+
+
+                        # -RAG : Remove away (Any/Ant/Ref=1/A/R) sample if spectrum Average is Greater
+                        if not ezFixRemoveRawThis and ezFixRemoveAvgGreaterL:
+                            # -RAG dataType ezFixRemoveAvgGreaterL[0] is not empty
+                            ezFixRemoveAvgGreaterL00 = ezFixRemoveAvgGreaterL[0][0].lower()
+                            if ezFixRemoveAvgGreaterL00 in dataFlagsS or (not dataFlagsS and ezFixRemoveAvgGreaterL00 == 'a') or ezFixRemoveAvgGreaterL00 == '1':
+                                radDataLAvg = sum(radDataL) / fileFreqBinQty
+                                if ezFixRemoveAvgGreaterL[1] < radDataLAvg:
+                                    ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests needed
+
+
+                        # -RAL : Remove away (Any/Ant/Ref=1/A/R) sample if spectrum Average is Less
+                        if not ezFixRemoveRawThis and ezFixRemoveAvgLessL:
+                            # -RAL dataType ezFixRemoveAvgLessL[0] is not empty
+                            ezFixRemoveAvgLessL00 = ezFixRemoveAvgLessL[0][0].lower()
+                            if ezFixRemoveAvgLessL00 in dataFlagsS or (not dataFlagsS and ezFixRemoveAvgLessL00 == 'a') or ezFixRemoveAvgLessL00 == '1':
+                                radDataLAvg = sum(radDataL) / fileFreqBinQty
+                                if radDataLAvg < ezFixRemoveAvgLessL[1]:
+                                    ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests needed
+
+
+                        # -ET  -07:00:00 (Edit Timestamps: add this time (sHH:MM:SS) to all timestamps)
+                        if not ezFixRemoveRawThis and ezFixEditTimeS:
                             # read in data timestamp
                             # 2022-05-06T00:00:23
-                            timeStampUtcS = thisLineSplit[0]
+                            #timeStampUtcS = thisLineSplit[0]
                             #print(' timeStampUtcS =', timeStampUtcS)
                             timestampTSplit = timeStampUtcS.split('T')
                             # 2022-05-06
@@ -1235,52 +1468,62 @@ def readDataDir():
                             timestampMM = int(timestampTimeColonSplit[1])
                             timestampSS = int(timestampTimeColonSplit[2])
 
-                            timestampSS += ezFixTimeShiftSS
+                            timestampSS += ezFixEditTimeSS
                             if timestampSS < 0:
+                                # borrow from timestampMM
                                 timestampSS += 60
                                 timestampMM -= 1
                             elif 60 <= timestampSS:
+                                # carry into timestampMM
                                 timestampSS -= 60
                                 timestampMM += 1
 
                             timestampMM += ezFixTimeShiftMM
                             if timestampMM < 0:
+                                # borrow from timestampHH
                                 timestampMM += 60
                                 timestampHH -= 1
                             elif 60 <= timestampMM:
+                                # carry into timestampHH
                                 timestampMM -= 60
                                 timestampHH += 1
 
                             timestampHH += ezFixTimeShiftHH
                             if timestampHH < 0:
+                                # borrow from timestampDD
                                 timestampHH += 24
                                 timestampDD -= 1
                             elif 24 <= timestampHH:
+                                # carry into timestampDD
                                 timestampHH -= 24
                                 timestampDD += 1
 
                             timestampMonthChanged = 0                               # assume no change
                             if timestampDD < 1:
+                                # borrow from timestampMonth
                                 timestampDD += monthsDaysL[timestampMonth - 1]
-                                timestampMonth -= 1                                 # into Feb or Dec ?
+                                timestampMonth -= 1                                 # but what if into Feb or Dec ?
                                 timestampMonthChanged = 1
                             elif monthsDaysL[timestampMonth] < timestampDD:
+                                # carry into timestampMonth
                                 timestampDD = 1
-                                timestampMonth += 1                                 # into Mar or Jan ?
+                                timestampMonth += 1                                 # but what if into Mar or Jan ?
                                 timestampMonthChanged = 1
 
                             if timestampMonthChanged:
                                 # adjustments needed if into Jan or Dec, or Feb or Mar
-                                if timestampMonth == 13:                            # if into Jan
+                                if timestampMonth == 13:                            # if was into Jan
+                                    # carry into timestampYYYY
                                     timestampMonth = 1
                                     timestampYYYY += 1
-                                elif timestampMonth == 0:                           # if into Dec
+                                elif timestampMonth == 0:                           # if was into Dec
+                                    # borrow from timestampYYYY
                                     timestampMonth = 12
                                     timestampYYYY -= 1
                                 else:
-                                    # Into Feb or Mar.
-                                    # Above assumed non-leap year with 28 days in Feb.
-                                    # Is the sample year a leap year ?
+                                    # If was into Feb or Mar:
+                                    # monthsDaysL and above assumed non-leap year with 28 days in Feb.
+                                    # But is the sample year a leap year ?
                                     # https://www.timeanddate.com/date/leapyear.html
                                     # Leap year must be evenly divisible by 4;
                                     # If the year can also be evenly divided by 100, it is not a leap year;
@@ -1294,17 +1537,18 @@ def readDataDir():
                                     elif not (timestampYYYY % 400):
                                         leapYear = 1            # divisible by 400, is a leap year
                                     elif timestampYYYY % 100:
-                                        leapYear = 1            # not divisible by 100, is a leap year
+                                        leapYear = 1            # divisible by 4, not divisible by 100, is a leap year
                                     else:
-                                        leapYear = 0            # divisible by 100, not a leap year
+                                        leapYear = 0            # not divisible by 400, divisible by 100, not a leap year
 
                                     if leapYear:
                                         # then undo the change Feb or Mar month mistake
-                                        #if timestampMonth == 2:                     # if into Feb
+                                        #if timestampMonth == 2:            # if was thought to move backward into Feb
                                         #    timestampDD = 29
-                                        #else:                                       # was thought into Mar
+                                        #else:                              # was thought to move forward into Mar
                                         #    timestampMonth = 2
                                         #    timestampDD = 29
+                                        # so in both directions, the answer is the same Feb-29
                                         timestampMonth = 2
                                         timestampDD = 29
 
@@ -1320,110 +1564,90 @@ def readDataDir():
                             thisLine = timeStampUtcS + thisLine[19:]
                             #thisLineSplit = thisLine.split()
                             thisLineSplit[0] = timeStampUtcS
+                            sampleEditedCount += 1
 
-                        if ezFixNeedData:
-                            # need the sample data as floats
-                            radDataL = list(map(float, thisLineSplit[1:fileFreqBinQty + 1]))
-                            #print()
-                            #print('radDataL =', radDataL)
-                            #print(len(thisLineSplit))
 
-                        # need to remove sample ?   Before tests, assume no
-                        ezFixRemoveRawThis = 0
-                        
-                        #print()
-                        #print(' ezFixEditData =', ezFixEditData)
-                        if ezFixEditData:
-                            # need the words before and after the sample data
-                            timeStampUtcS = thisLineSplit[0]
-                            if fileFreqBinQty + 2 <= thisLineSplitLen:       # if data flags
-                                dataFlagsS = ''.join(thisLineSplit[fileFreqBinQty + 1:])
-                            else:
-                                dataFlagsS = ''
-                            #print('     dataFlagsS =', dataFlagsS, '=')
-
-                            # -RR : Remove away sample if is a Reference sample
-                            if ezFixRemoveReference and 'r' in dataFlagsS.lower():
-                                ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests
-
-                            if ezFixRemoveReference and 'c' in dataFlagsS.lower():
-                                ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests
-
-                            if ezFixEditGreater < 8e99:    # if enabled
-                                # -eg : Edit sample spectrum values if equal or Greater (enforce ceiling)
-                                radDataL = [min(x, ezFixEditGreater) for x in radDataL]
+                        # Edit Ceiling: no (Any/Ant/Ref=1/A/R) sample spectrum values greater than ezFixEditCeilingL[1]
+                        if not ezFixRemoveRawThis and ezFixEditCeilingL:
+                            # -EC dataType ezFixEditCeilingL[0] is not empty
+                            ezFixEditCeilingL00 = ezFixEditCeilingL[0][0].lower()
+                            if ezFixEditCeilingL00 in dataFlagsS or (not dataFlagsS and ezFixEditCeilingL00 == 'a') or ezFixEditCeilingL00 == '1':
+                                radDataL = [min(y, ezFixEditCeilingL[1]) for y in radDataL]
                                 #print()
                                 #print('     radDataL =', radDataL)
                                 #print('     max(radDataL) =', max(radDataL))
+                                sampleEditedCount += 1
 
-                            if -8e99 < ezFixEditLess:      # if enabled
-                                # -el : Edit sample spectrum values if equal or Less    (enforce floor  )
-                                radDataL = [max(x, ezFixEditLess) for x in radDataL]
 
-                        # -RNL : Remove away raw sample Numbers if in an ezFixRemoveRawL pair range
-                        if ezFixRemoveRawLen:          # if ezFixRemoveRawL enabled
-                            for ezFixRemoveRawIndex in range(0, ezFixRemoveRawLen, 2):
-                                if ezFixRemoveRawL[ezFixRemoveRawIndex] <= sampleCount \
-                                    and sampleCount <= ezFixRemoveRawL[ezFixRemoveRawIndex + 1]:
-                                        ezFixRemoveRawThis = 1     # yes, remove this raw sample
-                                        break
-                        if ezFixRemoveRawThis:         # from above ezFixRemoveRawL test
-                            pass                        # yes, remove this raw sample, no more tests
+                        # Edit Floor: no (Any/Ant/Ref=1/A/R) sample spectrum values less than ezFixEditFloorL[1]
+                        if not ezFixRemoveRawThis and ezFixEditFloorL:
+                            # -EF dataType ezFixEditFloorL[0] is not empty
+                            ezFixEditFloorL00 = ezFixEditFloorL[0][0].lower()
+                            if ezFixEditFloorL00 in dataFlagsS or (not dataFlagsS and ezFixEditFloorL00 == 'a') or ezFixEditFloorL00 == '1':
+                                radDataL = [max(y, ezFixEditFloorL[1]) for y in radDataL]
+                                sampleEditedCount += 1
 
-                        # -RG : Remove away sample if any spectrum value is equal or Greater
-                        elif ezFixRemoveGreater < 8e99 and ezFixRemoveGreater <= max(radDataL):
-                            ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests
-                            #print()
-                            #print(' ezFixRemoveRawThis =', ezFixRemoveRawThis)
-                            #print(' max(radDataL) =', max(radDataL))
 
-                        # -RL : Remove away sample if any spectrum value is equal or Less
-                        elif -8e99 < ezFixRemoveLess and min(radDataL) <= ezFixRemoveLess:
-                            ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests
+                        # -EM  A 123 456 0 9999 2.1  (Edit Multiply: Ant (Any/Ant/Ref=1/A/R) samples 123 through 456,
+                        #                               freqBin 0 through 9999, multiply spectrum values by 2.1)
+                        if not ezFixRemoveRawThis and ezFixEditMultL:
+                            # -EM dataType ezFixEditMultL[0] is not empty
+                            ezFixEditMultL00 = ezFixEditMultL[0][0].lower()
+                            if ezFixEditMultL00 in dataFlagsS or (not dataFlagsS and ezFixEditMultL00 == 'a') or ezFixEditMultL00 == '1':
+                                if ezFixEditMultL[1] <= sampleCount and sampleCount <= ezFixEditMultL[2]:
+                                    # sampleCount is within requested range, so multiply requested freqBin
+                                    multiplyValue = ezFixEditMultL[5]
+                                    radDataL[ezFixEditMultL[3]:ezFixEditMultL[4] + 1] = [y * multiplyValue for y in radDataL[ezFixEditMultL[3]:ezFixEditMultL[4] + 1]]
+                                    #print()
+                                    #print()
+                                    #print('    sampleCount = ', sampleCount)
+                                    #print('    ezFixEditMultL00 = ', ezFixEditMultL00)
+                                    #print()
+                                    sampleEditedCount += 1
 
-                        # -RFBG : Remove away sample if FreqBin is Greater
-                        elif ezFixRemoveFreqBinGreater < fileFreqBinQty:
-                            ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests
 
-                        # -RFBL : Remove away sample if FreqBin is Less
-                        elif fileFreqBinQty < ezFixRemoveFreqBinLess:
-                            ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests
+                        # -ES  R 123 456 0 9999 2.1  (Edit Set:      Ref (Any/Ant/Ref=1/A/R) samples 123 through 456,
+                        #                               freqBin 0 through 9999, set spectrum values to 2.1)
+                        if not ezFixRemoveRawThis and ezFixEditSetL:
+                            # -ES dataType ezFixEditSetL[0] is not empty
+                            ezFixEditSetL00 = ezFixEditSetL[0][0].lower()
+                            #print('    ezFixEditSetL00 =', ezFixEditSetL00, '=')
+                            #print('    dataFlagsS =', dataFlagsS, '=')
+                            if ezFixEditSetL00 in dataFlagsS or (not dataFlagsS and ezFixEditSetL00 == 'a') or ezFixEditSetL00 == '1':
+                                if ezFixEditSetL[1] <= sampleCount and sampleCount <= ezFixEditSetL[2]:
+                                    # sampleCount is within requested range, so set requested freqBin
+                                    setValue = ezFixEditSetL[5]
+                                    radDataL[ezFixEditSetL[3]:ezFixEditSetL[4] + 1] = [setValue for y in radDataL[ezFixEditSetL[3]:ezFixEditSetL[4] + 1]]
+                                    #print()
+                                    #print()
+                                    #print('    sampleCount =', sampleCount)
+                                    #print('    ezFixEditSetL00 =', ezFixEditSetL00)
+                                    #print('    ezFixEditedMaybe =', ezFixEditedMaybe)
+                                    #print()
+                                    sampleEditedCount += 1
 
-                        # ezFixRemoveAvgGreater or ezFixRemoveAvgLess enabled ?
-                        elif -8e99 < ezFixRemoveAvgLess or ezFixRemoveAvgGreater < 8e99:
-                            # need radDataLAvg
-                            radDataLAvg = sum(radDataL) / fileFreqBinQty
-
-                            # -RAG : Remove away sample if spectrum Average is equal or Greater
-                            if ezFixRemoveAvgGreater <= radDataLAvg:
-                                ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests
-
-                            # -RAL : Remove away sample if spectrum Average is equal or Less
-                            elif radDataLAvg <= ezFixRemoveAvgLess:
-                                ezFixRemoveRawThis = 1     # yes, remove this raw sample, no more tests
 
                         #print()
                         #print(' ezFixRemoveRawThis =', ezFixRemoveRawThis)
                         if ezFixRemoveRawThis:
-
-                            # if removed file enabled
+                            # if removed output file enabled
                             if ezFixRemovedWriteFilename:
-                                # write sample
-                                if ezFixEditData:
-                                    fileWriteRemoved.write(timeStampUtcS + ' ' \
-                                        + ' '.join(f'{x:.9g}' for x in radDataL) + ' ' + dataFlagsS + '\n')
-                                else:
-                                    fileWriteRemoved.write(thisLine)
-
+                                # write removed sample, sample unchanged
+                                fileWriteRemoved.write(thisLine)
+                            #else:
+                            #    pass            # current sample unwanted
+                                
                             sampleRemovedCount += 1
 
                         else:
                             # ezFixRemoveRawThis is 0
-                            # write sample
-                            if ezFixEditData:
+                            # write kept sample
+                            if ezFixEditedMaybe:
+                                # sample may have been edited, need to reconstruct data line
                                 fileOut.write(timeStampUtcS + ' ' \
-                                    + ' '.join(f'{x:.9g}' for x in radDataL) + ' ' + dataFlagsS + '\n')
+                                    + ' '.join(f'{x:.9g}' for x in radDataL) + ' ' + dataFlagsS.upper() + '\n')
                             else:
+                                # sample was not changed
                                 fileOut.write(thisLine)
 
                             #print(' sampleOutCount =', sampleOutCount)
@@ -1468,10 +1692,10 @@ def readDataDir():
                             print('dataAzimuth   = ', dataAzimuth)
                             print('dataElevation = ', dataElevation)
 
-                            if ezFixAzimuth < 8e99:    # if enabled, use ezFixAzimuth
+                            if math.isfinite(ezFixAzimuth):     # if enabled, use ezFixAzimuth
                                 dataAzimuth = ezFixAzimuth
 
-                            if ezFixElevation < 8e99:    # if enabled, use ezFixElevation
+                            if math.isfinite(ezFixElevation):   # if enabled, use ezFixElevation
                                 dataElevation = ezFixElevation
 
                             fileOut.write(thisLine)
@@ -1519,21 +1743,6 @@ def readDataDir():
 
     ###################################################################################
 
-    print('                         ezFixRemovedWriteFilename =', ezFixRemovedWriteFilename)
-    print('                         fileOutNameS              =', fileOutNameS)
-    print()
-    print('                         Total removed   samples read   =', sampleRemovedCount,
-        f'     === {100. * sampleRemovedCount / sampleCount:0.02f} % === removed')
-    print('                         Total unremoved samples read   =', sampleOutCount)
-    print('                         Total           samples read   =', sampleCount)
-
-
-
-def printGoodbye(startTime):
-
-    global pgmRev                   # string
-    global cmd                      # string
-
     if 1:
         # print status at ending
         print()
@@ -1547,22 +1756,73 @@ def printGoodbye(startTime):
         print('   ezFixAddAzDeg  =', ezFixAddAzDeg)
         print('   ezFixAddElDeg  =', ezFixAddElDeg)
         print()
-        print('   ezFixRemoveFreqBinGreater =', ezFixRemoveFreqBinGreater)
-        print('   ezFixRemoveFreqBinLess    =', ezFixRemoveFreqBinLess)
+        print('   ezFixKeepNumL    =', ezFixKeepNumL)
+        print('   ezFixRemoveNumL  =', ezFixRemoveNumL)
+        print('   ezFixRemoveTypeS =', ezFixRemoveTypeS)
         print()
-        print('   ezFixRemoveReference      =', ezFixRemoveReference)
+        print('   ezFixRemoveGreaterL    =', ezFixRemoveGreaterL)
+        print('   ezFixRemoveLessL       =', ezFixRemoveLessL)
+        print('   ezFixRemoveAvgGreaterL =', ezFixRemoveAvgGreaterL)
+        print('   ezFixRemoveAvgLessL    =', ezFixRemoveAvgLessL)
         print()
-        print('   ezFixRemoveGreater    =', ezFixRemoveGreater)
-        print('   ezFixRemoveLess       =', ezFixRemoveLess)
-        print('   ezFixRemoveAvgGreater =', ezFixRemoveAvgGreater)
-        print('   ezFixRemoveAvgLess    =', ezFixRemoveAvgLess)
+        print('   ezFixEditTimeS    =', ezFixEditTimeS)
         print()
-        print('   ezFixEditGreater =', ezFixEditGreater)
-        print('   ezFixEditLess    =', ezFixEditLess)
+        print('   ezFixEditCeilingL =', ezFixEditCeilingL)
+        print('   ezFixEditFloorL   =', ezFixEditFloorL)
         print()
-        print('   ezFixRemoveRawL  =', ezFixRemoveRawL)
+        print('   ezFixEditMultL    =', ezFixEditMultL)
+        print('   ezFixEditSetL     =', ezFixEditSetL)
         print()
-        print('   ezFixTimeShiftS           =', ezFixTimeShiftS)
+        print('   ezFixOverwriteFilename    =', ezFixOverwriteFilename)
+        print('   ezFixRemovedWriteFilename =', ezFixRemovedWriteFilename)
+        print()
+
+    print('                         ezFixRemovedWriteFilename =', ezFixRemovedWriteFilename)
+    print('                         fileOutNameS              =', fileOutNameS)
+    print()
+    print('                         Total removed   samples read   =', sampleRemovedCount,
+        f'     === {100. * sampleRemovedCount / sampleCount:0.02f} % === removed')
+    print('                         Total unremoved samples read   =', sampleOutCount)
+    print()
+    print('                         Total Edited    samples        =', sampleEditedCount)
+
+
+
+def printGoodbye(startTime):
+
+    global programRevision          # string
+    global cmd                      # string
+
+    if 0:
+        # print status at ending
+        print()
+        print('   ezRAObsName =', ezRAObsName)
+        print('   ezRAObsLat  =', ezRAObsLat)
+        print('   ezRAObsLon  =', ezRAObsLon)
+        print('   ezRAObsAmsl =', ezRAObsAmsl)
+        print()
+        print('   ezFixAzimuth   =', ezFixAzimuth)
+        print('   ezFixElevation =', ezFixElevation)
+        print('   ezFixAddAzDeg  =', ezFixAddAzDeg)
+        print('   ezFixAddElDeg  =', ezFixAddElDeg)
+        print()
+        print('   ezFixKeepNumL    =', ezFixKeepNumL)
+        print('   ezFixRemoveNumL  =', ezFixRemoveNumL)
+        print('   ezFixRemoveTypeS =', ezFixRemoveTypeS)
+        print()
+        print('   ezFixRemoveGreaterL    =', ezFixRemoveGreaterL)
+        print('   ezFixRemoveLessL       =', ezFixRemoveLessL)
+        print('   ezFixRemoveAvgGreaterL =', ezFixRemoveAvgGreaterL)
+        print('   ezFixRemoveAvgLessL    =', ezFixRemoveAvgLessL)
+        print()
+        print('   ezFixEditTimeS    =', ezFixEditTimeS)
+        print()
+        print('   ezFixEditCeilingL =', ezFixEditCeilingL)
+        print('   ezFixEditFloorL   =', ezFixEditFloorL)
+        print()
+        print('   ezFixEditMultL    =', ezFixEditMultL)
+        print('   ezFixEditSetL     =', ezFixEditSetL)
+        print()
         print('   ezFixOverwriteFilename    =', ezFixOverwriteFilename)
         print('   ezFixRemovedWriteFilename =', ezFixRemovedWriteFilename)
         print()
@@ -1578,7 +1838,7 @@ def printGoodbye(startTime):
 
     #print(' Helpful commands:')
     print()
-    print(' ( pgmRev =', pgmRev, ')')
+    print(' ( programRevision =', programRevision, ')')
     print()
     print()
     print()
@@ -1602,8 +1862,6 @@ def main():
 
     printHello()
     
-    #experiment()
-
     ezFixArguments()
 
     if 0:

@@ -1,23 +1,43 @@
-pgmName = 'ezColBaa220929a.py'
-#pgmRev  = pgmName + ' (N0RQV)'
-pgmRev  = pgmName
+programName = 'ezColBaa230305a.py'
+programRevision  = programName
 
-'''
-ezColBaa220929a.py, prep for Git
-ezColBaaSem220115a02.py, believe dec in file,
-https://www.youtube.com/watch?v=_3vkEIYs7gk&ab_channel=britishastronomical
-    GNU II Training seminar - Unpacking more mysteries of GNU Radio
-    Jan 15, 2022  RAG Zoom Programme - 2022
-        https://github.com/ccera-astro/baa_seminar
-            fft-0-20220506.csv says
-                0	0	9	8	55	52	-39.31	-39.32	-39.32 ...
-            tp-20220506.csv says
-                INFO:Sum	Corr(R)	Corr(I)	Diff	East	West	DEC=60.000000	FREQ=1420.405000
-                    BW=2.560000			
-                0	0	10	8	55	53	0.143533939	1.744E-06	1.462E-06	0.136702067	0.140118003	0.003415936
-                0	1	10	8	56	53	0.143562054	9.01E-07	4.275E-06	0.136731358	0.140146706	0.003415348
-                ...
-'''
+# ezRA - Easy Radio Astronomy ezColBaa Data COLlector program,
+#   converting data from British Astronomical Association
+#   Jan-15-2022 GNU II Training seminar .csv data format.
+#   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
+# https://github.com/tedcline/ezRA
+
+# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+# ezColBaa230305a.py, boilerplate from ezSky
+# ezColBaa220929a.py, prep for Git
+# ezColBaaSem220115a02.py, believe dec in file,
+# https://www.youtube.com/watch?v=_3vkEIYs7gk&ab_channel=britishastronomical
+#     GNU II Training seminar - Unpacking more mysteries of GNU Radio
+#     Jan 15, 2022  RAG Zoom Programme - 2022
+#         https://github.com/ccera-astro/baa_seminar
+#             fft-0-20220506.csv says
+#                 0	0	9	8	55	52	-39.31	-39.32	-39.32 ...
+#             tp-20220506.csv says
+#                 INFO:Sum	Corr(R)	Corr(I)	Diff	East	West	DEC=60.000000	FREQ=1420.405000
+#                     BW=2.560000			
+#                 0	0	10	8	55	53	0.143533939	1.744E-06	1.462E-06	0.136702067	0.140118003	0.003415936
+#                 0	1	10	8	56	53	0.143562054	9.01E-07	4.275E-06	0.136731358	0.140146706	0.003415348
+#                 ...
 
 def main():
 
@@ -37,7 +57,7 @@ def main():
     #print(' time.asctime(time.localtime() = %s ' % time.asctime(time.localtime()))
     print(' Local time = %s ' % time.asctime(time.localtime()))
 
-    print(' pgmRev = ' + pgmRev)
+    print(' programRevision = ' + programRevision)
     print()
 
     cmd = ''
@@ -74,7 +94,7 @@ def main():
             print('    sdrInit.txt                               (customized for observatory')
             print()
             print()
-            print(' pgmRev = ' + pgmRev)
+            print(' programRevision = ' + programRevision)
             print()
             print()
             print()
@@ -714,7 +734,7 @@ def main():
                             ## 2022-03-01T06:32:55 10.523690382 10.570080895 10.535587705 10.527403187 ... C
                             ## 2022-03-01T06:33:56 10.558290361 10.551762452 10.545512521 10.539835481 ...
                             ## ...
-                            #fileWrite.write('from ' + pgmRev  \
+                            #fileWrite.write('from ' + programRevision  \
                             #    + '\nlat {:g}'.format(sdrQthLat) \
                             #    + ' long {:g}'.format(sdrQthLon) \
                             #    + ' amsl ' + str(sdrQthAmsl) \
@@ -726,7 +746,7 @@ def main():
                             #    + ' el {:g}'.format(elevationThis) \
                             #    + '\n# times are in UTC\n')
                             fileWrite.write(
-                                'from ' + pgmRev \
+                                'from ' + programRevision \
                                 + '\nlat {:g} long {:g} amsl {:g} name '.format( \
                                 sdrQthLat, sdrQthLon, sdrQthAmsl) \
                                 + sdrQthName \

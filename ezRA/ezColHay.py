@@ -1,7 +1,28 @@
-pgmName = 'ezColHay220930a.py'
-#pgmRev  = pgmName + ' (N0RQV)'
-pgmRev  = pgmName
+programName = 'ezColHay230305a.py'
+programRevision  = programName
 
+# ezRA - Easy Radio Astronomy ezColHay Data COLlector program,
+#   converting data from MIT Haystack SRT .rad data format.
+#   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
+# https://github.com/tedcline/ezRA
+
+# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+# ezColHay230305a.py, boilerplate from ezSky
 # ezColHay220930a.py, prep for Git
 # ezColHay01m.py, output to ./data directory, 
 
@@ -20,7 +41,7 @@ import numpy as np
 
 def printHello():
 
-    global pgmRev                   # string
+    global programRevision          # string
     global cmd                      # string
 
     #print(' startTime = ', startTime)
@@ -31,7 +52,7 @@ def printHello():
     #print(' Local time = %s ' % time.asctime(time.localtime()))
     print(' Local time =', time.asctime(time.localtime()))
 
-    print(' pgmRev =', pgmRev)
+    print(' programRevision =', programRevision)
     print()
 
     #print(sys.argv)
@@ -381,7 +402,7 @@ def printUsage():
     #print('    -ezDefaultsFile ..\\bigDish8.txt     (Additional file of default arguments)')
     print()
     print()
-    print(' pgmRev =', pgmRev)
+    print(' programRevision =', programRevision)
     print()
     print()
     print()
@@ -403,8 +424,8 @@ def printUsage():
 
 def printGoodbye(startTime):
 
-    global pgmRev                   # string
-    global cmd                      # string
+    global programRevision                  # string
+    global cmd                              # string
 
     global ezRAObsName                      # string
     global ezRAObsLat                       # float
@@ -436,7 +457,7 @@ def printGoodbye(startTime):
 
     #print(' Helpful commands:')
     print()
-    print(' ( pgmRev =', pgmRev, ')')
+    print(' ( programRevision =', programRevision, ')')
     print()
     print()
     print()
@@ -456,7 +477,7 @@ def printGoodbye(startTime):
 
 def main():
 
-    global pgmRev                           # string
+    global programRevision                  # string
     #global cmd                              # string
 
     global ezRAObsName                      # string
@@ -474,7 +495,7 @@ def main():
     startTime = time.time()
 
     print()
-    print(pgmRev)
+    print(programRevision)
     print()
 
     printHello()
@@ -775,7 +796,7 @@ def main():
                             ## 2022-03-01T06:32:55 10.523690382 10.570080895 10.535587705 10.527403187 ... C
                             ## 2022-03-01T06:33:56 10.558290361 10.551762452 10.545512521 10.539835481 ...
                             ## ...
-                            #fileWrite.write('from ' + pgmRev  \
+                            #fileWrite.write('from ' + programRevision  \
                             #    + '\nlat {:g}'.format(sdrQthLat) \
                             #    + ' long {:g}'.format(sdrQthLon) \
                             #    + ' amsl ' + str(sdrQthAmsl) \
@@ -787,7 +808,7 @@ def main():
                             #    + ' el {:g}'.format(elevationThis) \
                             #    + '\n# times are in UTC\n')
                             fileWrite.write(
-                                'from ' + pgmRev \
+                                'from ' + programRevision \
                                 + f'\nlat {ezRAObsLat:g} long {ezRAObsLon:g} amsl {ezRAObsAmsl:g} name ' \
                                 + ezRAObsName \
                                 + f'\nfreqMin {dataFreqMin:g} freqMax {dataFreqMax:g} freqBinQty {freqBinQty:d}'\

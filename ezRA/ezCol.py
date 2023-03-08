@@ -1,18 +1,38 @@
-programName = 'ezCol230208a.py'
+programName = 'ezCol230305a.py'
 programRevision = programName
+
+# ezRA - Easy Radio Astronomy ezCol Data COLlector program,
+#   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
+# https://github.com/tedcline/ezRA
+
+# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+# Modified from Victor Boesen's https://github.com/byggemandboesen/H-line-software
 
 # Thanks to Todd Ullery, this ezColX.py was an experimental multiple process version of ezCol.py ,
 # to improve graphic dashboard responsiveness.
 # Problems ?  Dashboard more responsive ?  Faster ?
-
 # 221202, works on Win7Pro 'Python 3.8.10'
 # 221130, works on Ubuntu22 'Python 3.10.6'
 
-# ezRA - Easy Radio Astronomy Data COLlector - ezCol
-#   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
-#   Modified from Victor Boesen's https://github.com/byggemandboesen/H-line-software
-
-# ezCol230208a.py, REF should be defined in data collection process
+# ezCol230305a.py, boilerplate from ezSky
+# ezCol230301a.py, -ezez help wording
+# ezCol230228a.py, ezCol230208a.py did programStateQueue.put() and ezColIntegQtyQueue.put() way too often
+# ezCol230208a.py, REF should be defined in data collection process,
 #   moved REF and relay control into sdrTask, ezColIntegQtyQueue
 # ezCol230207c.py, marked REF one sample too early, so write with dataFlagsSLast - worked but first REF is second sample, want as first
 # ezCol230207b.py, marked REF one sample too early, so write with dataFlagsSLast
@@ -184,6 +204,9 @@ def printUsage():
     print('  py ezCol.py -ezColYLimL      0.1  0.4     (Fraction of Y Auto Scale, Min and Max)')
     print()
     print('  py ezCol.py -ezDefaultsFile ..\\bigDish8.txt   (Additional file of default arguments)')
+    print()
+    print('              -ezezIgonoreThisWholeOneWord')
+    print('         (any one word starting with -ezez is ignored, handy for long command line editing)')
     print()
     print()
     print(' programRevision =', programRevision)
@@ -863,18 +886,22 @@ def main():
         # https://blog.finxter.com/matplotlib-widgets-button/
         def programStateEntry(label):
             global programState                 # integer
+            global programStatePutLast          # integer
             #if label == 'Fast':
             if label == 'Collect':
                 programState = 0
                 programStateQueue.put(programState)
+                programStatePutLast = programState
             elif label == 'Pause': 
                 programState = 1
                 programStateQueue.put(programState)
+                programStatePutLast = programState
             else:
                 # label == 'Exit'
                 #exit()
                 programState = 2
                 programStateQueue.put(programState)
+                programStatePutLast = programState
                 #sdrProcess.join()               # needed ????????????????????
                 sys.exit(0)
 
@@ -978,9 +1005,11 @@ def main():
     #create the SDR Process
     programStateQueue = Queue()
     programStateQueue.put(programState)
+    programStatePutLast = programState
 
     ezColIntegQtyQueue = Queue()
     ezColIntegQtyQueue.put(ezColIntegQty)
+    ezColIntegQtyPutLast = ezColIntegQty
 
     sdrOutQueue = Queue()               #sdr to main communication
 
@@ -1010,8 +1039,12 @@ def main():
     #mainLoop = 0
     while programState <= 1:
         # update inputs to sdrTask
-        programStateQueue.put(programState)
-        ezColIntegQtyQueue.put(ezColIntegQty)
+        if programState != programStatePutLast:
+            programStateQueue.put(programState)
+            programStatePutLast = programState
+        if ezColIntegQty != ezColIntegQtyPutLast:
+            ezColIntegQtyQueue.put(ezColIntegQty)
+            ezColIntegQtyPutLast = ezColIntegQty
 
         #get the rmsSpectrum from the queue
         #if firstDraw and programState <= 1:
@@ -1074,6 +1107,7 @@ def main():
                         print()
                         programState = 2
                         programStateQueue.put(programState)
+                        programStatePutLast = programState
                         #sdrProcess.join()               # needed ????????????????????
                         exit()
 

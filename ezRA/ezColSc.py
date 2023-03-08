@@ -1,36 +1,51 @@
-programName = 'ezColSc221202a.py'
+programName = 'ezColSc230305a.py'
 programRevision = programName
 
-'''
-ezColSc program to convert one SpectraCyber output radio spectrum data file
-        to ezRA .txt radio spectrum data file.
+# ezRA - Easy Radio Astronomy ezColSc Data COLlector program,
+#   converting data from SpectraCyber output radio spectrum data file format.
+#   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
+# https://github.com/tedcline/ezRA
+
+# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+# ezColSc230305a.py, boilerplate from ezSky
+# ezColSc221202a.py, comments
+# ezColSc221126a.py, commented out special timing code
+
+# The "R-40DEC-2019-09-13 UTC  15 01 30 LAST.001" data file from Sep-2019 had
+# 480 freqBin from 1419.808 to 1421.012 MHz:
+# s 9 13 2019 15 1 30 1.000000 -600 600 5 0
+# 0.000000	= 2
+# ...
+# 0.000000	= 81
+# 3.408194	= 82
+# ...
+# 2.053217	= 321
+# 0.000000	= 322
+# ...
+# 0.000000	= 401
 
 
 
-ezColSc221202a.py, comments
-ezColSc221126a.py, commented out special timing code
+# 321 - 81 = 240
 
-The "R-40DEC-2019-09-13 UTC  15 01 30 LAST.001" data file from Sep-2019 had
-480 freqBin from 1419.808 to 1421.012 MHz:
-s 9 13 2019 15 1 30 1.000000 -600 600 5 0
-0.000000	= 2
-...
-0.000000	= 81
-3.408194	= 82
-...
-2.053217	= 321
-0.000000	= 322
-...
-0.000000	= 401
+# 80 + 240 + 80 = 400
+# 1421.012 - 1419.808 = 1.204 MHz
 
-
-
-321 - 81 = 240
-
-80 + 240 + 80 = 400
-1421.012 - 1419.808 = 1.204 MHz
-
-'''
 
 import os                       # used to grab all files in the current directory
 import sys                

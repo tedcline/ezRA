@@ -1,12 +1,12 @@
-programName = 'ezSky221205b.py'
+programName = 'ezSky230308a.py'
 programRevision = programName
 
-# Easy Radio Astronomy (ezRA) ezSky Sky Mapper program,
+# ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
 #   to read ezCon format .ezb condensed data text file(s)
 #   and optionally create .png plot files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2022, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,6 +26,8 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezSky230308a.py, cleanup
+# ezSky230305a.py, plt.close(fig) "deprecated in Matplotlib 3.6"
 # ezSky221205b.py, new .py header
 # ezSky221205a.py, ezSky201RBMax fixed highlight Right Ascensions,
 #   allows for ezConAstroMath=2 calculation noise of 1 HalfDeg Declination
@@ -140,7 +142,7 @@ def printUsage():
     print('    -ezDefaultsFile ..\\bigDish.txt      (additional file of ezRA arguments)')
     print()
     print()
-    print(' ( programRevision =', programRevision, ')')
+    print(' programRevision =', programRevision)
     print()
     print()
     print()
@@ -1219,7 +1221,7 @@ def plotEzSky200RBVO():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    #plt.close(fig)
 
 
 
@@ -1500,7 +1502,7 @@ def plotEzSky201RBMax():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    #plt.close(fig)
 
 
 
@@ -1581,7 +1583,7 @@ def plotEzSky300RB():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    #plt.close(fig)
 
 
 
@@ -1695,7 +1697,7 @@ def plotEzSky301RBT():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    #plt.close(fig)
 
 
 
@@ -1809,7 +1811,7 @@ def plotEzSky309RBTC():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    #plt.close(fig)
 
 
 def plotEzSky400RI():
@@ -1933,7 +1935,7 @@ def plotEzSky400RI():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    #plt.close(fig)
 
 
 
@@ -2144,7 +2146,7 @@ def plotEzSky500GMI():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    #plt.close(fig)
 
 
 
@@ -2293,7 +2295,7 @@ def plotEzSky501GSI():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    #plt.close(fig)
 
 
 
@@ -2366,7 +2368,7 @@ def plotEzSky600azEl():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    plt.close(fig)
+    #plt.close(fig)
 
 
 

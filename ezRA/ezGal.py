@@ -1,14 +1,34 @@
-programName = 'ezGal221123a.py'
+programName = 'ezGal230308a.py'
 programRevision = programName
 
-# Easy Radio Astronomy (ezRA) ezGal GALaxy explorer program,
+# ezRA - Easy Radio Astronomy ezGal GALaxy explorer program,
 #   to read ezCon format *Gal.npz condensed data text file(s),
 #   and optionally create .png plot files.
+# https://github.com/tedcline/ezRA
+
+# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 3
+# of the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # TTD:
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGal230308a.py, cleanup
+# ezGal230305a.py, boilerplate from ezSky
+# ezGal230217a.py, add ezGal516velGLonAvg, ezGal517velGLonMax
 # ezGal221123a.py, to ezGal690, and to X axis using -byFreqBinX
 # ezGal221117a.py, "Galaxy Crossing" to "Galaxy Plane"
 # ezGal221117a.py,
@@ -108,7 +128,7 @@ def printUsage():
     print('    -ezDefaultsFile ../bigDish8.txt     (additional file of ezRA arguments)')
     print()
     print()
-    print(' ( programRevision =', programRevision, ')')
+    print(' programRevision =', programRevision)
     print()
     print()
     print()
@@ -828,6 +848,217 @@ def plotEzGal511velGLonCount():
                 fileWriteGLon.write('*\n')
 
         fileWriteGLon.close()   
+
+
+
+def plotEzGal516velGLonAvg():
+    # spectrum Averages in dots
+
+    global plotCountdown            # integer
+    global velGLonP180              # float 2d array
+    global velGLonP180Count         # integer array
+    global velGLonP180CountSum      # integer
+
+    global titleS                   # string
+    global ezGalDispGrid            # integer
+    #global fileFreqBinQty           # integer
+    global ezGalPlotRangeL          # integer list
+
+    pltNameS = 'ezGal516velGLonAvg.png'
+    print()
+    print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+    plotCountdown -= 1
+
+    # if anything in velGLonP180 to plot
+    if ezGalPlotRangeL[0] <= 516 and 516 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
+        plt.clf()
+        #plt.plot(np.arange(-180, +181, 1), velGLonP180Count)
+
+
+
+
+
+
+
+
+        print('velGLonP180.shape = ', velGLonP180.shape)
+
+
+        print('velGLonP180')
+        print(velGLonP180)
+        print('~np.isnan(velGLonP180)')
+        print(~np.isnan(velGLonP180))
+        print('velGLonP180[~np.isnan(velGLonP180)]')
+        print(velGLonP180[~np.isnan(velGLonP180)])
+
+        print('velGLonP180[0]')
+        print(velGLonP180[0])
+        print('velGLonP180[1]')
+        print(velGLonP180[1])
+        
+        
+        print('np.mean(velGLonP180, axis=0)')
+        print(np.mean(velGLonP180, axis=0))
+        print('shape = ', np.mean(velGLonP180, axis=0).shape)   # shape = (361,) <=================
+ 
+ 
+ 
+
+        print('np.mean(velGLonP180, axis=1)')
+        print(np.mean(velGLonP180, axis=1))
+        print('shape = ', np.mean(velGLonP180, axis=1).shape)   # shape = (256,)
+
+
+
+
+        print('velGLonP180[~np.isnan(velGLonP180[0])]')
+        print(velGLonP180[~np.isnan(velGLonP180[0])])
+        print('velGLonP180[~np.isnan(velGLonP180[1])]')
+        print(velGLonP180[~np.isnan(velGLonP180[1])])
+
+        print('velGLonP180[~np.isnan(velGLonP180)][0]')
+        print(velGLonP180[~np.isnan(velGLonP180)][0])
+        print('velGLonP180[~np.isnan(velGLonP180)][1]')
+        print(velGLonP180[~np.isnan(velGLonP180)][1])
+        print('np.mean(velGLonP180[~np.isnan(velGLonP180)][1])')
+        print(np.mean(velGLonP180[~np.isnan(velGLonP180)][1]))
+
+
+        
+        plt.plot(np.arange(-180, +181, 1), np.mean(velGLonP180[~np.isnan(velGLonP180)][1]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+        plt.title(titleS)
+        #plt.grid(ezGalDispGrid)
+        plt.grid(0)
+
+        plt.xlabel('Galactic Longitude (degrees)')
+        plt.xlim(180, -180)        # in degrees
+        plt.xticks([ 180,   90,   0,   -90,   -180],
+                   ['180', '90', '0', '-90', '-180'])
+
+        # if any Galactic plane crossings, velGLonP180 has been (partially?) filled with averages
+        velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
+        print(' velGLonP180CountNonzero =', velGLonP180CountNonzero, 'of', len(velGLonP180Count) )
+        print()
+
+        plt.ylabel('Average Velocity (km/s) by Galactic Longitude' \
+            + f'\nVelocity Count: Sum={velGLonP180CountSum:,}' \
+            + f' Nonzero = {velGLonP180CountNonzero} of {len(velGLonP180Count)}')
+        #    rotation=90, verticalalignment='bottom')
+
+        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
+            os.remove(pltNameS)
+        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+
+
+
+def plotEzGal517velGLonMax():
+    # spectrum Maximums in dots
+
+    global plotCountdown            # integer
+    global velGLonP180              # float 2d array
+    global velGLonP180Count         # integer array
+    global velGLonP180CountSum      # integer
+
+    global titleS                   # string
+    global ezGalDispGrid            # integer
+    #global fileFreqBinQty           # integer
+    global ezGalPlotRangeL          # integer list
+
+    pltNameS = 'ezGal517velGLonMax.png'
+    print()
+    print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+    plotCountdown -= 1
+
+    # if anything in velGLonP180 to plot
+    if ezGalPlotRangeL[0] <= 517 and 517 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
+        plt.clf()
+        #plt.plot(np.arange(-180, +181, 1), velGLonP180Count)
+        plt.plot(np.arange(-180, +181, 1), np.maximum(velGLonP180[~np.isnan(velGLonP180)][0]))
+
+        plt.title(titleS)
+        #plt.grid(ezGalDispGrid)
+        plt.grid(0)
+
+        plt.xlabel('Galactic Longitude (degrees)')
+        plt.xlim(180, -180)        # in degrees
+        plt.xticks([ 180,   90,   0,   -90,   -180],
+                   ['180', '90', '0', '-90', '-180'])
+
+        # if any Galactic plane crossings, velGLonP180 has been (partially?) filled with averages
+        velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
+        print(' velGLonP180CountNonzero =', velGLonP180CountNonzero, 'of', len(velGLonP180Count) )
+        print()
+
+        plt.ylabel('Maximum Velocity (km/s) by Galactic Longitude' \
+            + f'\nVelocity Count: Sum={velGLonP180CountSum:,}' \
+            + f' Nonzero = {velGLonP180CountNonzero} of {len(velGLonP180Count)}')
+        #    rotation=90, verticalalignment='bottom')
+
+        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
+            os.remove(pltNameS)
+        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+
+
+
+def plotEzGal518velGLonMin():
+    # spectrum Maximums in dots
+
+    global plotCountdown            # integer
+    global velGLonP180              # float 2d array
+    global velGLonP180Count         # integer array
+    global velGLonP180CountSum      # integer
+
+    global titleS                   # string
+    global ezGalDispGrid            # integer
+    #global fileFreqBinQty           # integer
+    global ezGalPlotRangeL          # integer list
+
+    pltNameS = 'ezGal518velGLonMin.png'
+    print()
+    print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+    plotCountdown -= 1
+
+    # if anything in velGLonP180 to plot
+    if ezGalPlotRangeL[0] <= 518 and 518 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
+        plt.clf()
+        #plt.plot(np.arange(-180, +181, 1), velGLonP180Count)
+        plt.plot(np.arange(-180, +181, 1), np.minimum(velGLonP180[~np.isnan(velGLonP180)][0]))
+
+        plt.title(titleS)
+        #plt.grid(ezGalDispGrid)
+        plt.grid(0)
+
+        plt.xlabel('Galactic Longitude (degrees)')
+        plt.xlim(180, -180)        # in degrees
+        plt.xticks([ 180,   90,   0,   -90,   -180],
+                   ['180', '90', '0', '-90', '-180'])
+
+        # if any Galactic plane crossings, velGLonP180 has been (partially?) filled with averages
+        velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
+        print(' velGLonP180CountNonzero =', velGLonP180CountNonzero, 'of', len(velGLonP180Count) )
+        print()
+
+        plt.ylabel('Minimum Velocity (km/s) by Galactic Longitude' \
+            + f'\nVelocity Count: Sum={velGLonP180CountSum:,}' \
+            + f' Nonzero = {velGLonP180CountNonzero} of {len(velGLonP180Count)}')
+        #    rotation=90, verticalalignment='bottom')
+
+        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
+            os.remove(pltNameS)
+        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
 
 
 
@@ -1560,6 +1791,9 @@ def main():
     # velocity plots
     plotEzGal510velGLon()
     plotEzGal511velGLonCount()          # creates ezGal511velGLonCount.txt
+    plotEzGal516velGLonAvg()            # spectrum Averages
+    plotEzGal517velGLonMax()            # spectrum Maximums
+    plotEzGal518velGLonMin()            # spectrum Minimums
 
     plotEzGal520velGLonPolar()
     plotEzGal521velGLonPolarCount()
