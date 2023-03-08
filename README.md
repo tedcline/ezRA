@@ -74,12 +74,14 @@ please see these introductory PDFs from the ezRA directory:
     ezRA_24_ezSky.pdf
     ezRA_25_ezGal.pdf
 
-Videos:
+
+## Videos:
 
 * [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
 * [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
 ---
+
 
 ## Status:
 
