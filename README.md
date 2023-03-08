@@ -76,8 +76,8 @@ please see these introductory PDFs from the ezRA directory:
 
 Videos:
 
-    [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
-    [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
+* [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
+* [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
 ---
 
