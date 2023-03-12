@@ -85,12 +85,12 @@ please see these introductory PDFs from the ezRA directory:
 
 ## Status:
 
+    ezCon's default "-ezConAstroMath  2" now calculates the   correct   VLSR values.
+
 Known bugs:
 
     ezCon's "-ezConAstroMath  1" calculates wrong Right Ascension values.
     ezCon's default now changed to the slower "-ezConAstroMath  2".
-
-    ezCon calculates wrong VLSR values.
 
 Thanks to Todd Ullery, the  ezColX.py  was an experimental multiple process version of  ezCol.py , to improve dashboard responsiveness.
 <br>
@@ -117,6 +117,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Mar-8-2023
+Mar-11-2023
 
 ---

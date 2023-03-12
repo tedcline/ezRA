@@ -1,4 +1,4 @@
-programName = 'ezCon230305a.py'
+programName = 'ezCon230311a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
@@ -27,6 +27,9 @@ programRevision = programName
 #       when unsupport .sdre text data file ?
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezCon230311a.py, commented VLSR prints
+# ezCon230310a.py, ezConAstroMath=2 VLSR
+# ezCon230309a.py, ezConAstroMath=2 VLSR was Barycentric radial velocity only,
 # ezCon230305a.py, boilerplate from ezSky
 # ezCon230304a.py, help: 'remove' to 'ignore'
 # ezCon230303a.py, improved ezConAntFreqBinSmooth help and comments
@@ -3200,10 +3203,12 @@ def createEzConOutEzb():
     # for each sample in ant, create and collect .ezb coordinate numbers
 
     if ezConAstroMath == 1:
-        # use Python port from MIT Haystack Small Radio Telescope (SRT) geom.c
+        # use Python port from MIT Haystack Small Radio Telescope (SRT) from vlsr() in geom.c
         # https://www.haystack.mit.edu/haystack-public-outreach/srt-the-small-radio-telescope-for-education/
-        # VLSR = Velocity of the Local Standard of Rest
+        # VLSR = Velocity from the Local Standard of Rest
         #   to remove Doppler effects of earth and Sun Galactic movements
+        # "/* sun 20km/s towards ra=18h dec=30.0 */"
+        # https://en.wikipedia.org/wiki/Solar_apex
 
         #decc = -(28. + 56. / 60.) * math.pi / 180.
         #print(' decc =', decc)
@@ -3267,7 +3272,7 @@ def createEzConOutEzb():
         #
         #from astropy.time import Time
         dataTimeUtcVlsr2000 = Time('2000-01-01T00:00:00', format='fits', scale='utc')
-        print(' dataTimeUtcVlsr2000.mjd =', dataTimeUtcVlsr2000.mjd)
+        #print(' dataTimeUtcVlsr2000.mjd =', dataTimeUtcVlsr2000.mjd)
 
     elif ezConAstroMath == 2:
         # use astropy
@@ -3276,6 +3281,66 @@ def createEzConOutEzb():
         from astropy.coordinates import SkyCoord
 
         locBase = EarthLocation(lat = ezRAObsLat*u.deg, lon = ezRAObsLon*u.deg, height = ezRAObsAmsl*u.m)
+        # for testing:  https://www.gb.nrao.edu/~fghigo/gbt/setups/radvelcalc.html
+        #   which assumes location is the Green Bank Telescope at 38.432964328895835, -79.83969457195226,
+        #locBase = EarthLocation(lat = 38.432964328895835*u.deg, lon = -79.83969457195226*u.deg, height = 807.43*u.m)
+
+        # By studying the telescope's received frequency information, the telescope can measure the radial (line-of-sight) velocity of Galactic hydrogen,
+        #
+        #     Telescope <========== moving-relative-to ==========>  Galactic hydrogen
+        #
+        # The MIT Haystack Small Radio Telescope (SRT) system suggests that ezRA divide that moving-relative-to velocity measurement into 2 parts,
+        # both relative to a "Local Standard of Reference (LSR)" in the middle,
+        #
+        #     Telescope <==== moving-relative-to ====> LSR <==== moving-relative-to ====> Galactic hydrogen
+        # 
+        # That MIT Haystack system says that "Local Standard of Reference (LSR)"
+        # "is the average [motion] for a group of stars that are in the vicinity of our solar system",
+        #     http://web.mit.edu/8.13/www/srt_software/vlsr.pdf
+        #
+        # ezRA should study that velocity part on the right, the radial velocity of the Galactic hydrogen relative to the LSR.
+        #
+        # ezRA should calculate and subtract that velocity part on the left, the radial velocity of the telescope relative to the LSR.
+        # That ezRA telescope is on the moving Earth, with the Earth moving around the Sun, with the Sun moving relative to the Local Standard of Reference.
+        # Considering those motions in the opposite order, ezRA could calculate
+        #     1. the Sun motion relative to the LSR
+        #     2. the Earth motion revolving around the Sun once a year
+        #     3. the motion of the telescope location on the Earth which rotates once a day
+
+        # What is the fastest the telescope can move toward a star ?
+        # If everything aligns, the notes below say 20.0 + 29.86  + 0.463 = 50.323 km/s
+        #
+        # 1. The Sun is moving toward a particular star: vStarSunMax = 20 km/s:
+        # Direction of motion of the Sun from
+        # http://herschel.esac.esa.int/hcss-doc-15.0/load/hifi_um/html/hifi_ref_frame.html#hum_lsr_frame
+        # https://en.wikipedia.org/wiki/Solar_apex
+        pointingSun = SkyCoord(ra = "18:03:50.29", dec = "+30:00:16.8",frame = "icrs",unit = (u.hourangle,u.deg))
+        vStarSunMax = -20.0*u.km/u.s        # toward a direction is negative velocity
+        #
+        # 2. The Earth is revolving around the Sun once a year: vStarEarthAroundSunMax = 29.86 km/s:
+        # Earth is 150e6 km from Sun.
+        # Circumference = 2 * pi * r = 2 * pi * 150e6 = 942,477,796 km.
+        # Speed to travel that distance in 365.25 days
+        # = 942,477,796 / 365.25 / 24 / 60 / 60 = 29.86 km/s
+        #
+        # 3. The Earth is rotating on its north-south axis: vStarEarthOnAxisMax = 0.463 km/s:
+        # At equator, Earth radius is 6371 km.
+        # Circumference = 2 * pi * r = 2 * pi * 6371 = 40,030 km.
+        # Speed to travel that distance in 24 hours
+        # = 40,030 / 24 / 60 / 60 = 0.463 km/s ====== which is relatively so small that ezCol will ignore.
+
+        # https://www.cosmos.esa.int/documents/12133/1028864/HCSS+User%27s+Reference+Manual+Herschel+Data+Processing
+        # "The sign of the radial velocity is negative towards the target and positive otherwise (Doppler effect sign convention)"
+
+        # https://gitlab.camras.nl/dijkema/HPIB/blob/185d241ad9bd7507ed90c9fa91fe0a63009d3eee/vlsr.py
+
+        # https://public.nrao.edu/ask/velocity-reference-used-in-radio-astronomy/
+        # https://www.atnf.csiro.au/people/Tobias.Westmeier/tools_hihelpers.php#restframes
+        # says 'alternative “kinematical definition” (referred to as LSRK) which results in a slightly
+        #     higher velocity of about 20 km/s in the direction of (α,δ)=(270∘,30∘) in the B1900 system'.
+        # https://science.nrao.edu/facilities/gbt/observing/GBTog.pdf
+        # says "‘lsrk’ (Local Standard of Rest kinematical definition, i.e. typical LSR definition)".
+        # https://encyclopedia2.thefreedictionary.com/local+standard+of+rest
 
     ## calculate and fill missing ezConOut[n, 20] signal columns
 
@@ -3373,6 +3438,10 @@ def createEzConOutEzb():
 
             if ezConUseVlsr:
                 vlsrThis = vsun + vearth    # km/s
+                #print()
+                #print()
+                #print(' vsun =', vsun)
+                #print(' vearth =', vearth)
             else:
                 vlsrThis = 0.               # km/s
 
@@ -3381,28 +3450,105 @@ def createEzConOutEzb():
 
             # Coordinate of sky target at the UTC time from the data file
             # SkyCoord() wants time = Time('1991-06-06 12:00:00')
-            cTarget = SkyCoord(az = azimuth[n]*u.deg, alt = elevation[n]*u.deg,
+            pointingTelescope = SkyCoord(az = azimuth[n]*u.deg, alt = elevation[n]*u.deg,
                 obstime = dataTimeUtcStrThis, frame = 'altaz', location = locBase)
+            #print()
+            #print()
+            #print(' dataTimeUtcStrThis =', dataTimeUtcStrThis)
 
             # extract RaDec coordinates
-            raDegThis = float(cTarget.icrs.ra.degree)
+            raDegThis = float(pointingTelescope.icrs.ra.degree)
             raHThis = raDegThis / 15.       # 24 / 360 = 1 / 15
-            decDegThis = float(cTarget.icrs.dec.degree)
+            #print(' raHThis =', raHThis, ' Hours')
+            decDegThis = float(pointingTelescope.icrs.dec.degree)
+            #print(' decDegThis =', decDegThis, ' degrees')
 
             # extract Galactic coordinates
-            gLatDegThis = float(cTarget.galactic.b.degree)
-            gLonDegThis = float(cTarget.galactic.l.degree)
+            gLatDegThis = float(pointingTelescope.galactic.b.degree)
+            gLonDegThis = float(pointingTelescope.galactic.l.degree)
             if 180. < gLonDegThis:
                 gLonDegThis -= 360.
 
             if ezConUseVlsr:        # astropy
+                # https://gitlab.camras.nl/dijkema/HPIB/blob/185d241ad9bd7507ed90c9fa91fe0a63009d3eee/vlsr.py
                 # https://astropy-cjhang.readthedocs.io/en/latest/api/
                 #   astropy.coordinates.SkyCoord.html#astropy.coordinates.SkyCoord.radial_velocity_correction
-                # brvc = barycentric radial velocity correction
-                brvcThis = cTarget.radial_velocity_correction(kind='barycentric')    # in m/sec
+                # brvc = barycentric radial velocity correction = velocity of solar system barycenter toward star
+                #vStarEarthAroundSun = pointingTelescope.radial_velocity_correction(kind='barycentric')    # in m/sec
+                # print(pointingTelescope.radial_velocity_correction(kind='barycentric'))   # says -17469.223186040872 m / s
+                vStarEarthAroundSun = -float(pointingTelescope.radial_velocity_correction(kind='barycentric') / (1000. * u.m / u.s))   # into km/s
+                #print(' pointingTelescope =', pointingTelescope)
+                #print(' vStarEarthAroundSun =', vStarEarthAroundSun, ' km/s')
 
-                # Barycentric Radial Velocity Correction in km/s
-                vlsrThis = -float(brvcThis / (1000. * u.m / u.s))      # to extract from units as km/s
+                # Projection of solar velocity towards the pointingTelescope star
+                # https://www.khanacademy.org/math/multivariable-calculus/thinking-about-multivariable-function/x786f2022:vectors-and-matrices/a/dot-products-mvc
+                #vsun_proj = psrc.cartesian.dot(psun.cartesian)*vsun
+
+                # pointingTelescope currently contains (az, alt) in deg
+                # For dot product, need pointingTelescope also containing (ra, dec) in deg
+                pointingTelescope = SkyCoord(ra = raDegThis*u.deg, dec = decDegThis*u.deg,
+                    obstime = dataTimeUtcStrThis, frame = 'icrs', location = locBase)
+                #print(' pointingTelescope =', pointingTelescope)
+                #print(pointingTelescope.cartesian.dot(pointingSun.cartesian) * vStarSunMax)     # says -17.46922318604087  km/s
+                vStarSun = -float(pointingTelescope.cartesian.dot(pointingSun.cartesian) * vStarSunMax / (u.km / u.s))  # in km/s
+                # and vStarSun has positive max is near ra=18.0567000180526 Hours
+                #print(' pointingTelescope.cartesian =', pointingTelescope.cartesian)
+                #print(' pointingSun =', pointingSun)    # <SkyCoord (ICRS): (ra, dec) in deg (270.95954167, 30.00466667)>
+                #print(' pointingSun.cartesian =', pointingSun.cartesian)
+                #vStarSun = 0
+                #print(' vStarSun =', vStarSun, ' km/s')
+
+                # VLSR = Velocity from the Local Standard of Rest (km/s)
+                #vlsrThis = -float((vStarSun - vStarEarthAroundSun) / (1000. * u.m / u.s))   # to extract from units as km/s
+                #vlsrThis = vStarSun - vStarEarthAroundSun
+                vlsrThis = vStarEarthAroundSun - vStarSun
+                #print(' vlsrThis =', vlsrThis, ' km/s')
+
+                # for that last sample of N0RQV-8230209_00.txt,
+                #   dataTimeUtcStrThis = 2023-02-09 23:58:56.000
+                #   raHThis = 23.405257531500908  Hours
+                #   decDegThis = 8.007827205726938  degrees
+                #   vStarEarthAroundSun = -17.206217294776792  km/s
+                #   vStarSun = -18.037474540029592  km/s
+                #   vlsrThis = -0.8312572452528002  km/s
+                # HawkRAO VLSR Calculator,
+                # http://f4klo.ampr.org/vlsrKLO.php
+                #   Radial Velocity Calculator
+                #   UTC (DD/MM/YYYY hh:mm:ss):	
+                #   09/02/2023 23:58:56
+                #   RA (hh.hhhhh):	
+                #   23.4052575
+                #   DEC (±dd.ddddd):	
+                #   8.00782720
+                #   Latitude (±dd.ddddd):	
+                #   40.299512
+                #   Longitude (±dd.ddddd):	
+                #   -105.08449
+                #   ---
+                #   Radial Velocity (±km/s):	
+                #   +12.68 ======================================================================================= +12.68
+                #   Local Sidereal Time (day):	
+                #   0.095736
+
+                # for the first sample of N0RQV-8230209_00.txt,
+                #    dataTimeUtcStrThis = 2023-02-09 00:01:20.000
+                #    raHThis = 23.379665787029346  Hours
+                #    decDegThis = 8.007942475940645  degrees
+                #    vStarEarthAroundSun = -17.46922318604087  km/s
+                #    vStarSun = 0  km/s
+                #    vlsrThis = 17.46922318604087  km/s
+                #      data/N0RQV-8230209_00.txt   Total samples processed for signals     = 1 of 908
+
+                # for the first and last samples of N0RQV-8230209_00.txt, with -ezConAstroMath 1
+                #    # from ezCon230309a.py
+                #    lat 40.299512 long -105.084491 amsl 1524.0 name N0RQV-8
+                #    freqMin 1419.2 freqMax 1421.61 freqBinQty 256
+                #    ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  ...
+                #    #        0           1    2       3        4        5     6      ...
+                #    59984.00093 23.415 8.132 -49.006 89.145 1.352e+01 1 ... ======================================= 13.52
+                #    59984.99926 23.440 8.132 -49.195 89.649 1.338e+01 1 ... ======================================= 13.38
+                #       vsun = -3.9173568308658924
+                #       vearth = 17.29853211404944
             else:
                 vlsrThis = 0.       # km/s
 

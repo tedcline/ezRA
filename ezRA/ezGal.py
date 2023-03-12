@@ -1,4 +1,4 @@
-programName = 'ezGal230308a.py'
+programName = 'ezGal230311a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGal GALaxy explorer program,
@@ -26,6 +26,13 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGal230311a.py, oops ezGal516 ezGal516 ezGal516 were not finished, commented them out,
+#   for ezGal520velGLonPolar.png and ezGal521velGLonPolarCount.png,
+#   "MatplotlibDeprecationWarning: Auto-removal of grids by pcolor() and
+#   pcolormesh() is deprecated since 3.5 and will be removed two minor releases later;
+#   please call grid(False) first.", so put "plt.grid(0)" in front of each "im = plt.pcolormesh(",
+#   `scipy.ndimage` not deprecated `scipy.ndimage.filters`,
+#   plotCountdown tuning
 # ezGal230308a.py, cleanup
 # ezGal230305a.py, boilerplate from ezSky
 # ezGal230217a.py, add ezGal516velGLonAvg, ezGal517velGLonMax
@@ -76,7 +83,8 @@ from astropy.coordinates import SkyCoord
 import numpy as np
 
 from scipy.interpolate import griddata
-from scipy.ndimage.filters import gaussian_filter
+#from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 
 import math
 
@@ -416,7 +424,7 @@ def ezGalArguments():
                                     #   ezGalVelGLonEdgeFrac ignored
 
     ezGalPlotRangeL = [0, 9999]     # save this range of plots to file
-    plotCountdown = 9               # number of plots still to print
+    plotCountdown = 8               # number of plots still to print
     ezGalDispGrid = 0
 
     # process arguments from ezDefaults.txt file in the same directory as this ezGal program
@@ -911,17 +919,17 @@ def plotEzGal516velGLonAvg():
 
 
 
-        print('velGLonP180[~np.isnan(velGLonP180[0])]')
-        print(velGLonP180[~np.isnan(velGLonP180[0])])
-        print('velGLonP180[~np.isnan(velGLonP180[1])]')
-        print(velGLonP180[~np.isnan(velGLonP180[1])])
+        #        print('velGLonP180[~np.isnan(velGLonP180[0])]')
+        #        print(velGLonP180[~np.isnan(velGLonP180[0])])
+        #        print('velGLonP180[~np.isnan(velGLonP180[1])]')
+        #        print(velGLonP180[~np.isnan(velGLonP180[1])])
 
-        print('velGLonP180[~np.isnan(velGLonP180)][0]')
-        print(velGLonP180[~np.isnan(velGLonP180)][0])
-        print('velGLonP180[~np.isnan(velGLonP180)][1]')
-        print(velGLonP180[~np.isnan(velGLonP180)][1])
-        print('np.mean(velGLonP180[~np.isnan(velGLonP180)][1])')
-        print(np.mean(velGLonP180[~np.isnan(velGLonP180)][1]))
+        #        print('velGLonP180[~np.isnan(velGLonP180)][0]')
+        #        print(velGLonP180[~np.isnan(velGLonP180)][0])
+        #        print('velGLonP180[~np.isnan(velGLonP180)][1]')
+        #        print(velGLonP180[~np.isnan(velGLonP180)][1])
+        #        print('np.mean(velGLonP180[~np.isnan(velGLonP180)][1])')
+        #        print(np.mean(velGLonP180[~np.isnan(velGLonP180)][1]))
 
 
         
@@ -1089,12 +1097,13 @@ def plotEzGal520velGLonPolar():
         azm = np.linspace(0, np.pi + np.pi, 361, endpoint=True)
         r, theta = np.meshgrid(rad, azm)
 
+        plt.grid(0)
         im = plt.pcolormesh(theta, r, velGLonP180.T, cmap=plt.get_cmap('gnuplot'), shading='auto')
 
         fig.colorbar(im, ax=ax, pad=0.1)
 
         polarPlot = plt.plot(azm, r, color='black', linestyle='none')
-        plt.grid()
+        plt.grid(1)
 
 
         plt.title(titleS)
@@ -1146,12 +1155,13 @@ def plotEzGal521velGLonPolarCount():
             if velGLonP180Count[gLonP180]:
                 velGLonP180CountPolar[gLonP180, :] += velGLonP180Count[gLonP180]
 
+        plt.grid(0)
         im = plt.pcolormesh(theta, r, velGLonP180CountPolar, cmap=plt.get_cmap('gnuplot'), shading='auto')
 
         fig.colorbar(im, ax=ax, pad=0.1)
 
         polarPlot = plt.plot(azm, r, color='black', linestyle='none')
-        plt.grid()
+        plt.grid(1)
 
         plt.title(titleS)
 
@@ -1340,6 +1350,7 @@ def plotEzGal540velGLonEdgesB():
 
         print()
         print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+        plotCountdown -= 1
 
         print(' ezGalVelGLonEdgeFrac  =', ezGalVelGLonEdgeFrac)
         print(' ezGalVelGLonEdgeLevel =', ezGalVelGLonEdgeLevel)
@@ -1460,6 +1471,7 @@ def plotEzGal541velGLonEdges():
 
         print()
         print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+        plotCountdown -= 1
 
         plt.clf()
 
@@ -1555,7 +1567,6 @@ def plotEzGal541velGLonEdges():
             os.remove(pltNameS)
         plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
 
-    plotCountdown -= 1
 
 
     # since need same velGLonUEdge, merged plotEzGal550galRot() into plotEzGal541velGLonEdges()
@@ -1636,7 +1647,11 @@ def plotEzGal690gLonDegP180_nnnByFreqBinAvg():
 
     # if anything in velGLonP180 to plot
     if ezGalPlotRangeL[0] <= 690 and 690 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
-        plotCountdown += np.count_nonzero(velGLonP180Count)
+        velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
+        print()
+        print(' velGLonP180CountNonzero =', velGLonP180CountNonzero, 'of', len(velGLonP180Count) )
+        #plotCountdown += np.count_nonzero(velGLonP180Count)
+        plotCountdown = velGLonP180CountNonzero
 
         if 1:
             # same ylim for all ezGal690gLonDegP180_nnnByFreqBinAvg plots
@@ -1791,9 +1806,9 @@ def main():
     # velocity plots
     plotEzGal510velGLon()
     plotEzGal511velGLonCount()          # creates ezGal511velGLonCount.txt
-    plotEzGal516velGLonAvg()            # spectrum Averages
-    plotEzGal517velGLonMax()            # spectrum Maximums
-    plotEzGal518velGLonMin()            # spectrum Minimums
+    ################plotEzGal516velGLonAvg()            # spectrum Averages
+    ################plotEzGal517velGLonMax()            # spectrum Maximums
+    ################plotEzGal518velGLonMin()            # spectrum Minimums
 
     plotEzGal520velGLonPolar()
     plotEzGal521velGLonPolarCount()
