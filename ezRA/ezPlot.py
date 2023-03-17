@@ -1,4 +1,4 @@
-programName = 'ezPlot230305a.py'
+programName = 'ezPlot230316a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezPlot data Plotter program,
@@ -25,6 +25,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezPlot230316a.py, -eX
 # ezPlot230305a.py, boilerplate from ezSky
 # ezPlot221123a.py, fixed ezPlot000timeUtcMjdSorted
 # ezPlot221017a.py, polishing, ylabel
@@ -96,6 +97,9 @@ def printUsage():
     #print('      -ezPlotAstroMath  2:    using math from slower Astropy library')
     #print()
     print('    -ezDefaultsFile ../bigDish8.txt  (additional file of ezRA arguments)')
+    print()
+    print('    -eXXXXXXXXXXXXXXzIgonoreThisWholeOneWord')
+    print('         (any one word starting with -eX is ignored, handy for long command line editing)')
     print()
     print()
     print(' programRevision =', programRevision)
@@ -330,10 +334,19 @@ def ezPlotArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezPlotArgumentsFile(cmdLineSplit[cmdLineSplitIndex])
 
+            # ignore silly -eX* arguments, for handy neutralization of command line arguments,
+            #   but remove spaces before argument numbers
+            #   (can not use '-x' which is a preface to a negative hexadecimal number)
+            elif 3 <= len(cmdLineArgLower) and cmdLineArgLower[:3] == '-ex':
+                cmdLineSplitIndex -= 1
+                #pass
+
+            # before -eX, old spelling:
             # ignore silly -ezez* arguments, for handy neutralization of command line arguments,
             #   but remove spaces before argument numbers
             elif 5 <= len(cmdLineArgLower) and cmdLineArgLower[:5] == '-ezez':
-                pass
+                cmdLineSplitIndex -= 1
+                #pass
 
             else:
                 print()
@@ -400,7 +413,6 @@ def ezPlotArguments():
     #       any -ezDefaultsFile).
     #    Each last defined value wins.
     # The top (and bottom ?) of the program printout should list the resultant argument values.
-    # Eventually support -ezez argument preface, to allow ignoring.
 
     # process arguments from ezDefaults.txt file in the same directory as this ezPlot program
     ezPlotArgumentsFile(os.path.dirname(__file__) + os.path.sep + 'ezDefaults.txt')

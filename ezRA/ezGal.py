@@ -1,4 +1,4 @@
-programName = 'ezGal230311a.py'
+programName = 'ezGal230316a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGal GALaxy explorer program,
@@ -26,6 +26,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGal230316a.py, -eX, cmdLineArg
 # ezGal230311a.py, oops ezGal516 ezGal516 ezGal516 were not finished, commented them out,
 #   for ezGal520velGLonPolar.png and ezGal521velGLonPolarCount.png,
 #   "MatplotlibDeprecationWarning: Auto-removal of grids by pcolor() and
@@ -134,6 +135,9 @@ def printUsage():
     print('         (velGLon level for ezGal540velGLonEdgesB, if 0 then use only ezGalVelGLonEdgeFrac)')
     print()
     print('    -ezDefaultsFile ../bigDish8.txt     (additional file of ezRA arguments)')
+    print()
+    print('    -eXXXXXXXXXXXXXXzIgonoreThisWholeOneWord')
+    print('         (any one word starting with -eX is ignored, handy for long command line editing)')
     print()
     print()
     print(' programRevision =', programRevision)
@@ -328,56 +332,66 @@ def ezGalArgumentsCommandLine():
             # Ignoring whitespace, first character of cmdLineSplit word is '-'.
             # Must be an option.
             # Remove '-'
-            cmdLineOption = cmdLineSplit[cmdLineSplitIndex][1:]
+            cmdLineArg = cmdLineSplit[cmdLineSplitIndex][1:]
             # ignoring whitespace, first character of cmdLineSplit word was '-', now removed
-            if cmdLineOption[0] == '-':
-                cmdLineOption = cmdLineOption[1:]
+            if cmdLineArg[0] == '-':
+                cmdLineArg = cmdLineArg[1:]
                 # ignoring whitespace, first 2 characters of cmdLineSplit word were '--', now removed
 
-            cmdLineOptionLower = cmdLineOption.lower()
+            cmdLineArgLower = cmdLineArg.lower()
             cmdLineSplitIndex += 1      # point to first option value
 
 
-            if cmdLineOptionLower == 'help':
+            if cmdLineArgLower == 'help':
                 printUsage()
 
-            elif cmdLineOptionLower == 'h':
+            elif cmdLineArgLower == 'h':
                 printUsage()
 
 
             # ezRA arguments used by multiple programs:
-            elif cmdLineOptionLower == 'ezRAObsName'.lower():
+            elif cmdLineArgLower == 'ezRAObsName'.lower():
                 ezRAObsName = cmdLineSplit[cmdLineSplitIndex]   # cmd line allows only one ezRAObsName word
                 #ezRAObsName = uni.encode(thisLine[1])
                 #ezRAObsName = str.encode(thisLine[1])
             
 
             # integer arguments:
-            elif cmdLineOptionLower == 'ezGalDispGrid'.lower():
+            elif cmdLineArgLower == 'ezGalDispGrid'.lower():
                 ezGalDispGrid = int(cmdLineSplit[cmdLineSplitIndex])
 
 
             # float arguments:
-            elif cmdLineOptionLower == 'ezGalVelGLonEdgeFrac'.lower():
+            elif cmdLineArgLower == 'ezGalVelGLonEdgeFrac'.lower():
                 ezGalVelGLonEdgeFrac = float(cmdLineSplit[cmdLineSplitIndex])
 
-            elif cmdLineOptionLower == 'ezGalVelGLonEdgeLevel'.lower():
+            elif cmdLineArgLower == 'ezGalVelGLonEdgeLevel'.lower():
                 ezGalVelGLonEdgeLevel = float(cmdLineSplit[cmdLineSplitIndex])
 
 
             # list arguments:
-            elif cmdLineOptionLower == 'ezGalPlotRangeL'.lower():
+            elif cmdLineArgLower == 'ezGalPlotRangeL'.lower():
                 ezGalPlotRangeL[0] = int(cmdLineSplit[cmdLineSplitIndex])
                 cmdLineSplitIndex += 1
                 ezGalPlotRangeL[1] = int(cmdLineSplit[cmdLineSplitIndex])
 
-            elif cmdLineOptionLower == 'ezDefaultsFile'.lower():
+            elif cmdLineArgLower == 'ezDefaultsFile'.lower():
                 ezGalArgumentsFile(cmdLineSplit[cmdLineSplitIndex])
 
 
-            elif 4 <= len(cmdLineOptionLower) and cmdLineOptionLower[:4] == 'ezez':
-                # ignore this one word that starts with '-ezez'
-                pass
+            # ignore silly -eX* arguments, for handy neutralization of command line arguments,
+            #   but remove spaces before argument numbers
+            #   (can not use '-x' which is a preface to a negative hexadecimal number)
+            elif 2 <= len(cmdLineArgLower) and cmdLineArgLower[:2] == 'ex':
+                cmdLineSplitIndex -= 1
+                #pass
+
+            # before -eX, old spelling:
+            # ignore silly -ezez* arguments, for handy neutralization of command line arguments,
+            #   but remove spaces before argument numbers
+            elif 4 <= len(cmdLineArgLower) and cmdLineArgLower[:4] == 'ezez':
+                cmdLineSplitIndex -= 1
+                #pass
 
 
             else:
@@ -387,7 +401,7 @@ def ezGalArgumentsCommandLine():
                 print()
                 print()
                 print(' ========== FATAL ERROR:  Command line has this unrecognized first word:')
-                print('-' + cmdLineOption)
+                print('-' + cmdLineArg)
                 print()
                 print()
                 print()

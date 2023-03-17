@@ -1,9 +1,9 @@
-programName = 'ezCon230311a.py'
+programName = 'ezCon230316c.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
 #   CONdense one or more frequency spectrum data .txt files into
-#   one .ezb (and .sdre) text data file, and perhaps one GALaxy *Gal.npz data file.
+#   one .ezb text data file, and perhaps one GALaxy *Gal.npz data file.
 # https://github.com/tedcline/ezRA
 
 # Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
@@ -24,9 +24,15 @@ programRevision = programName
 
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
-#       when unsupport .sdre text data file ?
-#       plotCountdown, 'plotting' lines only if plotting
 
+# ezCon230316c.py, different gst() to fix ezConAstroMath=1 right ascension, fixed -eX
+# ezCon230316b.py, ezConAstroMath=1 right ascension
+# ezCon230316a.py, ezCon082antXTV comments, -eX
+# ezCon230314a.py, more AntX choices and improved names and separate filenames,
+#   ezConAntXTFreqBinsFracL and ezConAntXTVTFreqBinsFracL defaults
+# ezCon230313c.py, ezConAstroMath=1 right ascension
+# ezCon230313b.py, ezConAstroMath=1 right ascension
+# ezCon230313a.py, ezConAstroMath=1 right ascension
 # ezCon230311a.py, commented VLSR prints
 # ezCon230310a.py, ezConAstroMath=2 VLSR
 # ezCon230309a.py, ezConAstroMath=2 VLSR was Barycentric radial velocity only,
@@ -188,8 +194,8 @@ def printUsage():
     print('    -ezConAntRABaselineFreqBinsFracL 0  0.2344  0.7657  1')
     print('         (AntRABaseline      FreqBin bands: start stop start stop (as fractions of bandwidth))')
     print()
-    print('    -ezConAntXInput 2                '
-        + '(AntX choice: default 0 for Auto, 1 for AntB, 2 for AntRA, 3 for AntRB)')
+    print('    -ezConAntXInput 6                '
+        + '(AntX choice: default -1 for Auto, 0/2/4/5/6 for Ant/Ref/AntB/AntRA/AntRB)')
     print()
     print('    -ezConAntXTFreqBinsFracL            0.2344  0.7657')
     print('         (AntXTFreqBinsFrac FreqBin band:  start stop            (as fractions of bandwidth))')
@@ -219,8 +225,8 @@ def printUsage():
     print()
     print('    -ezDefaultsFile ../bigDish8.txt     (additional file of ezRA arguments)')
     print()
-    print('    -ezezIgonoreThisWholeOneWord')
-    print('         (any one word starting with -ezez is ignored, handy for long command line editing)')
+    print('    -eXXXXXXXXXXXXXXzIgonoreThisWholeOneWord')
+    print('         (any one word starting with -eX is ignored, handy for long command line editing)')
     print()
     print()
     print(' programRevision =', programRevision)
@@ -731,10 +737,19 @@ def ezConArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezConArgumentsFile(cmdLineSplit[cmdLineSplitIndex])
 
+            # ignore silly -eX* arguments, for handy neutralization of command line arguments,
+            #   but remove spaces before argument numbers
+            #   (can not use '-x' which is a preface to a negative hexadecimal number)
+            elif 3 <= len(cmdLineArgLower) and cmdLineArgLower[:3] == '-ex':
+                cmdLineSplitIndex -= 1
+                #pass
+
+            # before -eX, old spelling:
             # ignore silly -ezez* arguments, for handy neutralization of command line arguments,
             #   but remove spaces before argument numbers
             elif 5 <= len(cmdLineArgLower) and cmdLineArgLower[:5] == '-ezez':
-                pass
+                cmdLineSplitIndex -= 1
+                #pass
 
             elif cmdLineArgLower[:6] == '-ezCon'.lower():
                 print()
@@ -821,7 +836,7 @@ def ezConArguments():
         #ezRAObsName = 'LebanonKS'
         ezRAObsName = ''                    # silly name
 
-        ezConAntXInput    = 0               # default = 0 for auto choice: AntB or if 1 < refQty then AntRB
+        ezConAntXInput    = -1              # default = -1 for auto choice: AntB, or if 1 < refQty then AntRB
 
         ezConUseVlsr      = 1
         ezConRawDispIndex = 0
@@ -850,9 +865,9 @@ def ezConArguments():
         ezConAntBaselineFreqBinsFracL   = [0, 0.2344, 0.7656, 1]
         ezConAntRABaselineFreqBinsFracL = [0, 0.2344, 0.7656, 1]
 
-        ezConAntXTFreqBinsFracL         = [   0.2344, 0.7657   ]
+        ezConAntXTFreqBinsFracL         = [   0.15,   0.85      ]
 
-        ezConAntXTVTFreqBinsFracL       = [   0.4,    0.6      ]
+        ezConAntXTVTFreqBinsFracL       = [   0.25,   0.75      ]
         
         ezConHeatVMinMaxL = [0., 0.]        # default is to autoscale heatVMin of heatmaps
 
@@ -894,6 +909,19 @@ def ezConArguments():
 
     # process arguments from command line
     ezConArgumentsCommandLine()
+
+    if ezConAntXInput not in [-1, 0, 2, 4, 5, 6]:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print(' ========== FATAL ERROR: ', ezConAntXInput, 'is an unrecognized value for ezConAntXInput')
+        print()
+        print()
+        print()
+        print()
+        exit()
 
     if 1:
         # print status
@@ -1377,13 +1405,13 @@ def readDataDir():
     #print('raw.shape = ', raw.shape)
 
     # if automated setting of ezConAntXInput
-    if not ezConAntXInput:
+    if ezConAntXInput == -1:
         if 1 < refQty:
-            ezConAntXInput =  3
-            print('\n   ezConAntXInput changed to 3 for AntRB')
+            ezConAntXInput =  6
+            print('\n   ezConAntXInput changed to 6 for AntRB')
         else :
-            ezConAntXInput =  1
-            print('\n   ezConAntXInput changed to 1 for AntB')
+            ezConAntXInput =  4
+            print('\n   ezConAntXInput changed to 4 for AntB')
 
 
 
@@ -3202,6 +3230,8 @@ def createEzConOutEzb():
 
     # for each sample in ant, create and collect .ezb coordinate numbers
 
+    # calculate constants
+
     if ezConAstroMath == 1:
         # use Python port from MIT Haystack Small Radio Telescope (SRT) from vlsr() in geom.c
         # https://www.haystack.mit.edu/haystack-public-outreach/srt-the-small-radio-telescope-for-education/
@@ -3252,7 +3282,7 @@ def createEzConOutEzb():
         cosRpMRac = 0.28359695364827764
         sinRpMRac = -0.958943568663671
 
-        # readclock() in time.c
+        # readclock() from SRT's time.c
         # says
         # t = gmtime(&now);
         # // gmtime Jan 1 is day 0
@@ -3349,42 +3379,248 @@ def createEzConOutEzb():
     for n in range(antLen):
 
         dataTimeUtcStrThis = dataTimeUtc[n].iso
-
+        # '2023-02-09 00:01:20.000'
+        
         if ezConAstroMath == 1:
-            # use Python port from MIT Haystack Small Radio Telescope (SRT) geom.c,
-            # derivation comments removed in ezCon220826a.py
+            # use Python port from MIT Haystack Small Radio Telescope (SRT) geom.c and time.c,
+            # derivation comments last in ezCon220825b.py
 
-            azimuthRadThis = azimuth[n] * 0.01745329251
-            elevationRadThis = elevation[n] * 0.01745329251
+            # pre-calculations
+            pie    = math.pi
+            piD180 = pie / 180
+            piPPi  = pie + pie
+            oneEightZeroDPi = 180 / pie
+            secsPerYear = 31536000.0 # 365 * 24 * 60 * 60 = seconds per year
+
+            #print()
+            #print()
+            #print(' dataTimeUtcStrThis =', dataTimeUtcStrThis)
+
+            azimuthRadThis = azimuth[n] * piD180                # to radians
+            elevationRadThis = elevation[n] * piD180            # to radians
             cosElRad = math.cos(elevationRadThis)
             north = math.cos(azimuthRadThis) * cosElRad
             west = -math.sin(azimuthRadThis) * cosElRad
             zen = math.sin(elevationRadThis)
 
-            d1lat = ezRAObsLat * 0.01745329251
-            d1lon = ezRAObsLon * 0.01745329251
+            d1lat = ezRAObsLat * piD180                         # to radians
+            d1lon = ezRAObsLon * piD180                         # to radians
+            #print(' ezRAObsLon =', ezRAObsLon, 'degrees')
+            #print(' d1lon =', d1lon, 'radians')
 
             cosD1lat = math.cos(d1lat)
             sinD1lat = math.sin(d1lat)
             pole = north * cosD1lat + zen * sinD1lat
             rad = zen * cosD1lat - north * sinD1lat
+            #print(' rad =', rad, 'radians')                        # right ascension (radians)
 
             dec = math.atan2(pole, math.sqrt(rad * rad + west * west))
+            #print(' dec =', dec, 'radians')                        # declination (radians)
+            
             ha = math.atan2(west, rad)
+            #print(' ha =', ha, 'radians')                          # hour angle (radians)
+            #print(' ha * 24./piPPi =', ha*24./piPPi, 'hours')
+            #https://clearskytonight.com/projects/astronomycalculator/coordinate/rightascension_hourangle.html
+            
+            # try gst() with Haystack code
+            if 0:
+                # srt's readclock() (which calls tosecs()) to define secs as "Seconds since New Year 1970", 
+                #   = seconds since start of 1970
+                #
+                # https://linux.die.net/man/3/modf
+                #   The modf() function returns the fractional part of x
+                #
+                # gst() from SRT's time.c
+                # double gst(double ttime)
+                # {
+                #     double secs, pdum;
+                #     int i;
+                # //    secs = (1999 - 1970) * 31536000.0 + 17.0 * 3600.0 + 16.0 * 60.0 + 20.1948;
+                # //    secs = (2011 - 1970) * 31536000.0 + 17.0 * 3600.0 + 15.0 * 60.0 + 58.0778;
+                #     secs = (2020 - 1970) * 31536000.0 + 17.0 * 3600.0 + 16.0 * 60.0 + 40.5;
+                #     for (i = 1970; i < 2020; i++) {
+                #         if ((i % 4 == 0 && i % 100 != 0) || i % 400 == 0)
+                #             secs += 86400.0;
+                #     }
+                #
+                #     return (modf((ttime - secs) / 86164.09053, &pdum) * TWOPI);
+                # /* 17 16 20.1948 UT at 0hr newyear1999 */
+                # /* 17 15 58.0778 UT at 0hr newyear2011 */
+                # /* 17 16 40.5    UT at 0hr newyear2020 */
+                # } 
+                #
+                # tosecs() from SRT's time.c
+                # /* Convert to Seconds since New Year 1970 */
+                # double tosecs(int yr, int day, int hr, int min, int sec)
+                # {
+                #     int i;
+                #     double secs;
+                #     secs = (yr - 1970) * 31536000.0 + (day - 1) * 86400.0 + hr * 3600.0 + min * 60.0 + sec;
+                #     for (i = 1970; i < yr; i++) {
+                #         if ((i % 4 == 0 && i % 100 != 0) || i % 400 == 0)
+                #             secs += 86400.0;
+                #     }
+                #     if (secs < 0.0)
+                #         secs = 0.0;
+                #     return secs;
+                # }
+                #
+                # readclock() from SRT's time.c
+                # double readclock(void)
+                # {
+                #     time_t now;
+                #     double secs;
+                #     struct tm *t;
+                #     now = time(NULL);
+                #     t = gmtime(&now);
+                # // gmtime Jan 1 is day 0
+                #     secs = tosecs(t->tm_year + 1900, t->tm_yday + 1, t->tm_hour, t->tm_min, t->tm_sec);
+                #     if (d1.azelsim) {
+                #         if (d1.start_time == 0.0)
+                #             d1.start_time = secs;
+                #         if (d1.start_sec)
+                #             secs = d1.start_sec + (secs - d1.start_time) * d1.speed_up;
+                #         else {
+                #             if (d1.speed_up > 0)
+                #                 secs = d1.start_time + (secs - d1.start_time) * d1.speed_up;
+                #             else
+                #                 secs += -d1.speed_up * 3600.0; // advance by hours
+                #         }
+                #     }
+                #     sprintf(d1.timsource, "PC ");
+                #     return (secs);
+                # }
 
-            # with correction factor calculated below = 1.84308208361
-            ra = -ha + (((dataTimeUtc[n].mjd * 86400. - 1577899000.5) / 86164.09053) % 1.) * 6.283185307 \
-                - d1lon + 1.84308208361
-            # 1.8325957145 = 0.29166666666 * 2 * 3.1415926535 radians from UTC for Loveland --- yup
+                # python version of the gst() above
+                #   valid only during 2020 through 2024
+                # assuming data not earlier than 2020, start with
+                #   latest seed of "17 16 40.5 UT at 0hr newyear2020"
+                secsGst2020 = 1577899000.5
+                # calculate that number
+                if 0:
+                    secsGst2020 = (2020 - 1970) * 31536000.0 + 17.0 * 3600.0 + 16.0 * 60.0 + 40.5
+                    print()
+                    print(' secsGst2020 =', secsGst2020, 'seconds')      # says secsGst2020 = 1576862200.5
+                    # add leap year days 1970 through 1999
+                    for i in range(1970, 2020):
+                        #if ((i % 4 == 0 and i % 100 != 0) or (i % 400 == 0)):
+                        if ((not i % 4 and i % 100) or not i % 400):
+                            print(' i =', i)
+                            secsGst2020 += 86400.0             # seconds in a non-leap year
+                    print(' secsGst2020 =', secsGst2020, 'radians')
+                    print()
+                    exit()
 
+                # Calculate seconds since 1577899000.5 (start of 1970).
+                ttimeSecGst = dataTimeUtc[n].mjd * 86400. - 1577899000.5  # in seconds
+                #print(' ttimeSecGst =', ttimeSecGst, 'seconds')
+
+                # Calculate GST fractional sidereal day
+                # Sidereal day on Earth is approximately 86164.0905 seconds ?????????????????????????????? why sidereal ?
+                ##gstSidVlsr = (ttimeSecVlsr - secsVlsr2020) / 86164.09053 % 1.
+                ###print(' gstSidVlsr =', gstSidVlsr, 'seconds')
+                ##gstSidVlsrRad = gstSidVlsr * piPPi      # in radians
+                ##print(' gstSidVlsrRad =', gstSidVlsrRad, 'radians')
+                ##print(' gstSidVlsrRad * 24./piPPi =', gstSidVlsrRad*24./piPPi, 'hours')
+                gstDay = (ttimeSecVlsr - secsVlsr2020) / 86164.09053 % 1.
+                #print(' gstDay =', gstDay, 'days')
+                gstDayRad = gstDay * piPPi      # in radians
+                print(' gstDayRad =', gstDayRad, 'radians')
+                print(' gstDayRad * 24./piPPi =', gstDayRad*24./piPPi, 'hours')
+
+            # try gst() with https://www.astro.umd.edu/~jph/GST_eqn.pdf
+            
+            #dataTimeUtcStrThis = '1999-12-31 00:00:00.000'  # gstHoursThis = 6.598809806000002 hours
+            #                                                       vs table=6.5988098 yup
+            #                                                                 gstHoursThis = 6 35 55.715301600007194
+            #                                                     vs table= 2000 * 6.5988098 6 35 55.72 yup
+
+            #dataTimeUtcStrThis = '2000-01-01 00:00:00.000'  # gstHoursThis = 6.6645196304000045 hours
+            #                           vs math = 6.5988098 + 0.0657098244 = 6.6645196244 yup ???????????
+            #                                                                 gstHoursThis = 6 39 52.270669440016206
+            # https://dc.zah.uni-heidelberg.de/apfs/times/q/form says 2000-01-01 00:00:00	06 39 52.2717 yup
+
+            #dataTimeUtcStrThis = '2000-12-31 00:00:00.000'  # gstHoursThis = 6.648605536400005 hours
+            #                                                       vs table=6.6486056 yup
+
+            #dataTimeUtcStrThis = '2001-12-31 00:00:00.000'  # gstHoursThis = 6.632691442400002 hours
+            #                                                       vs table=6.6326915 yup
+
+            #dataTimeUtcStrThis = '2010-12-31 00:00:00.000'  # gstHoursThis = 6.620884245200045 hours
+            #                                                       vs table=6.6208844 yup
+
+            #dataTimeUtcStrThis = '2022-12-31 00:00:00.000'  # gstHoursThis = 6.627044590400033 hours
+            #                                                                 gstHoursThis = 6 37 37.36052544011727
+            # https://dc.zah.uni-heidelberg.de/apfs/times/q/form says 2022-12-31 00:00:00	06 37 37.3628 yup
+
+            #print(' dataTimeUtcStrThis =', dataTimeUtcStrThis)
+
+            # Calculate GST fractional sidereal day
+            # https://www.astro.umd.edu/~jph/GST_eqn.pdf
+            # gstHours = G2001 + 0.0657098244 * yearDay + 1.00273791 * hoursThis
+            # gstHours = 6.6486056 + 0.0657098244 * yearDay + 1.00273791 * hoursThis
+
+            #dataTimeUtcStrThis = dataTimeUtc[n].iso
+            #   '2023-02-09 00:01:20.000'
+            #    yyyy mm dd hh mm ssssss
+            #    012345678901234567890123
+            yearThis = int(dataTimeUtcStrThis[0:4])
+            #print(' yearThis =', yearThis)
+            monthThis = int(dataTimeUtcStrThis[5:7])
+            #print(' monthThis =', monthThis)
+            MonthDayThis   = int(dataTimeUtcStrThis[8:10])     # round up: fully count partial days
+            #print(' MonthDayThis =', MonthDayThis)
+
+            hoursThis = float(dataTimeUtcStrThis[11:13]) + float(dataTimeUtcStrThis[14:16]) / 60. + float(dataTimeUtcStrThis[17:]) / 3600.
+            #print(' hoursThis =', hoursThis, 'hours')
+
+            # round up yearDayThis: yearDayThis fully counts partial days
+            if ((not yearThis % 4 and yearThis % 100) or not yearThis % 400):       # if leap year
+                yearDayThis = [-1, 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335][monthThis] + MonthDayThis   # leap year
+            else:
+                yearDayThis = [-1, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334][monthThis] + MonthDayThis   # non-leap year
+            #print(' yearDayThis =', yearDayThis)
+
+            # round up daysFromStartOf1999: daysFromStartOf1900 fully counts partial days
+            daysFromStartOf1999 = (yearThis - 1999) * 365 + yearDayThis
+            #print(' daysFromStartOf1999 =', daysFromStartOf1999, 'days')
+            # add one day for each leap year Feb-29 since start of 1999, but not yearThis
+            for i in range(1999, yearThis):
+                #if ((i % 4 == 0 and i % 100 != 0) or (i % 400 == 0)):
+                if ((not i % 4 and i % 100) or not i % 400):        # if leap year
+                    #print(' i =', i)    
+                    daysFromStartOf1999 += 1            # leap year
+            #print(' daysFromStartOf1999 =', daysFromStartOf1999, 'days')
+
+            gstHoursThis = 6.6147239 + 0.0657098244 * daysFromStartOf1999 + 1.00273791 * hoursThis
+            #print(' gstHoursThis =', gstHoursThis, 'hours')
+            gstHoursThis = gstHoursThis % 24.
+            #print(' gstHoursThis =', gstHoursThis, 'hours')
+            gstMinThis = gstHoursThis %1. * 60.
+            gstSecThis = gstMinThis %1. * 60.
+            #print('                                 gstHoursThis =', int(gstHoursThis), int(gstMinThis), gstSecThis)
+            gstDayRad = gstHoursThis * piPPi / 24.      # in radians
+            #print(' gstDayRad =', gstDayRad, 'radians')
+
+            # https://dc.zah.uni-heidelberg.de/apfs/times/q/form
+            # https://astronomy.stackexchange.com/questions/21002/how-to-find-greenwich-mean-sideral-time
+
+            #ra = gstDayRad - ha - d1lon                 # in radians
+            # Haystack srt.cat file stored Longitude as positive, ezRA stores as negative
+            ra = gstDayRad - ha + d1lon                 # in radians
+             
             if ra < 0.:
-                ra += 6.283185307
-            elif 6.283185307 < ra:
-                ra -= 6.283185307
-            raDegThis = ra * 57.2957795147          # in degrees
+                ra += piPPi
+            elif piPPi < ra:
+                ra -= piPPi
+            #print(' ra =', ra, 'radians')
+            raDegThis = ra * oneEightZeroDPi            # in degrees
+            #print(' raDegThis =', raDegThis, 'degrees')
             raHThis = raDegThis / 15.       # 24 / 360 = 1 / 15
+            #print(' raHThis =', raHThis, 'hours')
 
-            decDegThis = dec * 57.2957795147        # in degrees
+            decDegThis = dec * oneEightZeroDPi          # in degrees
+            #print(' decDegThis =', decDegThis, 'degrees')
 
             cosRa = math.cos(ra)
             cosDec = math.cos(dec)
@@ -3404,7 +3640,7 @@ def createEzConOutEzb():
 
             # timeVlsr = for this sample n, seconds since start of 1900
             timeVlsr = (dataTimeUtc[n].mjd - dataTimeUtcVlsr2000.mjd) * 86400. + 3155673600.
-            sunlong = (timeVlsr * 0.00001140795 + 280.) * 0.01745329251       # long=280 day 1
+            sunlong = (timeVlsr * 0.00001140795 + 280.) * piD180            # long=280 day 1
 
             vearth = -30. * math.cos(soulat) * math.sin(sunlong - soulong)
             gwest = cosDecc * math.cos(rp - rac)
@@ -3415,7 +3651,7 @@ def createEzConOutEzb():
 
             gpole = gwest * cosDp - 0.22038881141180267
 
-            lon0 = (math.atan2(ggwest, grad)) * 57.2957795147
+            lon0 = (math.atan2(ggwest, grad)) * oneEightZeroDPi
             gwest = cosDec * math.cos(rp - ra)
 
             grad = cosDec * math.sin(rp - ra)
@@ -3424,10 +3660,10 @@ def createEzConOutEzb():
 
             gpole = gwest * cosDp + sinDec * sinDp
 
-            d1glat = (math.atan2(gpole, math.sqrt(ggwest * ggwest + grad * grad))) * 57.2957795147
+            d1glat = (math.atan2(gpole, math.sqrt(ggwest * ggwest + grad * grad))) * oneEightZeroDPi
             gLatDegThis = d1glat            # in degrees
 
-            d1glon = (math.atan2(ggwest, grad)) * 57.2957795147 - lon0
+            d1glon = (math.atan2(ggwest, grad)) * oneEightZeroDPi - lon0
 
             # map d1glon into (-180 to +180) degrees
             gLonDegThis = d1glon
@@ -3440,10 +3676,13 @@ def createEzConOutEzb():
                 vlsrThis = vsun + vearth    # km/s
                 #print()
                 #print()
-                #print(' vsun =', vsun)
-                #print(' vearth =', vearth)
+                #print(' vsun =', vsun, 'km/s')
+                #print(' vearth =', vearth, 'km/s')
+                #print(' vlsrThis =', vlsrThis, 'km/s')
             else:
                 vlsrThis = 0.               # km/s
+
+            #exit()
 
         elif ezConAstroMath == 2:
             # use astropy
@@ -3459,9 +3698,9 @@ def createEzConOutEzb():
             # extract RaDec coordinates
             raDegThis = float(pointingTelescope.icrs.ra.degree)
             raHThis = raDegThis / 15.       # 24 / 360 = 1 / 15
-            #print(' raHThis =', raHThis, ' Hours')
+            #print(' raHThis =', raHThis, 'Hours')
             decDegThis = float(pointingTelescope.icrs.dec.degree)
-            #print(' decDegThis =', decDegThis, ' degrees')
+            #print(' decDegThis =', decDegThis, 'degrees')
 
             # extract Galactic coordinates
             gLatDegThis = float(pointingTelescope.galactic.b.degree)
@@ -3478,7 +3717,7 @@ def createEzConOutEzb():
                 # print(pointingTelescope.radial_velocity_correction(kind='barycentric'))   # says -17469.223186040872 m / s
                 vStarEarthAroundSun = -float(pointingTelescope.radial_velocity_correction(kind='barycentric') / (1000. * u.m / u.s))   # into km/s
                 #print(' pointingTelescope =', pointingTelescope)
-                #print(' vStarEarthAroundSun =', vStarEarthAroundSun, ' km/s')
+                #print(' vStarEarthAroundSun =', vStarEarthAroundSun, 'km/s')
 
                 # Projection of solar velocity towards the pointingTelescope star
                 # https://www.khanacademy.org/math/multivariable-calculus/thinking-about-multivariable-function/x786f2022:vectors-and-matrices/a/dot-products-mvc
@@ -3496,13 +3735,13 @@ def createEzConOutEzb():
                 #print(' pointingSun =', pointingSun)    # <SkyCoord (ICRS): (ra, dec) in deg (270.95954167, 30.00466667)>
                 #print(' pointingSun.cartesian =', pointingSun.cartesian)
                 #vStarSun = 0
-                #print(' vStarSun =', vStarSun, ' km/s')
+                #print(' vStarSun =', vStarSun, 'km/s')
 
                 # VLSR = Velocity from the Local Standard of Rest (km/s)
                 #vlsrThis = -float((vStarSun - vStarEarthAroundSun) / (1000. * u.m / u.s))   # to extract from units as km/s
                 #vlsrThis = vStarSun - vStarEarthAroundSun
                 vlsrThis = vStarEarthAroundSun - vStarSun
-                #print(' vlsrThis =', vlsrThis, ' km/s')
+                #print(' vlsrThis =', vlsrThis, 'km/s')
 
                 # for that last sample of N0RQV-8230209_00.txt,
                 #   dataTimeUtcStrThis = 2023-02-09 23:58:56.000
@@ -3737,11 +3976,12 @@ def writeFileEzb():
     fileWriteEzb.write( \
         'ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  Spare1  Spare2  AntXCMDop' \
         + '    AntAvg  AntMax    RefAvg  RefMax' \
-        + '    AntBAvg  AntBMax    AntRBAvg  AntRBMax    AntXTVTAvg  AntXTVTMax\n')
+        + '    AntBAvg  AntBMax    AntRBAvg  AntRBMax    '+antXNameL[1]+'TVTAvg  '+antXNameL[1]+'TVTMax\n')
+    #    + '    AntBAvg  AntBMax    AntRBAvg  AntRBMax    AntXTVTAvg  AntXTVTMax\n')
     fileWriteEzb.write( \
         '#        0           1    2       3        4        5     6      7       8       9        ' \
         + '    10      11        12      13    ' \
-        + '    14       15         16        17          18          19\n')
+        + '    14       15         16        17          18           19\n')
 
     # save ezConOut[] in columns
     # experimentEzc for AzEl into .ezb Spare1 and Spare2
@@ -3760,6 +4000,7 @@ def writeFileEzb():
 def writeFileStudy():
 
     global fileWriteStudy           # file handle
+    global antXNameL                # list of strings
 
 
     fileWriteStudy.write( \
@@ -3784,8 +4025,8 @@ def writeFileStudy():
 
     fileWriteStudy.write( \
         '\n============================================================================ antXTVT\n\n\n\n\n')
-    fileWriteStudy.write(studyTime(18, 'AntXTVTAvg'))
-    fileWriteStudy.write(studyTime(19, 'AntXTVTMax'))
+    fileWriteStudy.write(studyTime(18, antXNameL[1] + 'TVTAvg'))
+    fileWriteStudy.write(studyTime(19, antXNameL[1] + 'TVTMax'))
     fileWriteStudy.write( \
         '\n============================================================================\n\n\n\n\n')
 
@@ -3794,6 +4035,7 @@ def writeFileStudy():
 def writeFileGal():
     # write velocity data arrays to file
 
+    global antXNameL                # list of strings
     global antXTV                   # float 2d array
     global antLen                   # integer
     global velGLonP180              # float 2d array     creation
@@ -4272,7 +4514,7 @@ def plotEzCon2dSamples(plotName, plotData2d, plotXLabel, plotXLast, plotYLabel, 
         #    plotData2dY, plotData2dX = np.where(plotData2d == plotData2dSort[0])
         #    plt.plot(plotData2dX, plotData2dY, 'yo', markersize=10)
         
-    if plotYLabel == 'AntXTV':
+    if plotYLabel[-2:] == 'TV':
         # add a thin black horizontal line at zero Doppler, for comparison
         plt.axhline(y=fileFreqBinQty/2, linewidth=0.5, color='black')
     
@@ -4625,11 +4867,13 @@ def plotEzCon081antXT():
     global ezConPlotRangeL                      # integer list
 
     global antX                                 # float 2d array
+    global antXNameL                            # list of strings
     global antXT                                # float 2d array        creation
     global antLen                               # integer
     global antLenM1                             # integer
 
-    plotName = 'ezCon081antXT.png'
+    #plotName = 'ezCon081antXT.png'
+    plotName = 'ezCon081' + antXNameL[0] + 'T.png'
 
     # Each antX[:, n] is a spectrum, normally from Doppler -1.2 to +1.2 MHz.
     # The low and high frequency extremes, they rise up, and they mislead.
@@ -4687,7 +4931,8 @@ def plotEzCon081antXT():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, antXT, 'Ant', antLenM1, 'AntXT', 0)
+    #plotEzCon2dSamples(plotName, antXT, 'Ant', antLenM1, 'AntXT', 0)
+    plotEzCon2dSamples(plotName, antXT, 'Ant', antLenM1, antXNameL[1]+'T', 0)
 
 
 
@@ -4697,12 +4942,14 @@ def plotEzCon082antXTV():
     global plotCountdown                        # integer
     global ezConPlotRangeL                      # integer list
 
+    global antXNameL                            # list of strings
     global antXT                                # float 2d array
     global antXTV                               # float 2d array        creation
     global antLen                               # integer
     global antLenM1                             # integer
 
-    plotName = 'ezCon082antXTV.png'
+    #plotName = 'ezCon082antXTV.png'
+    plotName = 'ezCon082' + antXNameL[0] + 'TV.png'
 
     # create antXTV
     antXTV = np.empty_like(antXT)   # antXTV is like antXT but corrected by Vlsr
@@ -4711,6 +4958,14 @@ def plotEzCon082antXTV():
     freqBinVlsrOnes = np.ones(int(fileFreqBinQty / 2))
 
     # speed of light = 299,792,458 meters per second
+    # https://docs.astropy.org/en/stable/api/astropy.units.equivalencies.doppler_radio.html
+    # f(VLSR) = fRest * (1 - VLSR / 299,792.458 km per second)
+    # f(VLSR) = fRest - fRest * VLSR / 299,792.458 km per second
+    # f(VLSR) = fRest -VLSR * (fRest / 299,792.458 km per second)
+    # f(VLSR) = fRest -VLSR * freqCenterDivC
+    # below, ezCon shifts each fRest spectrum by (-VLSR * freqCenterDivC)
+    # below, ezCon shifts each fRest spectrum by (freqVlsrThis)
+
     #freqVlsrThis = -vlsr km/s * 1420.406 MHz / (299,792,458. m/s / 1000.)       # in MHz
     #freqVlsrThis = -vlsr      * freqCenter   / (299,792,458.     / 1000.)       # in MHz
     #freqVlsrThis = -vlsr      * freqCenterDivC                                  # in MHz
@@ -4747,8 +5002,8 @@ def plotEzCon082antXTV():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, antXTV, 'Ant', antLenM1, 'AntXTV', 0)
-
+    #plotEzCon2dSamples(plotName, antXTV, 'Ant', antLenM1, 'AntXTV', 0)
+    plotEzCon2dSamples(plotName, antXTV, 'Ant', antLenM1, antXNameL[1]+'TV', 0)
 
 
 def plotEzCon087antXTVT():
@@ -4757,12 +5012,14 @@ def plotEzCon087antXTVT():
     global plotCountdown                        # integer
     global ezConPlotRangeL                      # integer list
 
+    global antXNameL                            # list of strings
     global antXTV                               # float 2d array
     global antXTVT                              # float 2d array        creation
     global antLen                               # integer
     global antLenM1                             # integer
 
-    plotName = 'ezCon087antXTVT.png'
+    #plotName = 'ezCon087antXTVT.png'
+    plotName = 'ezCon087' + antXNameL[0] + 'TVT.png'
 
     # Each antXTV[:, n] is a spectrum, normally from Doppler -1.2 to +1.2 MHz.
     # The low and high frequency extremes, they rise up, and they mislead.
@@ -4816,7 +5073,8 @@ def plotEzCon087antXTVT():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVT', 0)
+    #plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVT', 0)
+    plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, antXNameL[1]+'TVT', 0)
 
 
 
@@ -4826,10 +5084,12 @@ def plotEzCon097antXTVTMax2d():
     global plotCountdown                        # integer
     global ezConPlotRangeL                      # integer list
 
+    global antXNameL                            # list of strings
     global antXTVT                              # float 2d array
     global antLenM1                             # integer
 
-    plotName = 'ezCon097antXTVTMax.png'
+    #plotName = 'ezCon097antXTVTMax.png'
+    plotName = 'ezCon097' + antXNameL[0] + 'TVTMax.png'
 
     plotCountdown -= 1
 
@@ -4839,7 +5099,8 @@ def plotEzCon097antXTVTMax2d():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVTMax', 1)
+    #plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVTMax', 1)
+    plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, antXNameL[1]+'TVTMax', 1)
         
 
 
@@ -5157,7 +5418,8 @@ def plotEzCon118antXTVTAvg():
 
     global ezConOut                             # float and int 2d array
 
-    plotName = 'ezCon118antXTVTAvg.png'
+    #plotName = 'ezCon118antXTVTAvg.png'
+    plotName = 'ezCon118' + antXNameL[0] + 'TVTAvg.png'
 
     plotCountdown -= 1
 
@@ -5172,7 +5434,7 @@ def plotEzCon118antXTVTAvg():
     print('                         antXTVTAvgMin =', ezConOut[:, 18].min())
 
     plotEzCon1dSamplesAnt(plotName, ezConOut[:, 18], [], 'violet',
-        'AntXTVT Spectrum Average')
+        antXNameL[1]+'TVT Spectrum Average')
 
 
 
@@ -5292,7 +5554,8 @@ def plotEzCon119antXTVTMax():
 
     global ezConOut                             # float and int 2d array
 
-    plotName = 'ezCon119antXTVTMax.png'
+    #plotName = 'ezCon119antXTVTMax.png'
+    plotName = 'ezCon119' + antXNameL[0] + 'TVTMax.png'
 
     plotCountdown -= 1
 
@@ -5307,7 +5570,7 @@ def plotEzCon119antXTVTMax():
     print('                         antXTVTMaxMin =', ezConOut[:, 19].min())
 
     plotEzCon1dSamplesAnt(plotName, ezConOut[:, 19], [], 'violet',
-        'AntXTVT Spectrum Maximum')
+        antXNameL[1]+'TVT Spectrum Maximum')
 
 
 
@@ -5332,6 +5595,7 @@ def plotEzCon191sigProg():
     global antRAAvg                 # float array
     global antRABaseline            # float array
     global antXTVAvg                # float array       creation
+    global antXNameL                # list of strings
 
     plotName = 'ezCon191sigProg.png'     # Signal Computation Progression
 
@@ -5747,13 +6011,14 @@ def plotEzCon191sigProg():
     plt.xlabel(xLabelSAnt)
     plt.xlim(0, antLenM1)
 
-    plt.ylabel('Signal Computation Progression\nfrom AntRaw to AntXTVT')
+    plt.ylabel('Signal Computation Progression\nfrom AntRaw to '+antXNameL[1]+'TVTMax')
     plt.ylim(-150, 3350)
     plt.yticks([ \
          3200.,     3000., 2800.,    2600.,    2400.,  2200.,     2000.,    1800., 1600.,
          1400.,   1200.,      1000.,   800.,       600.,     400.,      200.,         0.],
         ['AntRaw', 'Ant', 'AntMax', 'AntBas', 'AntB', 'AntBMax', 'RefRaw', 'Ref', 'RefMax',
-        'AntRA', 'AntRABas', 'AntRB', 'AntRBMax', 'AntXTV', 'AntXTVT', 'AntXTVTMax', 'GLatDeg'])
+        'AntRA', 'AntRABas', 'AntRB', 'AntRBMax', antXNameL[1]+'TV', antXNameL[1]+'TVT', antXNameL[1]+'TVTMax', 'GLatDeg'])
+    #    'AntRA', 'AntRABas', 'AntRB', 'AntRBMax', 'AntXTV', 'AntXTVT', 'AntXTVTMax', 'GLatDeg'])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -6765,10 +7030,13 @@ def plotEzCon281antXTAvg():
     global plotCountdown                        # integer
     global ezConPlotRangeL                      # integer list
 
+    global antXNameL                            # list of strings
     global antXT                                # float 2d array
     global antXTAvg                             # float array       creation
 
-    plotName = 'ezCon281antXTAvg.png'
+    #plotName = 'ezCon281antXTAvg.png'
+    plotName = 'ezCon281' + antXNameL[0] + 'TAvg.png'
+
 
     antXTAvg = np.mean(antXT, axis=0)           # creation
 
@@ -6785,7 +7053,7 @@ def plotEzCon281antXTAvg():
     print('                         antXTAvgMin =', antXTAvg.min())
 
     plotEzCon1dSamplesAnt(plotName, antXTAvg, [], 'violet',
-        'AntXT Antenna Spectrum Average')
+        antXNameL[1]+'T Antenna Spectrum Average')
 
 
 
@@ -6796,10 +7064,12 @@ def plotEzCon282antXTVAvg():
     global plotCountdown                        # integer
     global ezConPlotRangeL                      # integer list
 
+    global antXNameL                            # list of strings
     global antXTV                               # float 2d array
     global antXTVAvg                            # float array       creation
 
-    plotName = 'ezCon282antXTVAvg.png'
+    #plotName = 'ezCon282antXTVAvg.png'
+    plotName = 'ezCon282' + antXNameL[0] + 'TVAvg.png'
 
     antXTVAvg = np.mean(antXTV, axis=0)         # creation
 
@@ -6816,7 +7086,7 @@ def plotEzCon282antXTVAvg():
     print('                         antXTVAvgMin =', antXTVAvg.min())
 
     plotEzCon1dSamplesAnt(plotName, antXTVAvg, [], 'violet',
-        'AntXTV Antenna Spectrum Average')
+        antXNameL[1]+'TV Antenna Spectrum Average')
 
 
 
@@ -6827,10 +7097,12 @@ def plotEzCon287antXTVTAvg():
     global plotCountdown                        # integer
     global ezConPlotRangeL                      # integer list
 
+    global antXNameL                            # list of strings
     global antXTVT                              # float 2d array
     global ezConOut                             # float and int 2d array
 
-    plotName = 'ezCon287antXTVTAvg.png'
+    #plotName = 'ezCon287antXTVTAvg.png'
+    plotName = 'ezCon287' + antXNameL[0] + 'TVTAvg.png'
 
     ezConOut[:, 18] = np.mean(antXTVT, axis=0)  # creation of antXTVTAvg into ezConOut[:, 18]
 
@@ -6847,7 +7119,7 @@ def plotEzCon287antXTVTAvg():
     print('                         antXTVTAvgMin =', ezConOut[:, 18].min())
 
     plotEzCon1dSamplesAnt(plotName, ezConOut[:, 18], [], 'violet',
-        'AntXTVT Antenna Spectrum Average')
+        antXNameL[1]+'TVT Antenna Spectrum Average')
 
 
 
@@ -6857,10 +7129,11 @@ def plotEzCon297antXTVTMax():
     global plotCountdown                        # integer
     global ezConPlotRangeL                      # integer list
 
+    global antXNameL                            # list of strings
     global antXTVT                              # float 2d array
     global ezConOut                             # float and int 2d array
 
-    plotName = 'ezCon297antXTVTMax.png'
+    plotName = 'ezCon297' + antXNameL[0] + 'TVTMax.png'
 
     ezConOut[:, 19] = np.amax(antXTVT, axis=0)  # creation of antXTVTMax into ezConOut[:, 19]
 
@@ -6877,7 +7150,7 @@ def plotEzCon297antXTVTMax():
     print('                         antXTVTMaxMin =', ezConOut[:, 19].min())
 
     plotEzCon1dSamplesAnt(plotName, ezConOut[:, 19], [], 'violet',
-        'AntXTVT Spectrum Maximum')
+        antXNameL[1]+'TVT Spectrum Maximum')
 
 
 
@@ -7358,9 +7631,11 @@ def plotEzCon381antXTByFreqBinAvg():
     global ezConPlotRangeL          # integer list
     global fileNameLast             # string
     global plotCountdown            # integer
+    global antXNameL                # list of strings
     global antXT                    # float 2d array
 
-    plotName = 'ezCon381antXTByFreqBinAvg.png'
+    #plotName = 'ezCon381antXTByFreqBinAvg.png'
+    plotName = 'ezCon381' + antXNameL[0] + 'TByFreqBinAvg.png'
 
     plotCountdown -= 1
 
@@ -7370,7 +7645,7 @@ def plotEzCon381antXTByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
         plotEzCon1dByFreqBin(plotName, np.mean(antXT, axis=1), 'violet',
-            'AntXT Average Spectrum')
+            antXNameL[1]+'T Average Spectrum')
 
 
 
@@ -7379,9 +7654,11 @@ def plotEzCon382antXTVByFreqBinAvg():
     global ezConPlotRangeL          # integer list
     global fileNameLast             # string
     global plotCountdown            # integer
+    global antXNameL                # list of strings
     global antXTV                   # float 2d array
 
-    plotName = 'ezCon382antXTVByFreqBinAvg.png'
+    #plotName = 'ezCon382antXTVByFreqBinAvg.png'
+    plotName = 'ezCon382' + antXNameL[0] + 'TVByFreqBinAvg.png'
 
     plotCountdown -= 1
 
@@ -7391,7 +7668,7 @@ def plotEzCon382antXTVByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
         plotEzCon1dByFreqBin(plotName, np.mean(antXTV, axis=1), 'violet',
-            'AntXTV Average Spectrum')
+            antXNameL[1]+'TV Average Spectrum')
 
 
 
@@ -7400,9 +7677,11 @@ def plotEzCon387antXTVTByFreqBinAvg():
     global ezConPlotRangeL          # integer list
     global fileNameLast             # string
     global plotCountdown            # integer
+    global antXNameL                # list of strings
     global antXTVT                  # float 2d array
 
-    plotName = 'ezCon387antXTVTByFreqBinAvg.png'
+    #plotName = 'ezCon387antXTVTByFreqBinAvg.png'
+    plotName = 'ezCon387' + antXNameL[0] + 'TVTByFreqBinAvg.png'
 
     plotCountdown -= 1
 
@@ -7412,7 +7691,7 @@ def plotEzCon387antXTVTByFreqBinAvg():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
         plotEzCon1dByFreqBin(plotName, np.mean(antXTVT, axis=1), 'violet',
-            'AntXTVT Average Spectrum')
+            antXNameL[1]+'TVT Average Spectrum')
 
 
 
@@ -7424,11 +7703,13 @@ def plotEzCon388antXTByFreqBinAvgRfi():
     global ezConDispGrid            # integer
     global dopplerSpanD2            # float
     global fileFreqBinQty           # integer
+    global antXNameL                # list of strings
     global antXT                    # float 2d array
     #global antLen                   # integer
     global ezConPlotRangeL          # integer list
 
-    plotName = 'ezCon388antXTByFreqBinAvgRfi.png'
+    #plotName = 'ezCon388antXTByFreqBinAvgRfi.png'
+    plotName = 'ezCon388' + antXNameL[0] + 'TByFreqBinAvgRfi.png'
     # for RFI filtering, to help create ezDefaults.txt ezConHideFreqBin arguments, 
     # print freqBin indexes of 5 highest-values of antXTByFreqBinSum
 
@@ -7443,35 +7724,35 @@ def plotEzCon388antXTByFreqBinAvgRfi():
             = (antXTByFreqBinSumAvgMax - antXTByFreqBinSumAvgMin) / 100.
 
         print()
-        print(' FreqBin indexes of 5 highest-values of AntXT:')
+        print(' FreqBin indexes of 5 highest-values of ' + antXNameL[1] + 'T:')
         antXTByFreqBinSumAvgIdxbyValueHigh5 = np.array(antXTByFreqBinSumAvg).argsort()[::-1][:5]
         for i in range(len(antXTByFreqBinSumAvgIdxbyValueHigh5)):
             antXTByFreqBinSumAvgThis = \
                 antXTByFreqBinSumAvg[antXTByFreqBinSumAvgIdxbyValueHigh5[i]]
             print(' i =', i,
                 '      FreqBin =', antXTByFreqBinSumAvgIdxbyValueHigh5[i],
-                '      antXTByFreqBinSumAvg =', antXTByFreqBinSumAvgThis,
+                '      '+antXNameL[1]+'TByFreqBinSumAvg =', antXTByFreqBinSumAvgThis,
                 '      ', (antXTByFreqBinSumAvgThis - antXTByFreqBinSumAvgMin) \
                 / antXTByFreqBinSumAvgSpanD100, '%')
         print('                 Maybe try arguments like    -ezConRawFreqBinHide',
             antXTByFreqBinSumAvgIdxbyValueHigh5[0])
 
         print()
-        print(' FreqBin indexes of 5 lowest-values of AntXT:')
+        print(' FreqBin indexes of 5 lowest-values of ' + antXNameL[1] + 'T:')
         antXTByFreqBinSumAvgIdxbyValueLow5 = np.array(antXTByFreqBinSumAvg).argsort()[:5]
         for i in range(len(antXTByFreqBinSumAvgIdxbyValueLow5)):
             antXTByFreqBinSumAvgThis = \
                 antXTByFreqBinSumAvg[antXTByFreqBinSumAvgIdxbyValueLow5[i]]
             print(' i =', i,
                 '      FreqBin =', antXTByFreqBinSumAvgIdxbyValueLow5[i],
-                '      antXTByFreqBinSumAvg =', antXTByFreqBinSumAvgThis,
+                '      '+antXNameL[1]+'TByFreqBinSumAvg =', antXTByFreqBinSumAvgThis,
                 '      ', (antXTByFreqBinSumAvgThis - antXTByFreqBinSumAvgMin) \
                 / antXTByFreqBinSumAvgSpanD100, '%')
         print('                 Maybe try arguments like    -ezConRawFreqBinHide',
             antXTByFreqBinSumAvgIdxbyValueLow5[0])
 
         print()
-        print(' FreqBin indexes of 5 largest change values of AntXT:')
+        print(' FreqBin indexes of 5 largest change values of ' + antXNameL[1] + 'T:')
         antXTByFreqBinSumAvgIdxbyValueDeltaHigh5m1 \
             = np.array(abs(antXTByFreqBinSumAvg[1:] - antXTByFreqBinSumAvg[:-1])).argsort()[::-1][:5]
         for i in range(len(antXTByFreqBinSumAvgIdxbyValueDeltaHigh5m1)):
@@ -7480,7 +7761,7 @@ def plotEzCon388antXTByFreqBinAvgRfi():
                 - antXTByFreqBinSumAvg[antXTByFreqBinSumAvgIdxbyValueDeltaHigh5m1[i]]
             print(' i =', i,
                 '      FreqBin =', antXTByFreqBinSumAvgIdxbyValueDeltaHigh5m1[i] + 1,
-                '      antXTByFreqBinSumAvgDelta =', antXTByFreqBinSumAvgDeltaThis,
+                '      '+antXNameL[1]+'TByFreqBinSumAvgDelta =', antXTByFreqBinSumAvgDeltaThis,
                 '      ', antXTByFreqBinSumAvgDeltaThis / antXTByFreqBinSumAvgSpanD100, '%')
         print('                 Maybe try arguments like    -ezConRawFreqBinHide',
             antXTByFreqBinSumAvgIdxbyValueDeltaHigh5m1[0] + 1)
@@ -7500,7 +7781,7 @@ def plotEzCon388antXTByFreqBinAvgRfi():
         plt.title(titleS)
         plt.grid(1)
 
-        plt.xlabel('AntXT Average Spectrum')
+        plt.xlabel(antXNameL[1]+'T Average Spectrum')
         # 2% of the data span as a spacing on each end
         plt.xlim(antXTByFreqBinSumAvgMin - 2 * antXTByFreqBinSumAvgSpanD100,
             antXTByFreqBinSumAvgMax + 2 * antXTByFreqBinSumAvgSpanD100)
@@ -7519,9 +7800,11 @@ def plotEzCon397antXTVTByFreqBinMax():
     global ezConPlotRangeL          # integer list
     global fileNameLast             # string
     global plotCountdown            # integer
+    global antXNameL                # list of strings
     global antXTVT                  # float 2d array
 
-    plotName = 'ezCon397antXTVTByFreqBinMax.png'
+    #plotName = 'ezCon397antXTVTByFreqBinMax.png'
+    plotName = 'ezCon397' + antXNameL[0] + 'TVTByFreqBinMax.png'
 
     plotCountdown -= 1
 
@@ -7531,7 +7814,7 @@ def plotEzCon397antXTVTByFreqBinMax():
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
         plotEzCon1dByFreqBin(plotName, np.amax(antXTVT, axis=1), 'violet',
-            'AntXTVT Maximum Spectrum')
+            antXNameL[1]+'TVT Maximum Spectrum')
 
 
 
@@ -8127,7 +8410,7 @@ def plotEzCon560antXTVTMaxIdxGLon():
     global titleS                   # string
     global ezConPlotRangeL          # integer list
 
-    plotName = 'ezCon560antXTVTMaxIdxGLon.png'
+    plotName = 'ezCon560' + antXNameL[0] + 'TVTMaxIdxGLon.png'
 
     plotCountdown -= 1
 
@@ -8169,7 +8452,7 @@ def plotEzCon560antXTVTMaxIdxGLon():
         #           [ '180', '90', '0', '-90', '-180'])
         plt.xlim(0, 360)        # in degrees
 
-        plt.ylabel('Index of AntXTVT Spectrum Maximum (increasing freq)')
+        plt.ylabel('Index of ' + antXNameL[1] + 'TVT Spectrum Maximum (increasing freq)')
         #plt.ylim(-270, 270)
         plt.ylim(0, 400)
 
@@ -8254,7 +8537,7 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
                 else:
                     gLonDegS = f'+{gLonP180 - 180:03d}'        # '+nnn' with leading zeros
 
-                plt.ylabel('Average AntXTV Spectrum for Galaxy plane at' \
+                plt.ylabel('Average ' + antXNameL[1] + 'TV Spectrum for Galaxy plane at' \
                     + '\n\nGalactic Longitude = ' + gLonDegS + ' degrees', \
                     rotation=90, verticalalignment='bottom')
 
@@ -8277,6 +8560,7 @@ def main():
     global antRA                    # float 2d array
     global antRB                    # float 2d array
     global antX                     # float 2d array
+    global antXNameL                # list of strings
 
     global refRawAvg                # float array
 
@@ -8616,7 +8900,7 @@ def main():
     plotEzCon057antBMax2d()
     plotEzCon257antBMax()               # creates antBMax
     # if antB not needed, free antB memory
-    if ezConAntXInput != 1:
+    if ezConAntXInput != 4:
         antB = []
         antB = None
         del antB
@@ -8625,14 +8909,16 @@ def main():
     ####### antRB
 
     plotEzCon061antRA()                 # creates antRA
-    # ant not needed, free ant memory
-    ant = []
-    ant = None
-    del ant
-    # ref not needed, free ref memory
-    ref = []
-    ref = None
-    del ref
+    # if ant not needed, free ant memory
+    if ezConAntXInput != 0:
+        ant = []
+        ant = None
+        del ant
+    # if ref not needed, free ref memory
+    if ezConAntXInput != 2:
+        ref = []
+        ref = None
+        del ref
     plotEzCon261antRAAvg()
     plotEzCon361antRAByFreqBinAvg()
 
@@ -8640,7 +8926,7 @@ def main():
 
     plotEzCon067antRB()                 # creates antRB
     # if antRA not needed, free antRA memory
-    if ezConAntXInput != 2:
+    if ezConAntXInput != 5:
         antRA = []
         antRA = None
         del antRA
@@ -8651,7 +8937,7 @@ def main():
     plotEzCon077antRBMax2d()
     plotEzCon277antRBMax()              # creates antRBMax
     # if antRB not needed, free antRA memory
-    if ezConAntXInput != 3:
+    if ezConAntXInput != 6:
         antRB = []
         antRB = None
         del antRB
@@ -8660,24 +8946,41 @@ def main():
     ####### antX
 
     # create antX
-    if ezConAntXInput == 2:             # use AntRA
+    if ezConAntXInput == 0:             # use Ant
+        antX = ant
+        # free ant memory
+        ant = []
+        ant = None
+        del ant
+        antXNameL = ['ant', 'Ant']
+    elif ezConAntXInput == 2:           # use Ref
+        antX = ref
+        # free ref memory
+        ref = []
+        ref = None
+        del ref
+        antXNameL = ['ref', 'Ref']
+    elif ezConAntXInput == 4:           # use AntRB
+        antX = antB
+        # free antB memory
+        antB = []
+        antB = None
+        del antB
+        antXNameL = ['antB', 'AntB']
+    elif ezConAntXInput == 5:           # use AntRA
         antX = antRA
         # free antRA memory
         antRA = []
         antRA = None
         del antRA
-    elif ezConAntXInput == 3:           # use AntRB
+        antXNameL = ['antRA', 'AntRA']
+    elif ezConAntXInput == 6:           # use AntRB
         antX = antRB
         # free antRB memory
         antRB = []
         antRB = None
         del antRB
-    else:
-        antX = antB                     # default: use AntB
-        # free antB memory
-        antB = []
-        antB = None
-        del antB
+        antXNameL = ['antRB', 'AntRB']
 
     plotEzCon081antXT()                 # creates antXT, deletes AntX
     plotEzCon281antXTAvg()              # creates antXTAvg

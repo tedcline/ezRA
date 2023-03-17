@@ -89,8 +89,9 @@ please see these introductory PDFs from the ezRA directory:
 
 Known bugs:
 
-    ezCon's "-ezConAstroMath  1" calculates wrong Right Ascension values.
-    ezCon's default now changed to the slower "-ezConAstroMath  2".
+    ezCon's "-ezConAstroMath  1" did calculate wrong Right Ascension values.
+	Now fixed ?  Does it work for your earth location ?  10x faster !
+    ezCon's default still is the slower "-ezConAstroMath  2".
 
 Thanks to Todd Ullery, the  ezColX.py  was an experimental multiple process version of  ezCol.py , to improve dashboard responsiveness.
 <br>
@@ -117,6 +118,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Mar-11-2023
+Mar-17-2023
 
 ---

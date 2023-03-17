@@ -1,4 +1,4 @@
-programName = 'ezFix230305a.py'
+programName = 'ezFix230316a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezFix frequency spectrum data ezRA .txt file editor program.
@@ -24,6 +24,7 @@ programRevision = programName
 # dataTimeUtcVlsr2000.mjd = 51544.0
 # Log what ezFix is doing
 
+# ezFix230316a.py, -eX, removed silly ezFixArgumentsFile()
 # ezFix230305a.py, boilerplate from ezSky
 # ezFix230301a.py, -ezez help wording
 # ezFix230228a.py, -EM and -ES and many code improvements
@@ -200,10 +201,10 @@ def printUsage():
     print('    -ezFixAddAzDeg  9.4        (if no ezFixAzimuth,   add to all file Azimuth   (degrees))')
     print('    -ezFixAddElDeg  -2.6       (if no ezFixElevation, add to all file Elevation (degrees))')
     print()
-    print('    -ezDefaultsFile bigDish8.txt   (file of default arguments)')
-    print()
-    print('    -ezezIgonoreThisWholeOneWord')
-    print('         (any one word starting with -ezez is ignored, handy for long command line editing)')
+    #print('    -ezDefaultsFile bigDish8.txt   (file of default arguments)')
+    #print()
+    print('    -eXXXXXXXXXXXXXXzIgonoreThisWholeOneWord')
+    print('         (any one word starting with -eX is ignored, handy for long command line editing)')
     print()
     print()
     print(' programRevision =', programRevision)
@@ -249,211 +250,6 @@ def printHello():
         #cmd = cmd + i + '  '
         cmd += i + '  '
     print(' This Python command = ' + cmd)
-
-
-
-def ezFixArgumentsFile(ezDefaultsFileNameInput):
-    # process arguments from file
-
-    global cmd                              # string
-
-    global ezRAObsLat                       # float
-    global ezRAObsLon                       # float
-    global ezRAObsAmsl                      # float
-    global ezRAObsName                      # string
-
-    global ezFixAzimuth                     # float
-    global ezFixElevation                   # float
-    global ezFixAddAzDeg                    # float
-    global ezFixAddElDeg                    # float
-
-    global ezFixKeepNumL                    # integer list
-    global ezFixRemoveNumL                  # integer list
-    global ezFixRemoveTypeS                 # string
-
-    global ezFixRemoveGreaterL              # string and float list
-    global ezFixRemoveLessL                 # string and float list
-    global ezFixRemoveAvgGreaterL           # string and float list
-    global ezFixRemoveAvgLessL              # string and float list
-
-    global ezFixEditTimeS                   # string
-    
-    global ezFixEditCeilingL                # string and float list
-    global ezFixEditFloorL                  # string and float list
-
-    global ezFixEditMultL                   # string and integer and float list
-    global ezFixEditSetL                    # string and integer and float list
-
-    global ezFixOverwriteFilename           # string
-    global ezFixRemovedWriteFilename        # string
-
-    global cmdDirectoryS                    # string
-
-
-    print()
-    print('   ezFixArgumentsFile(' + ezDefaultsFileNameInput + ') ===============')
-
-    # https://www.zframez.com/tutorials/python-exception-handling.html
-    try:
-        fileDefaults = open(ezDefaultsFileNameInput, 'r')
-
-        #if fileDefaults.mode == 'r':
-        # process each line in ezDefaultsFileNameInput
-        
-        #print('   ezColArgumentsFile(' + ezDefaultsFileNameInput + ') ===============')
-        print('      success opening ' + ezDefaultsFileNameInput)
-
-        while 1:
-            #print()
-            fileLine = fileDefaults.readline()
-            #print(fileLine)
-
-            # LF always present: 0=EOF  1=LF  2=1Character
-            if len(fileLine) < 1:         # if end of file
-                break                     # get out of while loop
-
-            thisLine = fileLine.split()
-            if len(thisLine) < 1:         # if line all whitespace
-                continue                  # skip to next line
-
-            #print('=', thisLine[0], '=')
-            #print('=', thisLine[0][0], '=', '#', '=')
-            if thisLine[0][0] == '#':    # ignoring whitespace, if first character of first word
-                continue                  # it is a comment, skip to next line
-
-
-            # be kind, ignore argument keyword capitalization
-            thisLine0Lower = thisLine[0].lower()
-            #print('= thisLine0Lower =', thisLine0Lower, '=')
-
-            # ezRA arguments used by multiple programs:
-            if thisLine0Lower == '-ezRAObsName'.lower():
-                # note: to allow multiple words, read in the rest of line !!!!!!!!!!!
-                ezRAObsName = ' '.join(thisLine[1:])
-                #ezRAObsName = uni.encode(thisLine[1])
-                #ezRAObsName = str.encode(thisLine[1])
-                #print(      'ezRAObsName =', ezRAObsName, '=')
-
-            elif thisLine0Lower == '-ezRAObsLat'.lower():
-                ezRAObsLat  = float(thisLine[1])
-
-            elif thisLine0Lower == '-ezRAObsLon'.lower():
-                ezRAObsLon  = float(thisLine[1])
-
-            elif thisLine0Lower == '-ezRAObsAmsl'.lower():
-                ezRAObsAmsl = float(thisLine[1])
-
-
-            # float arguments:
-            elif thisLine0Lower == '-ezFixAzimuth'.lower():
-                ezFixAzimuth = float(thisLine[1])
-
-            elif thisLine0Lower == '-ezFixElevation'.lower():
-                ezFixElevation = float(thisLine[1])
-
-            elif thisLine0Lower == '-ezFixAddAzDeg'.lower():
-                ezFixAddAzDeg = float(thisLine[1])
-
-            elif thisLine0Lower == '-ezFixAddElDeg'.lower():
-                ezFixAddElDeg = float(thisLine[1])
-
-
-            # list arguments:
-            elif thisLine0Lower == '-KN'.lower():
-                ezFixKeepNumL.append(int(thisLine[1]))
-                ezFixKeepNumL.append(int(thisLine[2]))
-
-            elif thisLine0Lower == '-RN'.lower():
-                ezFixRemoveNumL.append(int(thisLine[1]))
-                ezFixRemoveNumL.append(int(thisLine[2]))
-
-            elif thisLine0Lower == '-RG'.lower():
-                ezFixRemoveGreaterL.append(thisLine[1])
-                ezFixRemoveGreaterL.append(float(thisLine[2]))
-
-            elif thisLine0Lower == '-RL'.lower():
-                ezFixRemoveLessL.append(thisLine[1])
-                ezFixRemoveLessL.append(float(thisLine[2]))
-
-            elif thisLine0Lower == '-RAG'.lower():
-                ezFixRemoveAvgGreaterL.append(thisLine[1])
-                ezFixRemoveAvgGreaterL.append(float(thisLine[2]))
-
-            elif thisLine0Lower == '-RAL'.lower():
-                ezFixRemoveAvgLessL.append(thisLine[1])
-                ezFixRemoveAvgLessL.append(float(thisLine[2]))
-
-            elif thisLine0Lower == '-EC'.lower():
-                ezFixEditCeilingL.append(thisLine[1])
-                ezFixEditCeilingL.append(float(thisLine[2]))
-
-            elif thisLine0Lower == '-EF'.lower():
-                ezFixEditFloorL.append(thisLine[1])
-                ezFixEditFloorL.append(float(thisLine[2]))
-
-            elif thisLine0Lower == '-EM'.lower():
-                ezFixEditMultL.append(thisLine[1])
-                ezFixEditMultL.append(int(thisLine[2]))
-                ezFixEditMultL.append(int(thisLine[3]))
-                ezFixEditMultL.append(int(thisLine[4]))
-                ezFixEditMultL.append(int(thisLine[5]))
-                ezFixEditMultL.append(float(thisLine[6]))
-
-            elif thisLine0Lower == '-ES'.lower():
-                ezFixEditSetL.append(thisLine[1])
-                ezFixEditSetL.append(int(thisLine[2]))
-                ezFixEditSetL.append(int(thisLine[3]))
-                ezFixEditSetL.append(int(thisLine[4]))
-                ezFixEditSetL.append(int(thisLine[5]))
-                ezFixEditSetL.append(float(thisLine[6]))
-
-
-            # string arguments:
-            elif thisLine0Lower == '-RT'.lower():
-                ezFixRemoveTypeS = thisLine[1]
-
-            elif thisLine0Lower == '-ET'.lower():
-                ezFixEditTimeS = thisLine[1]
-
-
-            elif thisLine0Lower[:6] == '-ezFix'.lower():
-                print()
-                print()
-                print()
-                print()
-                print()
-                print(' ========== FATAL ERROR:  Defaults file ( ' + ezDefaultsFileName + ' )')
-                print(" has this line's unrecognized first word:")
-                print(fileLine)
-                print()
-                print()
-                print()
-                print()
-                exit()
-
-
-            elif thisLine0Lower == '-ezez'.lower():
-                pass                # ignore
-
-
-            else:
-                pass    # unrecognized first word, but no error
-
-    except (FileNotFoundError, IOError):
-    	#print ()
-    	#print ()
-    	#print ()
-    	#print ()
-    	#print ('   Warning: Error in opening file or reading ' + ezDefaultsFileName + ' file.')
-    	##print ('   ... Using defaults ...')
-    	#print ()
-    	#print ()
-    	#print ()
-    	#print ()
-    	pass
-
-    else:
-        fileDefaults.close()                #   then have processed all available lines in this defaults file
 
 
 
@@ -657,12 +453,23 @@ def ezFixArgumentsCommandLine():
             elif cmdLineArgLower == 'removed'.lower():
                 ezFixRemovedWriteFilename = cmdLineSplit[cmdLineSplitIndex]
 
-            elif cmdLineArgLower == 'ezDefaultsFile'.lower():
-                ezFixArgumentsFile(cmdLineSplit[cmdLineSplitIndex])
+            #elif cmdLineArgLower == 'ezDefaultsFile'.lower():
+            #    ezFixArgumentsFile(cmdLineSplit[cmdLineSplitIndex])
 
 
-            elif cmdLineArgLower == 'ezez'.lower():
-                pass                # ignore
+            # ignore silly -eX* arguments, for handy neutralization of command line arguments,
+            #   but remove spaces before argument numbers
+            #   (can not use '-x' which is a preface to a negative hexadecimal number)
+            elif 2 <= len(cmdLineArgLower) and cmdLineArgLower[:2] == 'ex':
+                cmdLineSplitIndex -= 1
+                #pass
+
+            # before -eX, old spelling:
+            # ignore silly -ezez* arguments, for handy neutralization of command line arguments,
+            #   but remove spaces before argument numbers
+            elif 4 <= len(cmdLineArgLower) and cmdLineArgLower[:4] == 'ezez':
+                cmdLineSplitIndex -= 1
+                #pass
 
 
             else:
