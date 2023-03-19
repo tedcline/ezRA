@@ -1,4 +1,4 @@
-programName = 'ezSky230317a.py'
+programName = 'ezSky230318c.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
@@ -24,8 +24,11 @@ programRevision = programName
 
 # TTD:
 #       remove many global in main() ?????????
-#       plotCountdown, 'plotting' lines only if plotting
 
+# ezSky230318c.py, removed messy plotEzSky502GOI() notes
+# ezSky230318b.py, plotEzSky502GOI() with notes
+# ezSky230318a.py, plotEzSky502GOI()
+# ezSky230317b.py, plotEzSky502GOI()
 # ezSky230317a.py, commented plotEzSky502GOI()
 # ezSky230316c.py, plotEzSky502GOI() Mollweide, fixed -eX
 # ezSky230316b.py, commented Mollweide, ezSky100input_* color traces
@@ -364,11 +367,11 @@ def ezSkyArgumentsCommandLine():
 
             # be kind, ignore argument keyword capitalization
             cmdLineArgLower = cmdLineArg.lower()
-            print()
-            print()
-            print()
-            print()
-            print('= cmdLineArg =', cmdLineArg, '=')
+            #print()
+            #print()
+            #print()
+            #print()
+            #print('= cmdLineArg =', cmdLineArg, '=')
             cmdLineSplitIndex += 1      # point to first argument value
 
 
@@ -503,7 +506,7 @@ def ezSkyArguments():
 
     ezSkyPlotRangeL = [0, 9999]             # save this range of plots to file
 
-    plotCountdown = 16                      # number of plots still to print
+    plotCountdown = 17                      # number of plots still to print
 
     # process arguments from ezDefaults.txt file in the same directory as this ezCon program
     ezSkyArgumentsFile(os.path.dirname(__file__) + os.path.sep + 'ezDefaults.txt')
@@ -1129,7 +1132,7 @@ def ezSkyGridRadec():
 
 
 def plotEzSky200RBVO():
-    # radio Sky Radec map with background, Power Vertical Offset
+    # radio Sky Radec map with Background, power Vertical Offset
 
     global radecPower               # float   1d array
     global radecRaHalfDeg           # integer 1d array
@@ -1250,7 +1253,7 @@ def plotEzSky200RBVO():
 
 
 def plotEzSky201RBMax():
-    # radio Sky Radec map with background, dots on left and right maximum Power
+    # radio Sky Radec map with Background, dots on left and right maximum power
 
     global radecPower               # float   1d array
     global radecRaHalfDeg           # integer 1d array
@@ -1531,7 +1534,7 @@ def plotEzSky201RBMax():
 
 
 def plotEzSky300RB():
-    # radio Sky Radec map with background, Power color
+    # radio Sky Radec map with Background, power color
 
     global radecPower               # float   1d array
     global radecRaHalfDeg           # integer 1d array
@@ -1612,8 +1615,8 @@ def plotEzSky300RB():
 
 
 def plotEzSky301RBT():
-    # radio Sky Radec map with background, Power color Tall
-
+    # radio Sky Radec map with Background, power color Tall
+    
     global radecPower               # float   1d array
     global radecRaHalfDeg           # integer 1d array
     global radecDecHalfDeg          # integer 1d array
@@ -1726,7 +1729,7 @@ def plotEzSky301RBT():
 
 
 def plotEzSky309RBTC():
-    # radio Sky Radec map with background, Count Tall
+    # radio Sky Radec map with Background, Count Tall
 
     global radecCount               # float   1d array
     global radecRaHalfDeg           # integer 1d array
@@ -2043,7 +2046,7 @@ def ezSkyGridGalactic():
 
 
 def plotEzSky500GMI():
-    # radio Sky Galactic Mercator projection map of Interpolated Power
+    # radio Sky Galactic Mercator projection map of Interpolated power
 
     global galacticPower            # float   1d array
     global galacticGLatHalfDeg      # integer 1d array
@@ -2175,7 +2178,7 @@ def plotEzSky500GMI():
 
 
 def plotEzSky501GSI():
-    # radio Sky Galactic Sinusoidal projection map of Interpolated Power
+    # radio Sky Galactic Sinusoidal projection map of Interpolated power
     # https://en.wikipedia.org/wiki/Sinusoidal_projection
     
     global galacticPower            # float   1d array
@@ -2326,7 +2329,8 @@ def plotEzSky501GSI():
 
 
 def plotEzSky502GOI():
-    # radio Sky Galactic Mollweide projection map of Interpolated Power
+    # radio Sky Galactic Mollweide projection map of Interpolated power.
+    # "M" already used, so "GOI" using second letter "O" from "Mollweide".
     # https://en.wikipedia.org/wiki/Mollweide_projection
 
     global galacticPower            # float   1d array
@@ -2383,28 +2387,6 @@ def plotEzSky502GOI():
         print()
         return(2)
 
-    #if galacticGLonHalfDegMin == galacticGLonHalfDegMax:
-    if 0:
-        print()
-        print()
-        print()
-        print()
-        print()
-        print()
-        print()
-        print('============= WARNING: Can not create the ' + plotName + ' plot.')
-        print('              All this data has only one Declination value.')
-        print()
-        print('              galacticGLonHalfDegMin == galacticGLonHalfDegMax')
-        print()
-        print()
-        print()
-        print()
-        print()
-        print()
-        print()
-        return(3)
-
     # create a (xi, yi) meshgrid rectangular grid
     xi = np.arange(0., 720.5, 1.)       # represents -180 through +180 degrees, in half-degrees
     yi = np.arange(0., 360.5, 1.)       # represents  -90 through  +90 degrees, in half-degrees
@@ -2432,19 +2414,10 @@ def plotEzSky502GOI():
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-
-
-
-
-
-
-
-
-
     # Mollweide projection warping definition:
     # theta and Lat and Lon are in radians.
     # R is the radius of the globe to be projected.
-    # For Lat and Lon,
+    # Given Lat and Lon,
     # xiWarped = (R * sqrt(2)) * (2 / pi) * (Lon - 0) * cos(theta)
     # yiWarped = (R * sqrt(2)) * sin(theta)
     # after finding a theta such that
@@ -2455,256 +2428,97 @@ def plotEzSky502GOI():
 
     pie    = math.pi
     piD360 = pie / 360
-    #oneEightZeroDPi = 180 / pie
 
-    # calculate all the thetas once and store in program
-    if 1:
-        # The gLatHalfDeg values needed are 1 to 180 in halfDegrees.
-        # Pre-calculate the theta for each gLatHalfDeg value and store below.
-        theta = np.empty(180)
-        for gLatHalfDeg in range(180):         # in half-degrees
-            print(' gLatHalfDeg =', gLatHalfDeg)
-            gLatHalfDegRad = gLatHalfDeg * piD360
-            theta0 = gLatHalfDegRad
-            # guessing that 50 iterations should calculate close enough
-            for i in range(50):
-                theta1 = theta0 - ((2 * theta0 + math.sin(2 * theta0) - pie * math.sin(gLatHalfDegRad)) / (2 + 2 * math.cos(2 * theta0)))
-                theta0 = theta1
-            theta[gLatHalfDeg] = theta1
-        # Printing all values of theta numpy without truncation
-        np.set_printoptions(threshold=np.inf)
-        print(' theta =', theta)
-        print(' theta.tolist() =', theta.tolist())
-        print()
-        print()
-        #exit()
-    # from a previous calculation:
-    thetaa = np.array([ \
-    0.,         0.00685388, 0.01370772, 0.02056146, 0.02741505, 0.03426845,
-    0.0411216,  0.04797447, 0.05482699, 0.06167913, 0.06853083, 0.07538204,
-    0.08223272, 0.08908281, 0.09593228, 0.10278106, 0.10962911, 0.11647638,
-    0.12332282, 0.13016839, 0.13701302, 0.14385668, 0.15069932, 0.15754088,
-    0.16438131, 0.17122057, 0.1780586,  0.18489536, 0.1917308,  0.19856485,
-    0.20539749, 0.21222864, 0.21905827, 0.22588632, 0.23271274, 0.23953748,
-    0.24636049, 0.25318172, 0.26000111, 0.26681862, 0.27363419, 0.28044776,
-    0.2872593,  0.29406874, 0.30087603, 0.30768112, 0.31448395, 0.32128448,
-    0.32808265, 0.3348784,  0.34167168, 0.34846243, 0.35525061, 0.36203616,
-    0.36881901, 0.37559912, 0.38237644, 0.38915089, 0.39592244, 0.40269101,
-    0.40945657, 0.41621904, 0.42297837, 0.4297345,  0.43648737, 0.44323694,
-    0.44998313, 0.45672589, 0.46346516, 0.47020087, 0.47693298, 0.48366141,
-    0.49038612, 0.49710703, 0.50382408, 0.51053722, 0.51724637, 0.52395149,
-    0.5306525,  0.53734934, 0.54404194, 0.55073025, 0.5574142,  0.56409372,
-    0.57076874, 0.5774392,  0.58410503, 0.59076617, 0.59742255, 0.60407409,
-    0.61072073, 0.61736241, 0.62399904, 0.63063057, 0.63725691, 0.643878,
-    0.65049377, 0.65710414, 0.66370903, 0.67030839, 0.67690212, 0.68349016,
-    0.69007242, 0.69664885, 0.70321934, 0.70978384, 0.71634225, 0.72289451,
-    0.72944053, 0.73598023, 0.74251353, 0.74904034, 0.75556059, 0.7620742,
-    0.76858107, 0.77508112, 0.78157427, 0.78806043, 0.79453951, 0.80101143,
-    0.80747609, 0.81393341, 0.8203833,  0.82682566, 0.8332604,  0.83968742,
-    0.84610665, 0.85251797, 0.85892129, 0.86531652, 0.87170355, 0.8780823,
-    0.88445265, 0.8908145,  0.89716777, 0.90351233, 0.90984809, 0.91617494,
-    0.92249278, 0.92880149, 0.93510098, 0.94139112, 0.94767181, 0.95394293,
-    0.96020438, 0.96645603, 0.97269777, 0.97892949, 0.98515106, 0.99136236,
-    0.99756328, 1.00375368, 1.00993346, 1.01610247, 1.0222606,  1.02840772,
-    1.03454368, 1.04066838, 1.04678166, 1.0528834,  1.05897346, 1.06505171,
-    1.07111799, 1.07717218, 1.08321413, 1.0892437,  1.09526073, 1.10126509,
-    1.10725662, 1.11323516, 1.11920058, 1.1251527,  1.13109138, 1.13701646,
-    1.14292777, 1.14882515, 1.15470843, 1.16057745, 1.16643205, 1.17227203])
-    print('          len(theta) =', len(theta))
-
-
-    #for i in range(10):
-    thetaa = np.array([ \
-    0.0, 0.006853912275624153, 0.013707946540459082, 0.020562224817078357, 
-    0.02741686919480558, 0.03427200186315056, 0.041127745145318854, 
-    0.04798422153181957, 0.054841553714195926, 0.06169986461890379, 
-    0.0685592774413632, 0.07541991568020849, 0.0822819031717625, 
-    0.08914536412476123, 0.09601042315535514, 0.10287720532241394, 
-    0.10974583616316233, 0.11661644172917424, 0.12348914862275402, 
-    0.13036408403373353, 0.1372413757767143, 0.14412115232878553, 
-    0.151003542867748, 0.1578886773108769, 0.16477668635425433, 
-    0.17166770151270638, 0.1785618551603787, 0.18545928057198527, 
-    0.1923601119647676, 0.19926448454120166, 0.2061725345324909, 
-    0.21308439924288622, 0.22000021709487305, 0.22692012767526948, 
-    0.23384427178227918, 0.24077279147354505, 0.2477058301152515, 
-    0.254643532432324, 0.26158604455977846, 0.268533514095272, 
-    0.2754860901529127, 0.28244392341838365, 0.2894071662054434, 
-    0.296375972513863, 0.3033504980888679, 0.31033090048214956, 
-    0.31731733911451904, 0.3243099753402776, 0.3313089725133796, 
-    0.3383144960554695, 0.3453267135258786, 0.3523457946936678, 
-    0.3593719116118105, 0.36640523869361274, 0.37344595279147075, 
-    0.38049423327807447, 0.3875502621301675, 0.3946142240149811, 
-    0.40168630637946634, 0.4087666995424523, 0.4158555967898679, 
-    0.42295319447317076, 0.4300596921111313, 0.4371752924951341, 
-    0.44430020179816104, 0.4514346296876337, 0.45857878944229946, 
-    0.46573289807335916, 0.4728971764500403, 0.48007184942983666, 
-    0.48725714599364384, 0.4944532993860347, 0.5016605472609321, 
-    0.5088791318329543, 0.5161093000347184, 0.5233513036804125, 
-    0.5306053996359568, 0.5378718499961024, 0.5451509222688309, 
-    0.5524428895674426, 0.5597480308107488, 0.5670666309318035, 
-    0.5743989810956448, 0.5817453789265389, 0.5891061287452599, 
-    0.5964815418169681, 0.6038719366102882, 0.6112776390682306, 
-    0.6186989828916443, 0.6261363098359297, 0.6335899700218035, 
-    0.6410603222609496, 0.6485477343974589, 0.656052583666025, 
-    0.6635752570679262, 0.6711161517659098, 0.6786756754991734, 
-    0.6862542470197258, 0.6938522965515145, 0.7014702662738063, 
-    0.7091086108304332, 0.7167677978666369, 0.7244483085953835, 
-    0.7321506383951821, 0.7398752974415973, 0.7476228113748329, 
-    0.7553937220059718, 0.7631885880646673, 0.7710079859913327, 
-    0.7788525107771445, 0.7867227768554655, 0.7946194190486303, 
-    0.8025430935743854, 0.8104944791166978, 0.8184742779660682, 
-    0.8264832172350017, 0.8345220501548269, 0.842591557460675, 
-    0.8506925488721198, 0.8588258646777399, 0.8669923774327402,
-    0.8751929937797164, 0.8834286564037566, 0.8917003461342815,
-    0.9000090842074192, 0.9083559347042746, 0.9167420071822188,
-    0.925168459518369, 0.933636500986684, 0.9421473955927707, 
-    0.950702465693459, 0.9593030959316736, 0.9679507375210818,
-    0.9766469129195569, 0.985393220935805, 0.9941913423196093, 
-    1.003043045893301, 1.0119501952903809, 1.0209147563769803,
-    1.0299388054433256, 1.0390245382658818, 1.0481742801568936, 
-    1.0573904971370778, 1.0666758083899959, 1.0760330001838712, 
-    1.085465041479542, 1.0949751014829874, 1.104566569449337, 
-    1.1142430771045095, 1.124008524123565, 1.1338671071951607, 
-    1.143823353314004, 1.1538821580843972, 1.1640488299963554,
-    1.1743291418631094, 1.184729390900613, 1.1952564693079535,
-    1.2059179477023645, 1.216722174416594, 1.2276783945406127, 
-    1.2387968937722817, 1.250089173762746, 1.2615681678963024, 
-    1.273248509628461, 1.2851468700815523, 1.2972823883004043, 
-    1.3096772276020658, 1.3223573068290368, 1.3353532795265681, 
-    1.348701873377573, 1.3624477683571503, 1.376646307961791, 
-    1.3913675510336299, 1.406702587141639, 1.4227739074823127, 
-    1.4397536096580594, 1.4578983102739458, 1.47762494325684, 
-    1.4997096963539354, 1.5260233727203716])
-    print('          len(theta) =', len(theta))
-
-    #plt.plot(theta)
-
-
-
-
-
+    # calculate all the thetas once
+    # The gLatHalfDeg values needed are 1 to 180 in halfDegrees.
+    # Pre-calculate the theta for each gLatHalfDeg value
+    theta = np.empty(181)
+    for gLatHalfDeg in range(181):         # in half-degrees
+        gLatHalfDegRad = gLatHalfDeg * piD360
+        theta0 = gLatHalfDegRad
+        # guessing that 50 iterations should calculate close enough
+        for i in range(50):
+            #theta1 = theta0 - ((2 * theta0 + math.sin(2 * theta0) - pie * math.sin(gLatHalfDegRad)) / (2 + 2 * math.cos(2 * theta0)))
+            theta1 = theta0 - ((2 * theta0 + math.sin(2 * theta0) - pie * math.sin(gLatHalfDegRad)) / (4 * math.cos(theta0) * math.cos(theta0)))
+            theta0 = theta1
+        theta[gLatHalfDeg] = theta1
+    # Printing all values of theta numpy without truncation
+    #np.set_printoptions(threshold=np.inf)
+    #print(' theta =', theta)
+    #print(' theta.tolist() =', theta.tolist())
+    #exit()
 
     # Warp that (xi, yi) rectangular grid according to the Mollweide projection.
-    ######################################### Accounting for 360 offset, reduce the bottom south half's xi by sin(yi), mirror for the top north half
-    globeRadius = 123
+    globeRadius = 127.3     # tuned to get about 0 <= xi <= 720 and 0 <= yi <= 360
     globeRadiusSqrt2 = globeRadius * math.sqrt(2.)
     globeRadiusSqrt2T2DPi = (globeRadiusSqrt2 + globeRadiusSqrt2) / pie
     globeRadiusSqrt2T2PiDPiD360 = globeRadiusSqrt2T2DPi * piD360
 
-    xiWarpedA = []
-    yiWarpedA = []
-
-    for gLatHalfDeg in range(180):         # in half-degrees
+    # calculate xiWarped and yiWarped for one quarter of earth.
+    # Then warp each quarter of earth's xi and yi.
+    for gLatHalfDeg in range(181):         # in half-degrees
         #yiWarped = (globeRadius * sqrt(2)) * math.sin(theta[gLatHalfDeg])
         yiWarped = globeRadiusSqrt2 * math.sin(theta[gLatHalfDeg])
         for gLonHalfDeg in range(361):     # in half-degrees
             #xiWarped = (R * sqrt(2)) * (2 / pi) * radOf(gLonHalfDeg - 0) * math.cos(theta[gLatHalfDeg])
             #xiWarped = globeRadiusSqrt2T2DPi * gLonHalfDeg * piD360 * math.cos(theta[gLatHalfDeg])
             xiWarped = globeRadiusSqrt2T2PiDPiD360 * gLonHalfDeg * math.cos(theta[gLatHalfDeg])
-            #print('          gLonHalfDeg =', gLonHalfDeg, '    gLatHalfDeg =', gLatHalfDeg, '          xiWarped =', xiWarped, '   yiWarped =', yiWarped)
 
-            xiWarpedA.append(xiWarped)
-            yiWarpedA.append(yiWarped)
+            # later, xlim mirrors left-right, leaving 0,0 at bottom right
 
+            #print(np.shape(xi))     # says (361, 721)
 
-            #xi[    gLatHalfDeg, gLonHalfDeg] = \
-            #    (xi[    gLatHalfDeg, gLonHalfDeg] - 360.) * gLatHalfDegSin + 360.
+            # after xlim, warp top left
+            xi[180+gLatHalfDeg, 360+gLonHalfDeg] = 360 + xiWarped
+            yi[180+gLatHalfDeg, 360+gLonHalfDeg] = 180 + yiWarped
 
-            #xi[360-gLatHalfDeg, gLonHalfDeg] = \
-            #    (xi[360-gLatHalfDeg, gLonHalfDeg] - 360.) * gLatHalfDegSin + 360.
+            # after xlim, warp top right
+            xi[180+gLatHalfDeg, 360-gLonHalfDeg] = 360 - xiWarped
+            yi[180+gLatHalfDeg, 360-gLonHalfDeg] = 180 + yiWarped
 
+            # after xlim, warp bottom left
+            xi[180-gLatHalfDeg, 360+gLonHalfDeg] = 360 + xiWarped
+            yi[180-gLatHalfDeg, 360+gLonHalfDeg] = 180 - yiWarped
 
+            # after xlim, warp bottom right
+            xi[180-gLatHalfDeg, 360-gLonHalfDeg] = 360 - xiWarped
+            yi[180-gLatHalfDeg,     gLonHalfDeg] = 180 - yiWarped
 
-
-
-
-            #xi[    gLatHalfDeg, gLonHalfDeg]     =       xiWarped   # top    left
-            xi[    gLatHalfDeg, gLonHalfDeg]     =       xiWarped + 360
-
-            #xi[360-gLatHalfDeg, gLonHalfDeg] = \
-            #    (xi[360-gLatHalfDeg, gLonHalfDeg] - 360.) * gLatHalfDegSin + 360.
-
-
-
-            #xi[360-gLatHalfDeg, gLonHalfDeg]     = 720 - xiWarped   # bottom left
-            #xi[    gLatHalfDeg, 720-gLonHalfDeg] =       xiWarped   # top    right
-            #xi[360-gLatHalfDeg, 720-gLonHalfDeg] = 720 - xiWarped   # bottom right
-
-            yi[    gLatHalfDeg, gLonHalfDeg]     =       yiWarped
-            #yi[360-gLatHalfDeg, gLonHalfDeg]     = 360 - yiWarped
-            #yi[    gLatHalfDeg, 720-gLonHalfDeg] =       yiWarped
-            #yi[360-gLatHalfDeg, 720-gLonHalfDeg] = 360 - yiWarped
-
-
-
-
-
-    #print(np.shape(zi))     # says (361, 721)
-    #plt.plot(radecRaHalfDeg, radecDecHalfDeg-180., 'black')
-
-
-
-    #print( 'xi =', xi)
-    #plt.plot((xi[0, 0], xi[0, 60], xi[60, 0], xi[60, 60]), (yi[0, 0], yi[0, 60], yi[60, 0], yi[60, 60]))
-    #plt.plot((xi[0, 0], xi[0, 60], xi[60, 0], xi[60, 60]), (yi[0, 0], yi[0, 60], yi[60, 0], yi[60, 60]))
-    #plt.plot(yiWarpedA)
-    #plt.plot(yi)
-
-
-    plt.contour(xi[:, :], yi[:, :], zi[:, :], 20, linewidths=0.2, colors='black')
-
-
-
-
-
-
-
-
-
-
+    #print(' xi.max() =', xi.max())
+    #print(' xi.min() =', xi.min())
+    #print(' yi.max() =', yi.max())
+    #print(' yi.min() =', yi.min())
 
     # plot contour lines and contour fills
-    #plt.contour(xi, yi, zi, 20, linewidths=0.2, colors='black')
-    #plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
+    plt.contour(xi, yi, zi, 20, linewidths=0.2, colors='black')
+    plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
 
+    zi = None     # free memory
+    del zi
 
-
-
-
-
-
-    # Draw thin black lines of true data paths.
-    # Likewise, after accounting for offsets,
-    #   reduce each galacticGLonHalfDeg[i] by math.cos(galacticGLatHalfDeg[i])
-    galacticGLonHalfDegMollweide = np.empty_like(galacticGLonHalfDeg)
-    for i in range(len(galacticGLonHalfDeg)):
-        galacticGLonHalfDegMollweide[i] = (galacticGLonHalfDeg[i] - 360.) \
-            * math.cos(math.radians(abs(galacticGLatHalfDeg[i] - 180.)) / 2.) + 360.
-    #ax.scatter(galacticGLonHalfDegMollweide, galacticGLatHalfDeg, marker='.', s=0.5,
-    #    color='black', linewidths=0)
-
-
-
-
-
-
-
-
-
+    # draw thin black lines of true data paths,
+    # warp each galacticGLatHalfDeg[i] and galacticGLonHalfDeg[i]
+    galacticGLatHalfDegMollweide = np.empty_like(galacticGLatHalfDeg)
+    galacticGLonHalfDegMollweide = np.empty_like(galacticGLatHalfDeg)
+    for i in range(len(galacticGLatHalfDeg)):
+        galacticGLonHalfDegMollweide[i] = xi[galacticGLatHalfDeg[i], galacticGLonHalfDeg[i]]
+        galacticGLatHalfDegMollweide[i] = yi[galacticGLatHalfDeg[i], galacticGLonHalfDeg[i]]
+    ax.scatter(galacticGLonHalfDegMollweide, galacticGLatHalfDegMollweide, marker='.', s=0.5,
+        color='black', linewidths=0)
 
     plt.title(titleS)
     ###plt.grid(ezSkyDispGrid)
 
     # 0 through 720 represents -180 through +180 degrees, in half-degrees
-    #plt.xlim(725, -5)        # in half-degrees, inverted x axis
-    #plt.xticks([ 720.,  660.,  600.,  540., 480., 420., 360., 300.,  240.,  180.,  120.,   60.,    0.],
-    #           [ '180', '150', '120', '90', '60', '30', '0',  '-30', '-60', '-90', '-120', '-150', '-180'])
+    plt.xlim(725, -5)        # in half-degrees, inverted x axis
+    plt.xticks([ 720.,  660.,  600.,  540., 480., 420., 360., 300.,  240.,  180.,  120.,   60.,    0.],
+               [ '180', '150', '120', '90', '60', '30', '0',  '-30', '-60', '-90', '-120', '-150', '-180'])
 
     plt.ylabel(f'{ezSkyInputS[2:]} Interpolated in Mollweide Galactic Coordinates')
     # 0 through 360 represents -90 through +90 degrees, in half-degrees
-    #plt.ylim(-5, 365)        # in half-degrees
-    #plt.yticks([0.,    30.,   60.,   90.,   120.,  150.,  180., 210., 240., 270., 300., 330., 360.],
-    #           ['-90', '-75', '-60', '-45', '-30', '-15', '0',  '15', '30', '45', '60', '75', '90'])
+    plt.ylim(-5, 365)        # in half-degrees
+    plt.yticks([0.,    30.,   60.,   90.,   120.,  150.,  180., 210., 240., 270., 300., 330., 360.],
+               ['-90', '-75', '-60', '-45', '-30', '-15', '0',  '15', '30', '45', '60', '75', '90'])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -2886,12 +2700,12 @@ def main():
     # if needed, creates radecCount, radecPower, radecRaHalfDeg, radecDecHalfDeg
     ezSkyGridRadec()
 
-    plotEzSky200RBVO()
-    plotEzSky201RBMax()
+    plotEzSky200RBVO()  # radio Sky Radec map with Background, power Vertical Offset
+    plotEzSky201RBMax() # radio Sky Radec map with Background, dots on left and right maximum power
 
-    plotEzSky300RB()
-    plotEzSky301RBT()
-    plotEzSky309RBTC()
+    plotEzSky300RB()    # radio Sky Radec map with Background, power color
+    plotEzSky301RBT()   # radio Sky Radec map with Background, power color Tall
+    plotEzSky309RBTC()  # radio Sky Radec map with Background, Count Tall
 
     plotEzSky400RI()
 
@@ -2906,9 +2720,9 @@ def main():
     # if needed, creates galacticPower, galacticGLatHalfDeg, galacticGLonHalfDeg
     ezSkyGridGalactic()
 
-    plotEzSky500GMI()
-    plotEzSky501GSI()
-    #########plotEzSky502GOI()
+    plotEzSky500GMI()   # radio Sky Galactic Mercator   projection map of Interpolated power
+    plotEzSky501GSI()   # radio Sky Galactic Sinusoidal projection map of Interpolated power
+    plotEzSky502GOI()   # radio Sky Galactic Mollweide  projection map of Interpolated power
 
     printGoodbye()
 
@@ -2916,5 +2730,4 @@ def main():
 
 if __name__== '__main__':
   main()
-
 
