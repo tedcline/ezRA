@@ -1,4 +1,4 @@
-programName = 'ezSky230318c.py'
+programName = 'ezSky230321a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
@@ -25,6 +25,12 @@ programRevision = programName
 # TTD:
 #       remove many global in main() ?????????
 
+# ezSky230321a.py, astropy only if needed, only last -ezSkyMaskOutL
+# ezSky230320b.py, reorder -ezSkyMaskOutL args
+# ezSky230320a.py, masks out and in
+# ezSky230319c.py, masks out and in
+# ezSky230319b.py, masks out and in
+# ezSky230319a.py, masks last in ezSky221004a, masks out and in
 # ezSky230318c.py, removed messy plotEzSky502GOI() notes
 # ezSky230318b.py, plotEzSky502GOI() with notes
 # ezSky230318a.py, plotEzSky502GOI()
@@ -135,16 +141,14 @@ def printUsage():
     print('    -ezSkyHalfTallDec    9         (almost half height of ezSky301RBPT_  plot traces',
         '(in halfDegrees))')
     print()
-    #print('    -ezSkyMaskFile       ezSkyMask-N-48bigDish.npy')
-    #print('         (radio sky mask input for ezSky404GIP_  and ezSky405GIPS_  plots, unseen sky as white)')
-    #print('    -ezSkyMaskDecDegN    -49.6     (observatory horizon = ezRAObsLat - 90.0)')
-    #print('         (north edge degrees to create radio sky mask.  Use',
-    #    'default silly low  -99 to disable creation)')
-    #print('    -ezSkyMaskDecDegS    -90.0     (below horizon south celestial pole = -90.0)')
-    #print('         (south edge degrees to create radio sky mask.  Use',
-    #    'default silly high  99 to disable creation)')
-    #print('    -ezSkyMaskWrite      1         (default = 0 = not write sky mask to file)')
-    #print()
+    print('    -ezSkyMaskIn         ezSkyMaskBigDish_-49.7_-90.npz')
+    print()
+    print('    -ezSkyMaskOutL       ezSkyMaskBigDish_-49.7_-90    -49.7    -90.0')
+    print('         (radio sky mask input for ezSky plots, unseen sky as white,)')
+    print('         (from declination -49.6 to -90 degrees to create radio sky mask.')
+    print('         (northern hemispere: south horizon declination = latitude - 90.)')
+    print('         (written to file "ezSkyMaskBigDish_-49.7_-90.npz".)')
+    print()
     print('    -ezSkyPlotRangeL     0  300    (save only this range of ezSky plots to file, to save time)')
     print()
     print('    -ezDefaultsFile ..\\bigDish.txt      (additional file of ezRA arguments)')
@@ -203,10 +207,8 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
     global ezSkyVOGain                      # float
     global ezSkyHalfTallDec                 # integer
 
-    global ezSkyMaskFile                    # string
-    global ezSkyMaskDecDegN                 # integer
-    global ezSkyMaskDecDegS                 # integer
-    global ezSkyMaskWrite                   # integer
+    global ezSkyMaskOutL                    # list of string and floats
+    global ezSkyMaskInL                     # list of strings
 
     global ezSkyPlotRangeL                  # integer list
 
@@ -257,22 +259,18 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
             elif fileLineSplit0Lower == '-ezSkyHalfTallDec'.lower():
                 ezSkyHalfTallDec = int(fileLineSplit[1])
 
-            elif fileLineSplit0Lower == '-ezSkyMaskFile'.lower():
-                ezSkyMaskFile = fileLineSplit[1]
-
-            elif fileLineSplit0Lower == '-ezSkyMaskDecDegN'.lower():
-                ezSkyMaskDecDegN = float(fileLineSplit[1])
-
-            elif fileLineSplit0Lower == '-ezSkyMaskDecDegS'.lower():
-                ezSkyMaskDecDegS = float(fileLineSplit[1])
-
-            elif fileLineSplit0Lower == '-ezSkyMaskWrite'.lower():
-                ezSkyMaskWrite = int(fileLineSplit[1])
-
             elif fileLineSplit0Lower == '-ezSkyPlotRangeL'.lower():
                 ezSkyPlotRangeL[0] = int(fileLineSplit[1])
                 ezSkyPlotRangeL[1] = int(fileLineSplit[2])
 
+            elif fileLineSplit0Lower == '-ezSkyMaskOutL'.lower():
+                ezSkyMaskOutL = []
+                ezSkyMaskOutL.append(fileLineSplit[1])
+                ezSkyMaskOutL.append(float(fileLineSplit[2]))
+                ezSkyMaskOutL.append(float(fileLineSplit[3]))
+
+            elif fileLineSplit0Lower == '-ezSkyMaskIn'.lower():
+                ezSkyMaskInL.append(fileLineSplit[1])
 
             elif 6 <= len(fileLineSplit0Lower) and fileLineSplit0Lower[:6] == '-ezSky'.lower():
                 print()
@@ -323,10 +321,8 @@ def ezSkyArgumentsCommandLine():
     global ezSkyVOGain                      # float
     global ezSkyHalfTallDec                 # integer
 
-    global ezSkyMaskFile                    # string
-    global ezSkyMaskDecDegN                 # integer
-    global ezSkyMaskDecDegS                 # integer
-    global ezSkyMaskWrite                   # integer
+    global ezSkyMaskOutL                    # list of string and floats
+    global ezSkyMaskInL                     # list of strings
 
     global ezSkyPlotRangeL                  # integer list
 
@@ -402,20 +398,6 @@ def ezSkyArgumentsCommandLine():
             elif cmdLineArgLower == 'ezSkyHalfTallDec'.lower():
                 ezSkyHalfTallDec = int(cmdLineSplit[cmdLineSplitIndex])
 
-
-            elif cmdLineArgLower == 'ezSkyMaskFile'.lower():
-                ezSkyMaskFile = cmdLineSplit[cmdLineSplitIndex]
-
-            elif cmdLineArgLower == 'ezSkyMaskDecDegN'.lower():
-                ezSkyMaskDecDegN = float(cmdLineSplit[cmdLineSplitIndex])
-
-            elif cmdLineArgLower == 'ezSkyMaskDecDegS'.lower():
-                ezSkyMaskDecDegS = float(cmdLineSplit[cmdLineSplitIndex])
-
-            elif cmdLineArgLower == 'ezSkyMaskWrite'.lower():
-                ezSkyMaskWrite = int(cmdLineSplit[cmdLineSplitIndex])
-
-
             elif cmdLineArgLower == 'ezSkyPlotRangeL'.lower():
                 ezSkyPlotRangeL[0] = int(cmdLineSplit[cmdLineSplitIndex])
                 cmdLineSplitIndex += 1
@@ -423,6 +405,17 @@ def ezSkyArgumentsCommandLine():
 
             elif cmdLineArgLower == 'ezDefaultsFile'.lower():
                 ezSkyArgumentsFile(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezSkyMaskOutL'.lower():
+                ezSkyMaskOutL = []
+                ezSkyMaskOutL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezSkyMaskOutL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezSkyMaskOutL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == 'ezSkyMaskIn'.lower():
+                ezSkyMaskInL.append(cmdLineSplit[cmdLineSplitIndex])
 
 
             # ignore silly -eX* arguments, for handy neutralization of command line arguments,
@@ -471,10 +464,8 @@ def ezSkyArguments():
     global ezSkyPlotRangeL                  # integer list
     global plotCountdown                    # integer
 
-    global ezSkyMaskFile                    # string
-    global ezSkyMaskDecDegN                 # integer
-    global ezSkyMaskDecDegS                 # integer
-    global ezSkyMaskWrite                   # integer
+    global ezSkyMaskOutL                    # list of string and floats
+    global ezSkyMaskInL                     # list of strings
 
     global ezSkyBackground1                 # string
     global ezSkyBackground1XMax             # integer
@@ -492,17 +483,8 @@ def ezSkyArguments():
     # (ezSkyHalfTallDec + 1 + ezSkyHalfTallDec) = thickness of tall plot trace (last drawn wins)
     ezSkyHalfTallDec = 3
 
-    #ezSkyMaskFile = 'ezSkyMask-S419.npy'   # south edge =  41.9 degees Dec
-    #ezSkyMaskFile = 'ezSkyMask-N-311.npy'  # north edge = -31.1 degees Dec
-    #ezSkyMaskFile = 'ezSkyMask-S419N-311N0RQV.npy' # Sto41.9,Nto-31.1 Dec = N0RQV
-    ezSkyMaskFile = ''
-    # northern hemispere: south horizon declination = latitude - 90
-    # N0RQV = south horizon declination = latitude - 90 = 40.4 - 90 = -49.6
-    # ezSkyMaskDecDegN =  sdrQthLat - 90.0
-    # ezSkyMaskDecDegN = -49.6
-    ezSkyMaskDecDegN = -99      # north edge of mask, -99 = silly low  value, to disable modifying mask
-    ezSkyMaskDecDegS =  99      # south edge of mask,  99 = silly high value, to disable modifying mask
-    ezSkyMaskWrite = 0          # default = 0: not write mask to file
+    ezSkyMaskOutL = []
+    ezSkyMaskInL  = []
 
     ezSkyPlotRangeL = [0, 9999]             # save this range of plots to file
 
@@ -545,10 +527,22 @@ def ezSkyArguments():
     print('   ezSkyDispGrid    =', ezSkyDispGrid)
     print('   ezSkyPlotRangeL  =', ezSkyPlotRangeL)
     print()
-    print('   ezSkyMaskFile    =', ezSkyMaskFile)
-    print('   ezSkyMaskDecDegN =', ezSkyMaskDecDegN)
-    print('   ezSkyMaskDecDegS =', ezSkyMaskDecDegS)
-    print('   ezSkyMaskWrite   =', ezSkyMaskWrite)
+    print('   ezSkyMaskInL     =', ezSkyMaskInL)
+    print('   ezSkyMaskOutL    =', ezSkyMaskOutL)
+
+    # sanity tests
+    if ezSkyMaskOutL and ezSkyMaskOutL[1] <= ezSkyMaskOutL[2]:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print(' ========== FATAL ERROR:  ezSkyMaskOutL: ', ezSkyMaskOutL[1], 'is <=', ezSkyMaskOutL[2])
+        print()
+        print()
+        print()
+        print()
+        exit()
 
 
 
@@ -1896,6 +1890,16 @@ def plotEzSky400RI():
         print()
         print()
         print()
+
+        radecPower = None           # free memory
+        del radecPower
+
+        radecRaHalfDeg = None       # free memory
+        del radecRaHalfDeg
+
+        radecDecHalfDeg = None      # free memory
+        del radecDecHalfDeg
+
         return(2)
 
     if radecDecHalfDegMin == radecDecHalfDegMax:
@@ -1917,6 +1921,16 @@ def plotEzSky400RI():
         print()
         print()
         print()
+
+        radecPower = None           # free memory
+        del radecPower
+
+        radecRaHalfDeg = None       # free memory
+        del radecRaHalfDeg
+
+        radecDecHalfDeg = None      # free memory
+        del radecDecHalfDeg
+
         return(3)
 
     xi = np.arange(0.,  721., 1.)         # in   0 to 360 degrees in half-degrees
@@ -1926,16 +1940,6 @@ def plotEzSky400RI():
     zi = griddata((radecRaHalfDeg, radecDecHalfDeg-180.), radecPower, (xi, yi), method='linear')
 
     ###zi = gaussian_filter(zi, 9.)
-
-    maskPlotDecHalfDegN = ezSkyMaskDecDegN + ezSkyMaskDecDegN + 180
-    maskPlotDecHalfDegS = ezSkyMaskDecDegS + ezSkyMaskDecDegS + 180
-
-    maskRadec = (maskPlotDecHalfDegS <= yi) & (yi <= maskPlotDecHalfDegN)    # True gets np.nan later
-
-    zi[maskRadec] = np.nan              # True gets np.nan
-
-    maskRadec = None        # free memory
-    del maskRadec
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -1967,7 +1971,7 @@ def plotEzSky400RI():
 
 
 def ezSkyGridGalactic():
-    # If needed, creates galacticPower, galacticGLatHalfDeg, galacticGLonHalfDeg
+    # If needed, creates galacticPower, galacticGLatHalfDeg, galacticGLonHalfDeg, maskGalactic
 
     global gLatDeg                  # float 1d array
     global gLonDeg                  # float 1d array
@@ -1977,8 +1981,15 @@ def ezSkyGridGalactic():
     global galacticGLatHalfDeg      # integer 1d array                          creation
     global galacticGLonHalfDeg      # integer 1d array                          creation
 
+    global ezSkyMaskOutL            # list of string and floats
+    global ezSkyMaskInL             # list of strings
+
+    global maskGalactic             # integer 2d array
+
+    global ezSkyPlotRangeL          # integer list
+
     # if galactic grid not needed, then return
-    if ezSkyPlotRangeL[1] < 400 or 502 < ezSkyPlotRangeL[0]:
+    if ezSkyPlotRangeL[1] < 500 or 502 < ezSkyPlotRangeL[0]:
         return(1)
 
     print()
@@ -2040,8 +2051,82 @@ def ezSkyGridGalactic():
 
     print(f'                         len(galacticPower) = {len(galacticPower):,}')
 
-    #galacticGLatHalfDeg = np.clip(galacticGLatHalfDeg, -180, 180)   # easy insurance
-    #galacticGLonHalfDeg = np.clip(galacticGLonHalfDeg, -360, 359)   # easy insurance
+
+    #print(np.shape(zi))     # says (361, 721)
+    maskGalactic = np.zeros([361, 721], dtype = int)
+
+    # if maskGalactic not needed, then return
+    if not ezSkyMaskInL and not ezSkyMaskOutL:
+        return(1)
+
+    # N0RQV Lat = 40.4
+    # 40.4 + 3 = 43.4
+    # ezSkyMaskN0RQV_90_43.4.npz
+    # 40.4 - 90 = -49.6
+    # ezSkyMaskN0RQV_-49.6_-90.npz
+
+    # decDegMax = 43.5
+    # 43.5 + 3 = 46.5
+    # ezSkyMaskLto_90_46.5.npz
+    # LTO Lat = 40.3
+    # 40.3 - 90 = -49.7
+    # ezSkyMaskLto_-49.7_-90.npz
+
+    # read in maskGalactic masks
+    for ezSkyMaskInName in ezSkyMaskInL:
+        print()
+        print(' Loading maskGalactic from', ezSkyMaskInName, 'file ...')
+        #print(maskGalactic.files)
+        maskGalactic += np.load(ezSkyMaskInName)['maskGalactic']
+
+    if ezSkyMaskOutL:
+        from astropy import units as u
+        #from astropy.time import Time
+        #from astropy.coordinates import EarthLocation
+        from astropy.coordinates import SkyCoord
+
+        maskGalThis = np.zeros([361, 721], dtype = int)
+        ezSkyMaskOutName = ezSkyMaskOutL[0]
+
+        maskPlotDecDegN = ezSkyMaskOutL[1]                  # north border
+        maskPlotDecHalfDegN = min(maskPlotDecDegN,  90.0)   # trim silly values
+        maskPlotDecHalfDegN += maskPlotDecHalfDegN + 180    # halfDegrees
+
+        maskPlotDecDegS = ezSkyMaskOutL[2]                  # south border
+        maskPlotDecHalfDegS = max(maskPlotDecDegS, -90.0)   # trim silly values
+        maskPlotDecHalfDegS += maskPlotDecHalfDegS + 180    # halfDegrees
+
+        print()
+        print(' Modifying Galactic plot mask into', ezSkyMaskOutName+'.npz file ...')
+
+        for maskPlotGalLonHDeg in range(360 + 1 + 360):  # starting at right side of plot
+            print('\r    maskPlotGalLonHDeg =', maskPlotGalLonHDeg, '    of 720       ', end='')
+            # maskGalLonDegUnits: -180.0 to 0.0 to +180.0   with degree units
+            maskGalLonDegUnits = ((maskPlotGalLonHDeg - 360) / 2.)*u.deg
+            for maskPlotGalLatHDeg in range(361):   # 361 = 180 + 1 + 180, starting at bottom of plot
+                cTarget = SkyCoord( \
+                    b = ((maskPlotGalLatHDeg - 180) / 2.)*u.deg, \
+                    l = maskGalLonDegUnits, \
+                    frame = 'galactic')
+                cTargetDecDeg = float(cTarget.icrs.dec.degree)
+
+                if maskPlotDecDegS <= cTargetDecDeg and cTargetDecDeg <= maskPlotDecDegN:
+                    maskGalThis[maskPlotGalLatHDeg, maskPlotGalLonHDeg] = 1    # True gets np.nan later
+
+        maskGalactic += maskGalThis
+
+        #maskGalThis = None         # free memory
+        #del maskGalThis
+
+        # write maskGalactic to .npz file
+        print()
+        print(' Saving maskGalactic to', ezSkyMaskOutName+'.npz file ...')
+        #print(' maskGalactic before=', maskGalactic)
+        #print('     maskGalactic.sum() =', maskGalactic.sum())
+        #print('     (maskGalactic == 0).sum() =', (maskGalactic == 0).sum())
+        #print('     np.shape(maskGalactic) =', np.shape(maskGalactic))
+        maskGalactic = maskGalactic != 0         # make file compress to smaller ?
+        np.savez_compressed(ezSkyMaskOutName, maskGalactic=maskGalactic)
 
 
 
@@ -2051,6 +2136,8 @@ def plotEzSky500GMI():
     global galacticPower            # float   1d array
     global galacticGLatHalfDeg      # integer 1d array
     global galacticGLonHalfDeg      # integer 1d array
+
+    global maskGalactic             # integer 2d array
 
     global ezSkyInputS              # string
 
@@ -2133,18 +2220,10 @@ def plotEzSky500GMI():
 
     zi = gaussian_filter(zi, 9.)
 
-    zi[np.isnan(zi)] = galacticPower.min()
+    # a mask needs to be boolean
+    zi[maskGalactic != 0] = np.nan              # True gets np.nan
 
-    #maskPlotDecHalfDegN = ezSkyMaskDecDegN + ezSkyMaskDecDegN + 180
-    #maskPlotDecHalfDegS = ezSkyMaskDecDegS + ezSkyMaskDecDegS + 180
-
-    #maskRadec = (maskPlotDecHalfDegS <= yi) & (yi <= maskPlotDecHalfDegN)    # True gets np.nan later
-
-    ######maskGalactic = np.zeros((180 + 1 + 180, 360 + 1 + 360), dtype=bool)   # True gets np.nan later
-    ######zi[maskGalactic] = np.nan              # True gets np.nan
-
-    ######maskGalactic = None     # free memory
-    ######del maskGalactic
+    #zi[np.isnan(zi)] = galacticPower.min()
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -2184,6 +2263,8 @@ def plotEzSky501GSI():
     global galacticPower            # float   1d array
     global galacticGLatHalfDeg      # integer 1d array
     global galacticGLonHalfDeg      # integer 1d array
+
+    global maskGalactic             # integer 2d array
 
     global ezSkyInputS              # string
 
@@ -2267,18 +2348,10 @@ def plotEzSky501GSI():
 
     zi = gaussian_filter(zi, 9.)
 
-    zi[np.isnan(zi)] = galacticPower.min()
+    # a mask needs to be boolean
+    zi[maskGalactic != 0] = np.nan              # True gets np.nan
 
-    #maskPlotDecHalfDegN = ezSkyMaskDecDegN + ezSkyMaskDecDegN + 180
-    #maskPlotDecHalfDegS = ezSkyMaskDecDegS + ezSkyMaskDecDegS + 180
-
-    #maskRadec = (maskPlotDecHalfDegS <= yi) & (yi <= maskPlotDecHalfDegN)    # True gets np.nan later
-
-    ######maskGalactic = np.zeros((180 + 1 + 180, 360 + 1 + 360), dtype=bool)   # True gets np.nan later
-    ######zi[maskGalactic] = np.nan              # True gets np.nan
-
-    ######maskGalactic = None     # free memory
-    ######del maskGalactic
+    #zi[np.isnan(zi)] = galacticPower.min()
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -2336,6 +2409,8 @@ def plotEzSky502GOI():
     global galacticPower            # float   1d array
     global galacticGLatHalfDeg      # integer 1d array
     global galacticGLonHalfDeg      # integer 1d array
+
+    global maskGalactic             # integer 2d array
 
     global ezSkyInputS              # string
 
@@ -2398,18 +2473,10 @@ def plotEzSky502GOI():
 
     zi = gaussian_filter(zi, 9.)
 
-    zi[np.isnan(zi)] = galacticPower.min()
+    # a mask needs to be boolean
+    zi[maskGalactic != 0] = np.nan              # True gets np.nan
 
-    #maskPlotDecHalfDegN = ezSkyMaskDecDegN + ezSkyMaskDecDegN + 180
-    #maskPlotDecHalfDegS = ezSkyMaskDecDegS + ezSkyMaskDecDegS + 180
-
-    #maskRadec = (maskPlotDecHalfDegS <= yi) & (yi <= maskPlotDecHalfDegN)    # True gets np.nan later
-
-    ######maskGalactic = np.zeros((180 + 1 + 180, 360 + 1 + 360), dtype=bool)   # True gets np.nan later
-    ######zi[maskGalactic] = np.nan              # True gets np.nan
-
-    ######maskGalactic = None     # free memory
-    ######del maskGalactic
+    #zi[np.isnan(zi)] = galacticPower.min()
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
