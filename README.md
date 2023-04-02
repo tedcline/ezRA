@@ -20,7 +20,7 @@ ezRA documentation has many images.
 Rather than duplicate those image bytes here in an online README.md file,
 please see these introductory PDFs from the ezRA directory:
 
-* "Sales Brochure" showing what ezRA can do:<br>
+* "System Tour" showing what ezRA can do:<br>
 [ezRA_01_Tour.pdf](https://github.com/tedcline/ezRA/blob/master/ezRA/ezRA_01_Tour.pdf)<br>
 
 * Quick overview of programs and documentation:<br>
@@ -118,6 +118,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Mar-21-2023
+Apr-1-2023
 
 ---
