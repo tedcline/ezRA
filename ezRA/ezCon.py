@@ -1,4 +1,4 @@
-programName = 'ezCon230316c.py'
+programName = 'ezCon230401a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
@@ -25,9 +25,12 @@ programRevision = programName
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
 
+# ezCon230401a.py, from AntXTV changed to AntXTVT into velGLonP180[,],
+#   added antXTVTName=antXNameL[1]+'TVT' to *Gal.npz file
+# ezCon230323a.py, more ezCon082antXTV formula comments
 # ezCon230316c.py, different gst() to fix ezConAstroMath=1 right ascension, fixed -eX
 # ezCon230316b.py, ezConAstroMath=1 right ascension
-# ezCon230316a.py, ezCon082antXTV comments, -eX
+# ezCon230316a.py, ezCon082antXTV formula comments, -eX
 # ezCon230314a.py, more AntX choices and improved names and separate filenames,
 #   ezConAntXTFreqBinsFracL and ezConAntXTVTFreqBinsFracL defaults
 # ezCon230313c.py, ezConAstroMath=1 right ascension
@@ -4036,7 +4039,7 @@ def writeFileGal():
     # write velocity data arrays to file
 
     global antXNameL                # list of strings
-    global antXTV                   # float 2d array
+    global antXTVT                  # float 2d array
     global antLen                   # integer
     global velGLonP180              # float 2d array     creation
     global velGLonP180Count         # integer array      creation
@@ -4069,10 +4072,11 @@ def writeFileGal():
         if abs(gLatDegThis) <= ezConGalCrossingGLat:
             gLonP180 = int(ezConOut[n, 4]) + 180            # gLonP180 is RtoL from 0 thru 360
 
-            # sum the current antXTV spectrum to the grid column, and increment the column count
+            # sum the current antXTVT spectrum to the grid column, and increment the column count
             # but reverse the freqBin elements,
             #   because highest freqBin = highest freq = approaching fastest = most negative "velocity"
-            velGLonP180[:, gLonP180] += antXTV[:, n][::-1]
+            #velGLonP180[:, gLonP180] += antXTV[:, n][::-1]
+            velGLonP180[:, gLonP180] += antXTVT[:, n][::-1]
             velGLonP180Count[gLonP180] += 1
 
             # For each declination, several gLat may be 'close enough' to count as a crossing.
@@ -4100,11 +4104,16 @@ def writeFileGal():
         #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-8] + 'GalC.npz'   # ezGal combines .npz
         #np.savez_compressed(fileGalWriteName, velGLonP180=velGLonP180, velGLonP180Count=velGLonP180Count)
         print('   ezRAObsName = ', ezRAObsName)
-        np.savez_compressed(fileGalWriteName, fileObsName=np.array(ezRAObsName),
-            fileFreqMin=np.array(fileFreqMin), fileFreqMax=np.array(fileFreqMax),
+        np.savez_compressed(fileGalWriteName,
+            fileObsName=np.array(ezRAObsName),
+            fileFreqMin=np.array(fileFreqMin), 
+            fileFreqMax=np.array(fileFreqMax),
             fileFreqBinQty=np.array(fileFreqBinQty),
-            velGLonP180=velGLonP180, velGLonP180Count=velGLonP180Count,
-            galDecP90GLonP180Count=galDecP90GLonP180Count)
+            velGLonP180=velGLonP180,
+            velGLonP180Count=velGLonP180Count,
+            galDecP90GLonP180Count=galDecP90GLonP180Count,
+            antXTVTName=antXNameL[1]+'TVT')
+        # antXTVTName was added to file definition later on 230401
 
         #npzfile = np.load(directory + os.path.sep + fileReadName)
         #ezRAObsName = npzfile['ezRAObsName'] 
@@ -4958,11 +4967,33 @@ def plotEzCon082antXTV():
     freqBinVlsrOnes = np.ones(int(fileFreqBinQty / 2))
 
     # speed of light = 299,792,458 meters per second
+    # https://minerva.union.edu/marrj/radioastro/Instructions_MWrotationcurve.html
+    # (fem - fobs) / fobs = Vrec / c
+    # fem is the frequency that the radiation was emitted at, which is 1420.4 MHz, and fobs is the frequency that you observed [min freq value of possible H]
+    # This velocity is, now, the Vmax along that line of sight,
+    # -OK, but why the "/ fobs" here, vs the "/ fRest" below ?
+    # ezCon chooses the astropy formula below
+
     # https://docs.astropy.org/en/stable/api/astropy.units.equivalencies.doppler_radio.html
+    # V = c * (fRest - f) / fRest
+    #                     V          = c * (fRest - f        ) / fRest
+    #                     V / c      =     (fRest - f        ) / fRest
+    #                     V / c      =     (1     - f / fRest) / 1
+    #                     V / c      =      1     - f / fRest
+    #                     V / c  - 1 =            - f / fRest
+    #                 1 - V / c      =              f / fRest
+    #        fRest * (1 - V / c)     =              f
+    # f    = fRest * (1 - V / c)
+    # f(V) = fRest * (1 - V / c)
     # f(VLSR) = fRest * (1 - VLSR / 299,792.458 km per second)
-    # f(VLSR) = fRest - fRest * VLSR / 299,792.458 km per second
-    # f(VLSR) = fRest -VLSR * (fRest / 299,792.458 km per second)
-    # f(VLSR) = fRest -VLSR * freqCenterDivC
+    # f(VLSR) = fRest * (1     -           VLSR          / 299,792.458 km per second)
+    # f(VLSR) =          fRest - fRest *   VLSR          / 299,792.458 km per second
+    # f(VLSR) =          fRest -           VLSR *  fRest / 299,792.458 km per second
+    # f(VLSR) =          fRest -           VLSR * (fRest / 299,792.458 km per second)
+    # f(VLSR) =          fRest -           VLSR * freqCenterDivC
+    # f(VLSR) =          fRest +         (-VLSR * freqCenterDivC)
+    # f(VLSR) = fRest + (-VLSR * freqCenterDivC)
+    # f(VLSR) = fRest + freqVlsrThis
     # below, ezCon shifts each fRest spectrum by (-VLSR * freqCenterDivC)
     # below, ezCon shifts each fRest spectrum by (freqVlsrThis)
 
@@ -4979,20 +5010,23 @@ def plotEzCon082antXTV():
         if 0. <= freqVlsrThis:
             freqBinVlsrThis = int((freqVlsrThis / freqStep) + 0.5)      # round to closest number of freqBins
             if freqBinVlsrThis == 0:
-                antXTVThis = 0. + antXT[:, n]
+                # shift antXT[:, n] spectrum by 0 freqBin
+                antXTVThis = antXT[:, n] + 0.
             else:
+                # shift antXT[:, n] spectrum by -freqBinVlsrThis freqBin
                 antXTVThis = np.concatenate([ antXT[freqBinVlsrThis:, n], 
                     freqBinVlsrOnes[:freqBinVlsrThis] ])
         else:
             freqBinVlsrThis = int((freqVlsrThis / freqStep) - 0.5)      # round to closest number of freqBins
             if freqBinVlsrThis == 0:
-                antXTVThis = 0. + antXT[:, n]
+                # shift antXT[:, n] spectrum by 0 freqBin
+                antXTVThis = antXT[:, n] + 0.
             else:
+                # shift antXT[:, n] spectrum by +freqBinVlsrThis freqBin
                 antXTVThis = np.concatenate([ freqBinVlsrOnes[:-freqBinVlsrThis],
                     antXT[:freqBinVlsrThis, n] ])
 
         antXTV[:, n] = antXTVThis
-
 
     plotCountdown -= 1
 

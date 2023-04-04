@@ -1,4 +1,4 @@
-programName = 'ezPlot230316a.py'
+programName = 'ezPlot230326a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezPlot data Plotter program,
@@ -25,6 +25,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezPlot230326a.py, ezPlot700 - ezPlot790: avg vs calendar days
 # ezPlot230316a.py, -eX
 # ezPlot230305a.py, boilerplate from ezSky
 # ezPlot221123a.py, fixed ezPlot000timeUtcMjdSorted
@@ -402,7 +403,7 @@ def ezPlotArguments():
 
     ezPlotPlotRangeL = [0, 9999]        # save this range of plots to file
 
-    plotCountdown = 70                  # number of plots still to print
+    plotCountdown = 80                  # number of plots still to print
 
     # Program argument priority:
     #    Start with the argument value defaults inside the programs.
@@ -685,6 +686,7 @@ def plotPrep():
     global titleS                   # string                creation
 
     global ezPlotInIdxByMjdRel      # eventually float array
+    global calendar366Days          # eventually float array
     global colorPenSL               # list of strings       creation
 
     print()
@@ -697,6 +699,7 @@ def plotPrep():
         + '          (' + programName + ')'
 
     ezPlotInIdxByMjdRel = []        # empty list to trigger filling if needed
+    calendar366Days     = []        # empty list to trigger filling if needed
 
     colorPenSL = ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'grey', 'white']
 
@@ -842,7 +845,7 @@ def plotEzPlot000timeUtcMjdSorted():
     global ezPlotPlotRangeL                     # integer list
     global ezPlotIn                             # float 2d array
     global antLen                               # integer
-    global ezPlotInIdxByMjdRel                  # float array
+    global ezPlotInIdxByMjdRel                  # eventually float array
 
     if 0 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 0:
         plotCountdown -= 1
@@ -1720,7 +1723,7 @@ def plotEzPlot1dSamplesRa(plotName, ezPlotInColumn, plotYLabel):
     global antLenM1                             # integer
 
     global ezPlotIn                             # float 2d array
-    global ezPlotInIdxByMjdRel                  # float array
+    global ezPlotInIdxByMjdRel                  # eventually float array
     global colorPenSL                           # list of strings
 
     plt.clf()
@@ -1974,7 +1977,7 @@ def plotEzPlot1dSamplesUtc(plotName, ezPlotInColumn, plotYLabel):
     global antLenM1                             # integer
 
     global ezPlotIn                             # float 2d array
-    global ezPlotInIdxByMjdRel                  # float array
+    global ezPlotInIdxByMjdRel                  # eventually float array
     global colorPenSL                           # list of strings
 
     plt.clf()
@@ -2234,7 +2237,8 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
     global antLenM1                             # integer
 
     global ezPlotIn                             # float 2d array
-    global ezPlotInIdxByMjdRel                  # float array
+    global ezPlotInIdxByMjdRel                  # eventually float array
+
     global colorPenSL                           # list of strings
 
     plt.clf()
@@ -2266,7 +2270,7 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
             # just stepped forward into a new sidereal day, plot the last sidereal day
             print(f'\r         plotting {lastStartIndex:,}          ,       {index - 1:,}')
 
-            # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % SiderealOfUtc) * 24.0
+            # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % siderealOfUtc) * 24.0
             # y list = ezPlotInColumn
             plt.plot([((ezPlotIn[ezPlotInIdxByMjdRel[i], 0] \
                 - timeUtcMjdLastStart0) % siderealOfUtc) *  24.0 \
@@ -2283,7 +2287,7 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
             timeUtcMjdLastStart += siderealOfUtc
 
     # out of loop, plot the last sidereal day
-    # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % SiderealOfUtc) * 24.0
+    # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % siderealOfUtc) * 24.0
     # y list = ezPlotInColumn
     print(f'\r         plotting {lastStartIndex:,}          ,       {antLenM1:,}')
     plt.plot([((ezPlotIn[ezPlotInIdxByMjdRel[i], 0] \
@@ -2296,7 +2300,7 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
     plt.title(titleS)
     plt.grid(ezPlotDispGrid)
 
-    plt.xlabel(f'Hours of Sidereal day  ({antLen:,} Samples)')
+    plt.xlabel(f'Hours of Sidereal Day  ({antLen:,} Samples)')
     plt.xlim(0.0, 24.0)
     plt.xticks([0.0, 6.0, 12.0, 18.0, 23.93], ['0', '6', '12', '18', '23.93'])
 
@@ -3060,6 +3064,300 @@ def writeFileStudy():
 
 #A#################################################################################################
 
+def plotEzPlot1dSamplesCal(plotName, ezPlotInColumn, plotYLabel):
+
+    # plotName                                  # string
+    # ezPlotInColumn                            # integer
+    # plotYLabel                                # string
+
+    global titleS                               # string
+    global ezPlotDispGrid                       # integer
+    global antLen                               # integer
+    global antLenM1                             # integer
+
+    global ezPlotIn                             # float 2d array
+    global ezPlotInIdxByMjdRel                  # eventually float array
+    global calendar366Days                      # eventually float array
+    global colorPenSL                           # list of strings
+
+    plt.clf()
+
+    # ezPlotIn[n:] indices sorted by MJD
+    if not len(ezPlotInIdxByMjdRel):
+        ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
+        #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
+
+    # Calendar Day math
+    if not len(calendar366Days):
+        # calculate mjdMarch1950_2050L for many years
+        mjdMarchLast = 32976.               # MJD of Mar-1-1949
+        mjdMarch1950_2050L = []
+        for year in range(1950, 2051):
+            if year % 4:                    # if leap year (2000 = leap year)
+                mjdMarchLast += 366.
+            else:                           # not leap year
+                mjdMarchLast += 365.
+            mjdMarch1950_2050L.append(mjdMarchLast)
+        #print(' mjdMarch1950_2050L =', mjdMarch1950_2050L)
+
+        # calculate calendar366Days from each sample's mjd
+        print()
+        calendar366Days = np.empty(antLen)
+        for index in range(antLen):
+            mjdThis = ezPlotIn[ezPlotInIdxByMjdRel[index], 0]
+
+            # mjdMarchDays = first mjd >= mjdMarch1950_2050L
+            for mjdMarch1950_2050LThis in reversed(mjdMarch1950_2050L):
+                if mjdMarch1950_2050LThis <= mjdThis:
+                    mjdMarchDays = mjdThis - mjdMarch1950_2050LThis
+                    break
+            #print(' mjdMarchDays =', mjdMarchDays)
+            # calendar366Days = (mjdMarchDays + 29. + 31.) % 366.   # as if Feb-29 leap year
+            print(f'\r         sample {index:,}   of  {antLenM1:,}     ',
+                'calendar366Day =', (mjdMarchDays + 60.) % 366., '              ', end='')
+            calendar366Days[ezPlotInIdxByMjdRel[index]] = (mjdMarchDays + 60.) % 366.
+        mjdMarch1950_2050L = []
+        print()
+        print('         calendar366Days.max() =', calendar366Days.max())    # just below 366.
+        print('         calendar366Days.min() =', calendar366Days.min())    # just above 0.
+        print()
+
+    # To avoid retrace lines caused by new Calendar Year, plot each Calendar Year separately.
+    # Just keep records until stepping forward into new Calendar Year.
+    lastStartIndex = 0
+    calendar366DaysLast = calendar366Days[ezPlotInIdxByMjdRel[0]]
+    penIndex = 1                         # new pen color (1 through 7) for each plotted day
+    for index in range(1, antLen):   # start loop with index == 1
+
+        calendar366DaysThis = calendar366Days[ezPlotInIdxByMjdRel[index]]
+
+        if calendar366DaysThis < calendar366DaysLast:      # new Calendar Year ?
+            # just stepped forward into a new Calendar Year, plot the last Calendar Year
+            print(f'\r         plotting {lastStartIndex:,}          ,       {index - 1:,}')
+
+            # x list = calendar366Days
+            # y list = ezPlotInColumn
+            plt.plot([ calendar366Days[ezPlotInIdxByMjdRel[i]] \
+                for i in range(lastStartIndex, index - 1) ],  \
+                [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]  \
+                for i in range(lastStartIndex, index - 1) ],  \
+                c=colorPenSL[penIndex] )                                # using pens 1-7
+
+            lastStartIndex = index
+            penIndex += 1
+            if penIndex > 7:        # using only pens 1-7
+                penIndex = 1
+
+        calendar366DaysLast = calendar366DaysThis
+
+    # out of loop, plot the last Calendar Year
+    # x list = calendar366Days
+    # y list = ezPlotInColumn
+    print(f'\r         plotting {lastStartIndex:,}          ,       {antLenM1:,}')
+    plt.plot([ calendar366Days[ezPlotInIdxByMjdRel[i]] \
+        for i in range(lastStartIndex, antLen) ], \
+        [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]  \
+        for i in range(lastStartIndex, antLen) ], \
+        c=colorPenSL[penIndex] )
+
+    plt.title(titleS)
+    plt.grid(ezPlotDispGrid)
+
+    plt.xlabel(f'Calendar Year (Months) ({antLen:,} Samples)')
+    plt.xlim(0., 366.)
+    plt.xticks([0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335],
+        ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+
+    plt.ylabel(plotYLabel)
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+
+
+
+def plotEzPlot700calAnt():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 700 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 700:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot700calAnt.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 10, 'Ant Spectrum Average by Calendar Day')
+
+
+
+def plotEzPlot710calAntMax():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 710 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 710:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot710calAntMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 11, 'AntMax Spectrum Average by Calendar Day')
+
+
+
+def plotEzPlot720calRef():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 720 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 720:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot720calRef.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 12, 'Ref Spectrum Average by Calendar Day')
+
+
+
+def plotEzPlot730calRefMax():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 730 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 730:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot730calRefMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 13, 'RefMax Spectrum Average by Calendar Day')
+
+
+
+def plotEzPlot740calAntB():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 740 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 740:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot740calAntB.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 14, 'AntB Spectrum Average by Calendar Day')
+
+
+
+def plotEzPlot750calAntBMax():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 750 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 750:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot750calAntBMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 15, 'AntBMax Spectrum Average by Calendar Day')
+
+
+
+def plotEzPlot760calAntRB():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 760 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 760:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot760calAntRB.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 16, 'AntRB Spectrum Average by Calendar Day')
+
+
+
+def plotEzPlot770calAntRBMax():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 770 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 770:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot770calAntRBMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 17, 'AntRBMax Spectrum Average by Calendar Day')
+
+
+
+def plotEzPlot780calAntXTVT():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 780 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 780:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot780calAntXTVT.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 18, 'AntXTVT Spectrum Average by Calendar Day')
+
+
+
+def plotEzPlot790calAntXTVTMax():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 790 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 790:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot790calAntXTVTMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesCal(plotName, 19, 'AntXTVTMax Spectrum Average by Calendar Day')
+
+
+
+#A#################################################################################################
+
 
 
 def main():
@@ -3089,7 +3387,6 @@ def main():
     global xLabelSAnt               # string
 
     global ezPlotPlotRangeL         # integer list
-
 
     startTime = time.time()
     xTickLocsAnt = []               # force new xTickLocsAnt
@@ -3311,6 +3608,25 @@ def main():
 
     plotEzPlot680histAntXTVT()
     plotEzPlot690histAntXTVTMax()
+
+
+
+    # plot ezPlots with X-axis: calendar days
+
+    plotEzPlot700calAnt()
+    plotEzPlot710calAntMax()
+
+    plotEzPlot720calRef()
+    plotEzPlot730calRefMax()
+
+    plotEzPlot740calAntB()
+    plotEzPlot750calAntBMax()
+
+    plotEzPlot760calAntRB()
+    plotEzPlot770calAntRBMax()
+
+    plotEzPlot780calAntXTVT()
+    plotEzPlot790calAntXTVTMax()
 
 
 
