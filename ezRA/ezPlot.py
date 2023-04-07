@@ -1,4 +1,4 @@
-programName = 'ezPlot230326a.py'
+programName = 'ezPlot230406b.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezPlot data Plotter program,
@@ -25,6 +25,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezPlot230406b.py, -eX
 # ezPlot230326a.py, ezPlot700 - ezPlot790: avg vs calendar days
 # ezPlot230316a.py, -eX
 # ezPlot230305a.py, boilerplate from ezSky
@@ -339,15 +340,13 @@ def ezPlotArgumentsCommandLine():
             #   but remove spaces before argument numbers
             #   (can not use '-x' which is a preface to a negative hexadecimal number)
             elif 3 <= len(cmdLineArgLower) and cmdLineArgLower[:3] == '-ex':
-                cmdLineSplitIndex -= 1
-                #pass
+                pass
 
             # before -eX, old spelling:
             # ignore silly -ezez* arguments, for handy neutralization of command line arguments,
             #   but remove spaces before argument numbers
             elif 5 <= len(cmdLineArgLower) and cmdLineArgLower[:5] == '-ezez':
-                cmdLineSplitIndex -= 1
-                #pass
+                pass
 
             else:
                 print()

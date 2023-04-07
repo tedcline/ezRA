@@ -1,4 +1,4 @@
-programName = 'ezCol230316a.py'
+programName = 'ezCol230406a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCol Data COLlector program,
@@ -29,6 +29,7 @@ programRevision = programName
 # 221202, works on Win7Pro 'Python 3.8.10'
 # 221130, works on Ubuntu22 'Python 3.10.6'
 
+# ezCol230406a.py, -eX
 # ezCol230316a.py, help screen edits, -eX
 # ezCol230315a.py, no ezColDashboard needed centerFreqRefHz, major ezColUsbRelay improvements
 # ezCol230305a.py, boilerplate from ezSky
@@ -565,15 +566,13 @@ def ezColArgumentsCommandLine():
             #   but remove spaces before argument numbers
             #   (can not use '-x' which is a preface to a negative hexadecimal number)
             elif 3 <= len(cmdLineArgLower) and cmdLineArgLower[:3] == '-ex':
-                cmdLineSplitIndex -= 1
-                #pass
+                pass
 
             # before -eX, old spelling:
             # ignore silly -ezez* arguments, for handy neutralization of command line arguments,
             #   but remove spaces before argument numbers
             elif 5 <= len(cmdLineArgLower) and cmdLineArgLower[:5] == '-ezez':
-                cmdLineSplitIndex -= 1
-                #pass
+                pass
 
             else:
                 print()

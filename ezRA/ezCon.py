@@ -1,4 +1,4 @@
-programName = 'ezCon230401a.py'
+programName = 'ezCon230406a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
@@ -25,6 +25,7 @@ programRevision = programName
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
 
+# ezCon230406a.py, -eX
 # ezCon230401a.py, from AntXTV changed to AntXTVT into velGLonP180[,],
 #   added antXTVTName=antXNameL[1]+'TVT' to *Gal.npz file
 # ezCon230323a.py, more ezCon082antXTV formula comments
@@ -744,15 +745,13 @@ def ezConArgumentsCommandLine():
             #   but remove spaces before argument numbers
             #   (can not use '-x' which is a preface to a negative hexadecimal number)
             elif 3 <= len(cmdLineArgLower) and cmdLineArgLower[:3] == '-ex':
-                cmdLineSplitIndex -= 1
-                #pass
+                pass
 
             # before -eX, old spelling:
             # ignore silly -ezez* arguments, for handy neutralization of command line arguments,
             #   but remove spaces before argument numbers
             elif 5 <= len(cmdLineArgLower) and cmdLineArgLower[:5] == '-ezez':
-                cmdLineSplitIndex -= 1
-                #pass
+                pass
 
             elif cmdLineArgLower[:6] == '-ezCon'.lower():
                 print()
