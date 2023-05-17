@@ -1,4 +1,4 @@
-programName = 'ezSky230321a.py'
+programName = 'ezSky230413a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
@@ -25,6 +25,14 @@ programRevision = programName
 # TTD:
 #       remove many global in main() ?????????
 
+# ezSky230413a.py, yLim of ezSky031gLatDegSorted and ezSky032gLatDegSortedCross
+#   ezSky032gLatDegSortedCross still has a xTick bug if is the first plotted
+# ezSky230412a.py, added plotEzSky031gLatDegSorted(),
+#   corrected plotEzSky042gLonDegSortedCross() to plotEzSky032gLatDegSortedCross()
+# ezSky230408c.py, plotEzSky042gLonDegSortedCross()
+# ezSky230408b.py, maskGalactic, plotEzSkyMollweide(502), plotEzSkyMollweide(512),
+#   ezSkyGalCrossingGLat, ezSkyVOGain, plotCountdown
+# ezSky230408a.py, plotEzSky041gLonDegSorted()
 # ezSky230321a.py, astropy only if needed, only last -ezSkyMaskOutL
 # ezSky230320b.py, reorder -ezSkyMaskOutL args
 # ezSky230320a.py, masks out and in
@@ -149,6 +157,9 @@ def printUsage():
     print('         (northern hemispere: south horizon declination = latitude - 90.)')
     print('         (written to file "ezSkyMaskBigDish_-49.7_-90.npz".)')
     print()
+    print('    -ezSkyGalCrossingGLat   5.0')
+    print('         (defines "close to Galactic plane crossing" in Galactic Latitude degrees)')
+    print()
     print('    -ezSkyPlotRangeL     0  300    (save only this range of ezSky plots to file, to save time)')
     print()
     print('    -ezDefaultsFile ..\\bigDish.txt      (additional file of ezRA arguments)')
@@ -206,6 +217,7 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
     global ezSkyInput                       # integer
     global ezSkyVOGain                      # float
     global ezSkyHalfTallDec                 # integer
+    global ezSkyGalCrossingGLat             # float
 
     global ezSkyMaskOutL                    # list of string and floats
     global ezSkyMaskInL                     # list of strings
@@ -254,7 +266,10 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
                 ezSkyInput = int(fileLineSplit[1])
 
             elif fileLineSplit0Lower == '-ezSkyVOGain'.lower():
-                ezSkyVOGain = int(fileLineSplit[1])
+                ezSkyVOGain = float(fileLineSplit[1])
+
+            elif fileLineSplit0Lower == '-ezSkyGalCrossingGLat'.lower():
+                ezSkyGalCrossingGLat = float(fileLineSplit[1])
 
             elif fileLineSplit0Lower == '-ezSkyHalfTallDec'.lower():
                 ezSkyHalfTallDec = int(fileLineSplit[1])
@@ -320,6 +335,7 @@ def ezSkyArgumentsCommandLine():
     global ezSkyInput                       # integer
     global ezSkyVOGain                      # float
     global ezSkyHalfTallDec                 # integer
+    global ezSkyGalCrossingGLat             # float
 
     global ezSkyMaskOutL                    # list of string and floats
     global ezSkyMaskInL                     # list of strings
@@ -393,7 +409,10 @@ def ezSkyArgumentsCommandLine():
                 ezSkyInput = int(cmdLineSplit[cmdLineSplitIndex])
 
             elif cmdLineArgLower == 'ezSkyVOGain'.lower():
-                ezSkyVOGain = int(cmdLineSplit[cmdLineSplitIndex])
+                ezSkyVOGain = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezSkyGalCrossingGLat'.lower():
+                ezSkyGalCrossingGLat = float(cmdLineSplit[cmdLineSplitIndex])
 
             elif cmdLineArgLower == 'ezSkyHalfTallDec'.lower():
                 ezSkyHalfTallDec = int(cmdLineSplit[cmdLineSplitIndex])
@@ -463,6 +482,7 @@ def ezSkyArguments():
     global ezSkyHalfTallDec                 # integer
     global ezSkyPlotRangeL                  # integer list
     global plotCountdown                    # integer
+    global ezSkyGalCrossingGLat             # float
 
     global ezSkyMaskOutL                    # list of string and floats
     global ezSkyMaskInL                     # list of strings
@@ -479,7 +499,8 @@ def ezSkyArguments():
     ezSkyDispGrid = 0
 
     ezSkyVOGain = 50.
-
+    ezSkyGalCrossingGLat = 10.
+    
     # (ezSkyHalfTallDec + 1 + ezSkyHalfTallDec) = thickness of tall plot trace (last drawn wins)
     ezSkyHalfTallDec = 3
 
@@ -488,7 +509,7 @@ def ezSkyArguments():
 
     ezSkyPlotRangeL = [0, 9999]             # save this range of plots to file
 
-    plotCountdown = 17                      # number of plots still to print
+    plotCountdown = 22                      # number of plots still to print + 1
 
     # process arguments from ezDefaults.txt file in the same directory as this ezCon program
     ezSkyArgumentsFile(os.path.dirname(__file__) + os.path.sep + 'ezDefaults.txt')
@@ -523,6 +544,7 @@ def ezSkyArguments():
     print()
     print('   ezSkyInput  =', ezSkyInput)
     print('   ezSkyVOGain =', ezSkyVOGain)
+    print('   ezSkyGalCrossingGLat =', ezSkyGalCrossingGLat)
     print('   ezSkyHalfTallDec =', ezSkyHalfTallDec)
     print('   ezSkyDispGrid    =', ezSkyDispGrid)
     print('   ezSkyPlotRangeL  =', ezSkyPlotRangeL)
@@ -823,12 +845,18 @@ def plotEzSky1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColor
 
     plt.clf()
 
-    plt.plot(plotData1d, plotColorS)
+    if plotXLabel:
+        # sorted data
+        plt.scatter(range(antLen), plotData1d, s=0.001, c=plotColorS)
+        plt.xlabel(plotXLabel)
+    else:
+        # unsorted data
+        plt.plot(plotData1d, plotColorS)
+        plt.xlabel(f'Sample Number (last={antLenM1:,})')
 
     plt.title(titleS)
     plt.grid(ezSkyDispGrid)
 
-    plt.xlabel(f'Sample Number (last={antLenM1:,})')
     if not len(xTickLocsAnt):
         xTickLocsAnt, xTickLabelsAnt = plt.xticks()
         # may remove silly values, and shorten lists, so best to process indices in decreasing order
@@ -862,15 +890,15 @@ def plotEzSky010raH():
     global plotCountdown                    # integer
     global fileNameLast                     # string
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 10 or 10 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky010raH.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         raHMax =', raH.max())
     print('                         raHAvg =', np.mean(raH))
@@ -889,15 +917,15 @@ def plotEzSky020decDeg():
     global plotCountdown                    # integer
     global fileNameLast                     # string
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 20 or 20 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky020decDeg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         decDegMax =', decDeg.max())
     print('                         decDegAvg =', np.mean(decDeg))
@@ -916,15 +944,15 @@ def plotEzSky030gLatDeg():
     global plotCountdown                    # integer
     global fileNameLast                     # string
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 30 or 30 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky030gLatDeg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         gLatDegMax =', gLatDeg.max())
     print('                         gLatDegAvg =', np.mean(gLatDeg))
@@ -932,6 +960,70 @@ def plotEzSky030gLatDeg():
 
     plotEzSky1dSamplesAnt(plotName, gLatDeg, '', [-90., 90.], 'green',
         'Galactic Latitude (degrees)')
+
+
+
+def plotEzSky031gLatDegSorted():
+
+    global gLatDeg                          # float 1d array
+
+    global ezSkyPlotRangeL                  # integer list
+    global plotCountdown                    # integer
+    global fileNameLast                     # string
+    global antLen                           # integer
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 31 or 31 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky031gLatDegSorted.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    print('                         gLatDegMax =', gLatDeg.max())
+    print('                         gLatDegAvg =', np.mean(gLatDeg))
+    print('                         gLatDegMin =', gLatDeg.min())
+
+    #plotEzSky1dSamplesAnt(plotName, gLonDeg, '', [-180., 180.], 'green',
+    #    'Galactic Longitude (degrees)')
+    plotEzSky1dSamplesAnt(plotName, np.sort(gLatDeg), f'{antLen:,} Samples Sorted by Value', [-90., 90.], 'green',
+        'Sorted Galactic Latitude (degrees)')
+
+
+
+def plotEzSky032gLatDegSortedCross():
+
+    global gLatDeg                          # float 1d array
+
+    global ezSkyPlotRangeL                  # integer list
+    global plotCountdown                    # integer
+    global fileNameLast                     # string
+    global antLen                           # integer
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 32 or 32 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky032gLatDegSortedCross.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    print('                         gLatDegMax =', gLatDeg.max())
+    print('                         gLatDegAvg =', np.mean(gLatDeg))
+    print('                         gLatDegMin =', gLatDeg.min())
+
+    # set non-Galactic-Crossings to np.nan, so will not plot
+    plotData1d = np.sort(gLatDeg)
+    plotData1d[plotData1d < -ezSkyGalCrossingGLat] = np.nan
+    plotData1d[ezSkyGalCrossingGLat < plotData1d] = np.nan
+
+    # causes xTick bug if no xTickLocsAnt yet =============================
+    plotEzSky1dSamplesAnt(plotName, plotData1d, f'{np.count_nonzero(~np.isnan(plotData1d)):,} Galactic Crossing Samples Sorted by Value', [-90., 90.], 'green',
+        'Sorted Galactic Latitude (degrees)')
 
 
 
@@ -943,15 +1035,15 @@ def plotEzSky040gLonDeg():
     global plotCountdown                    # integer
     global fileNameLast                     # string
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 40 or 40 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky040gLonDeg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         gLonDegMax =', gLonDeg.max())
     print('                         gLonDegAvg =', np.mean(gLonDeg))
@@ -959,6 +1051,36 @@ def plotEzSky040gLonDeg():
 
     plotEzSky1dSamplesAnt(plotName, gLonDeg, '', [-180., 180.], 'green',
         'Galactic Longitude (degrees)')
+
+
+
+def plotEzSky041gLonDegSorted():
+
+    global gLonDeg                          # float 1d array
+
+    global ezSkyPlotRangeL                  # integer list
+    global plotCountdown                    # integer
+    global fileNameLast                     # string
+    global antLen                           # integer
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 41 or 41 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky041gLonDegSorted.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    print('                         gLonDegMax =', gLonDeg.max())
+    print('                         gLonDegAvg =', np.mean(gLonDeg))
+    print('                         gLonDegMin =', gLonDeg.min())
+
+    #plotEzSky1dSamplesAnt(plotName, gLonDeg, '', [-180., 180.], 'green',
+    #    'Galactic Longitude (degrees)')
+    plotEzSky1dSamplesAnt(plotName, np.sort(gLonDeg), f'{antLen:,} Samples Sorted by Value', [-180., 180.], 'green',
+        'Sorted Galactic Longitude (degrees)')
 
 
 
@@ -970,15 +1092,15 @@ def plotEzSky070azDeg():
     global plotCountdown                    # integer
     global fileNameLast                     # string
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 70 or 70 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky070azDeg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         azDegMax =', azDeg.max())
     print('                         azDegAvg =', np.mean(azDeg))
@@ -997,15 +1119,15 @@ def plotEzSky080elDeg():
     global plotCountdown                    # integer
     global fileNameLast                     # string
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 80 or 80 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky080elDeg.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print('                         elDegMax =', elDeg.max())
     print('                         elDegAvg =', np.mean(elDeg))
@@ -1025,15 +1147,15 @@ def plotEzSky100input():
     global plotCountdown                    # integer
     global fileNameLast                     # string
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 100 or 100 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky100input_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
 
     print(f'                         {ezSkyInputS[2:]}Max = {power.max()}')
     print(f'                         {ezSkyInputS[2:]}Avg = {np.mean(power)}')
@@ -1061,7 +1183,6 @@ def ezSkyGridRadec():
 
     # if Radec grid not needed, then return
     if ezSkyPlotRangeL[1] < 200 or 399 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     print()
@@ -1145,15 +1266,15 @@ def plotEzSky200RBVO():
     global ezSkyBackground1XMax     # integer
     global ezSkyBackground1YMax     # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 200 or 200 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky200RBVO_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     fig = plt.figure()
@@ -1266,15 +1387,15 @@ def plotEzSky201RBMax():
     global ezSkyBackground1XMax     # integer
     global ezSkyBackground1YMax     # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 201 or 201 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky201RBMax_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     fig = plt.figure()
@@ -1545,15 +1666,15 @@ def plotEzSky300RB():
     global ezSkyBackground1XMax     # integer
     global ezSkyBackground1YMax     # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 300 or 300 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky300RB_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     fig = plt.figure()
@@ -1627,15 +1748,15 @@ def plotEzSky301RBT():
     global ezSkyBackground1XMax     # integer
     global ezSkyBackground1YMax     # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 301 or 301 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky301RBT_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     fig = plt.figure()
@@ -1740,15 +1861,15 @@ def plotEzSky309RBTC():
     global ezSkyBackground1XMax     # integer
     global ezSkyBackground1YMax     # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 309 or 309 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky309RBTC.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     fig = plt.figure()
@@ -1849,15 +1970,15 @@ def plotEzSky400RI():
     global titleS                   # string
     #global ezSkyDispGrid           # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 400 or 400 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky400RI_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     radecRaHalfDegMin = radecRaHalfDeg.min()
@@ -2052,12 +2173,13 @@ def ezSkyGridGalactic():
     print(f'                         len(galacticPower) = {len(galacticPower):,}')
 
 
-    #print(np.shape(zi))     # says (361, 721)
-    maskGalactic = np.zeros([361, 721], dtype = int)
-
     # if maskGalactic not needed, then return
     if not ezSkyMaskInL and not ezSkyMaskOutL:
+        maskGalactic = []       # flag maskGalactic as not available
         return(1)
+
+    #print(np.shape(zi))     # says (361, 721)
+    maskGalactic = np.zeros([361, 721], dtype = int)
 
     # N0RQV Lat = 40.4
     # 40.4 + 3 = 43.4
@@ -2138,6 +2260,7 @@ def plotEzSky500GMI():
     global galacticGLonHalfDeg      # integer 1d array
 
     global maskGalactic             # integer 2d array
+    #global ezSkyGalCrossingGLat     # float
 
     global ezSkyInputS              # string
 
@@ -2147,15 +2270,15 @@ def plotEzSky500GMI():
     global titleS                   # string
     #global ezSkyDispGrid           # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 500 or 500 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky500GMI_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     galacticGLatHalfDegMin = galacticGLatHalfDeg.min()
@@ -2177,7 +2300,7 @@ def plotEzSky500GMI():
         print()
         print()
         print('============= WARNING: Can not create the ' + plotName + ' plot.')
-        print('              All this data has only one Right Ascension value.')
+        print('              All this data has only one Galactic Latitude value.')
         print()
         print('              galacticGLatHalfDegMin == galacticGLatHalfDegMax')
         print()
@@ -2198,7 +2321,7 @@ def plotEzSky500GMI():
         print()
         print()
         print('============= WARNING: Can not create the ' + plotName + ' plot.')
-        print('              All this data has only one Declination value.')
+        print('              All this data has only one Galactic Longitude  value.')
         print()
         print('              galacticGLonHalfDegMin == galacticGLonHalfDegMax')
         print()
@@ -2220,8 +2343,9 @@ def plotEzSky500GMI():
 
     zi = gaussian_filter(zi, 9.)
 
-    # a mask needs to be boolean
-    zi[maskGalactic != 0] = np.nan              # True gets np.nan
+    if len(maskGalactic):                           # if maskGalactic available
+        # a mask needs to be boolean
+        zi[maskGalactic != 0] = np.nan              # True gets np.nan
 
     #zi[np.isnan(zi)] = galacticPower.min()
 
@@ -2265,6 +2389,7 @@ def plotEzSky501GSI():
     global galacticGLonHalfDeg      # integer 1d array
 
     global maskGalactic             # integer 2d array
+    #global ezSkyGalCrossingGLat     # float
 
     global ezSkyInputS              # string
 
@@ -2274,15 +2399,15 @@ def plotEzSky501GSI():
     global titleS                   # string
     #global ezSkyDispGrid           # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 501 or 501 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky501GSI_' + ezSkyInputS + '.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     galacticGLatHalfDegMin = galacticGLatHalfDeg.min()
@@ -2304,7 +2429,7 @@ def plotEzSky501GSI():
         print()
         print()
         print('============= WARNING: Can not create the ' + plotName + ' plot.')
-        print('              All this data has only one Right Ascension value.')
+        print('              All this data has only one Galactic Latitude value.')
         print()
         print('              galacticGLatHalfDegMin == galacticGLatHalfDegMax')
         print()
@@ -2325,7 +2450,7 @@ def plotEzSky501GSI():
         print()
         print()
         print('============= WARNING: Can not create the ' + plotName + ' plot.')
-        print('              All this data has only one Declination value.')
+        print('              All this data has only one Galactic Longitude value.')
         print()
         print('              galacticGLonHalfDegMin == galacticGLonHalfDegMax')
         print()
@@ -2348,8 +2473,9 @@ def plotEzSky501GSI():
 
     zi = gaussian_filter(zi, 9.)
 
-    # a mask needs to be boolean
-    zi[maskGalactic != 0] = np.nan              # True gets np.nan
+    if len(maskGalactic):                           # if maskGalactic available
+        # a mask needs to be boolean
+        zi[maskGalactic != 0] = np.nan              # True gets np.nan
 
     #zi[np.isnan(zi)] = galacticPower.min()
 
@@ -2401,18 +2527,24 @@ def plotEzSky501GSI():
 
 
 
-def plotEzSky502GOI():
+def plotEzSkyMollweide(plotNumber):
+    # plotNumber    integer         # 502 or 512
+    
+    #def plotEzSky502GOI():
     # radio Sky Galactic Mollweide projection map of Interpolated power.
     # "M" already used, so "GOI" using second letter "O" from "Mollweide".
     # https://en.wikipedia.org/wiki/Mollweide_projection
+
+    #def plotEzSky512GOID():
+    # radio Sky Galactic Mollweide projection map of Data points
 
     global galacticPower            # float   1d array
     global galacticGLatHalfDeg      # integer 1d array
     global galacticGLonHalfDeg      # integer 1d array
 
-    global maskGalactic             # integer 2d array
-
     global ezSkyInputS              # string
+    global maskGalactic             # integer 2d array
+    global ezSkyGalCrossingGLat     # float
 
     global ezSkyPlotRangeL          # integer list
     global plotCountdown            # integer
@@ -2420,15 +2552,22 @@ def plotEzSky502GOI():
     global titleS                   # string
     #global ezSkyDispGrid           # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
-    if ezSkyPlotRangeL[1] < 502 or 502 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
+    if ezSkyPlotRangeL[1] < plotNumber or plotNumber < ezSkyPlotRangeL[0]:
         return(1)
 
-    plotName = 'ezSky502GOI_' + ezSkyInputS + '.png'
+    if plotNumber == 502:
+        plotName = 'ezSky502GOI_' + ezSkyInputS + '.png'
+    elif plotNumber == 512:
+        plotName = 'ezSky512GOID.png'
+    else:
+        # not supported
+        return(2)
+
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     galacticGLatHalfDegMin = galacticGLatHalfDeg.min()
@@ -2441,7 +2580,7 @@ def plotEzSky502GOI():
     galacticGLonHalfDegMax = galacticGLonHalfDeg.max()
     print('                         galacticGLonHalfDegMax =', galacticGLonHalfDegMax)
 
-    if galacticGLatHalfDegMin == galacticGLatHalfDegMax:
+    if plotNumber == 502 and galacticGLatHalfDegMin == galacticGLatHalfDegMax:
         print()
         print()
         print()
@@ -2450,7 +2589,7 @@ def plotEzSky502GOI():
         print()
         print()
         print('============= WARNING: Can not create the ' + plotName + ' plot.')
-        print('              All this data has only one Right Ascension value.')
+        print('              All this data has only one Galactic Latitude value.')
         print()
         print('              galacticGLatHalfDegMin == galacticGLatHalfDegMax')
         print()
@@ -2462,21 +2601,31 @@ def plotEzSky502GOI():
         print()
         return(2)
 
+    if plotNumber == 502 and galacticGLonHalfDegMin == galacticGLonHalfDegMax:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print('============= WARNING: Can not create the ' + plotName + ' plot.')
+        print('              All this data has only one Galactic Longitude value.')
+        print()
+        print('              galacticGLonHalfDegMin == galacticGLonHalfDegMax')
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        return(3)
+
     # create a (xi, yi) meshgrid rectangular grid
     xi = np.arange(0., 720.5, 1.)       # represents -180 through +180 degrees, in half-degrees
     yi = np.arange(0., 360.5, 1.)       # represents  -90 through  +90 degrees, in half-degrees
     xi, yi = np.meshgrid(xi, yi)
-
-    # interpolate galacticPower values onto (xi, yi) meshgrid
-    zi = griddata((galacticGLonHalfDeg, galacticGLatHalfDeg), galacticPower, (xi, yi), method='nearest')
-    #print(np.shape(zi))     # says (361, 721)
-
-    zi = gaussian_filter(zi, 9.)
-
-    # a mask needs to be boolean
-    zi[maskGalactic != 0] = np.nan              # True gets np.nan
-
-    #zi[np.isnan(zi)] = galacticPower.min()
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -2556,22 +2705,74 @@ def plotEzSky502GOI():
     #print(' yi.max() =', yi.max())
     #print(' yi.min() =', yi.min())
 
-    # plot contour lines and contour fills
-    plt.contour(xi, yi, zi, 20, linewidths=0.2, colors='black')
-    plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
+    if plotNumber == 502:
+        # interpolate galacticPower values onto (xi, yi) meshgrid
+        zi = griddata((galacticGLonHalfDeg, galacticGLatHalfDeg), galacticPower, (xi, yi), method='nearest')
+        #print(np.shape(zi))     # says (361, 721)
 
-    zi = None     # free memory
-    del zi
+        zi = gaussian_filter(zi, 9.)
 
-    # draw thin black lines of true data paths,
-    # warp each galacticGLatHalfDeg[i] and galacticGLonHalfDeg[i]
-    galacticGLatHalfDegMollweide = np.empty_like(galacticGLatHalfDeg)
-    galacticGLonHalfDegMollweide = np.empty_like(galacticGLatHalfDeg)
-    for i in range(len(galacticGLatHalfDeg)):
-        galacticGLonHalfDegMollweide[i] = xi[galacticGLatHalfDeg[i], galacticGLonHalfDeg[i]]
-        galacticGLatHalfDegMollweide[i] = yi[galacticGLatHalfDeg[i], galacticGLonHalfDeg[i]]
-    ax.scatter(galacticGLonHalfDegMollweide, galacticGLatHalfDegMollweide, marker='.', s=0.5,
-        color='black', linewidths=0)
+        if len(maskGalactic):                           # if maskGalactic available
+            # a mask needs to be boolean
+            zi[maskGalactic != 0] = np.nan              # True gets np.nan
+
+        #zi[np.isnan(zi)] = galacticPower.min()
+
+        if 0:
+            # border
+            ziMin = zi.min()
+            #print(np.shape(zi))     # says (361, 721)
+            zi[:,   0] = ziMin
+            zi[:, 720] = ziMin
+
+        # plot contour lines and contour fills
+        plt.contour(xi, yi, zi, 20, linewidths=0.2, colors='black')
+        plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
+
+        zi = None     # free memory
+        del zi
+
+        if 1:
+            # draw thin black lines of true data paths,
+            # warp each galacticGLatHalfDeg[i] and galacticGLonHalfDeg[i]
+            galacticGLatHalfDegMollweide = np.empty_like(galacticGLatHalfDeg)
+            galacticGLonHalfDegMollweide = np.empty_like(galacticGLatHalfDeg)
+            for i in range(len(galacticGLatHalfDeg)):
+                galacticGLonHalfDegMollweide[i] = xi[galacticGLatHalfDeg[i], galacticGLonHalfDeg[i]]
+                galacticGLatHalfDegMollweide[i] = yi[galacticGLatHalfDeg[i], galacticGLonHalfDeg[i]]
+            ax.scatter(galacticGLonHalfDegMollweide, galacticGLatHalfDegMollweide, marker='.', s=0.5,
+                color='black', linewidths=0)
+            galacticGLatHalfDegMollweide = None     # free memory
+            del galacticGLatHalfDegMollweide
+            galacticGLonHalfDegMollweide = None     # free memory
+            del galacticGLonHalfDegMollweide
+
+        ylabelText = f'{ezSkyInputS[2:]} Interpolated in Mollweide Galactic Coordinates'
+    else:
+        # plotNumber is 512
+        # draw red dots of true data paths, if defined as a Galactic Crossing.
+        # warp each galacticGLatHalfDeg[i] and galacticGLonHalfDeg[i]
+        #print(' galacticGLatHalfDeg =', galacticGLatHalfDeg)
+        ezSkyGalCrossingGLatHalfDegMax = int(180 + ezSkyGalCrossingGLat + ezSkyGalCrossingGLat)     # convert to halfDegrees
+        ezSkyGalCrossingGLatHalfDegMin = int(180 - ezSkyGalCrossingGLat - ezSkyGalCrossingGLat)     # convert to halfDegrees
+        galacticGLatHalfDegMollweideL = []
+        galacticGLonHalfDegMollweideL = []
+        for i in range(len(galacticGLatHalfDeg)):
+            # if defined as a Galactic Crossing
+            if ezSkyGalCrossingGLatHalfDegMin <= galacticGLatHalfDeg[i] and galacticGLatHalfDeg[i] <= ezSkyGalCrossingGLatHalfDegMax:
+                galacticGLonHalfDegMollweideL.append(xi[galacticGLatHalfDeg[i], galacticGLonHalfDeg[i]])
+                galacticGLatHalfDegMollweideL.append(yi[galacticGLatHalfDeg[i], galacticGLonHalfDeg[i]])
+        ax.scatter(galacticGLonHalfDegMollweideL, galacticGLatHalfDegMollweideL, marker='.', s=10,
+            color='red', linewidths=0)
+        galacticGLatHalfDegMollweideL = []      # free memory
+        galacticGLonHalfDegMollweideL = []      # free memory
+
+        # border
+        #print(np.shape(xi))     # says (361, 721)
+        ax.plot(xi[:,   0], yi[:,   0], linewidth=0.5, color='black')
+        ax.plot(xi[:, 720], yi[:, 720], linewidth=0.5, color='black')
+
+        ylabelText = f'{ezSkyInputS[2:]} Galactic Crossings, ezSkyGalCrossingGLat = {ezSkyGalCrossingGLat}'
 
     plt.title(titleS)
     ###plt.grid(ezSkyDispGrid)
@@ -2581,7 +2782,8 @@ def plotEzSky502GOI():
     plt.xticks([ 720.,  660.,  600.,  540., 480., 420., 360., 300.,  240.,  180.,  120.,   60.,    0.],
                [ '180', '150', '120', '90', '60', '30', '0',  '-30', '-60', '-90', '-120', '-150', '-180'])
 
-    plt.ylabel(f'{ezSkyInputS[2:]} Interpolated in Mollweide Galactic Coordinates')
+    #plt.ylabel(f'{ezSkyInputS[2:]} Interpolated in Mollweide Galactic Coordinates')
+    plt.ylabel(ylabelText)
     # 0 through 360 represents -90 through +90 degrees, in half-degrees
     plt.ylim(-5, 365)        # in half-degrees
     plt.yticks([0.,    30.,   60.,   90.,   120.,  150.,  180., 210., 240., 270., 300., 330., 360.],
@@ -2609,16 +2811,16 @@ def plotEzSky600azEl():
     global titleS                   # string
     #global ezSkyDispGrid           # integer
 
+    plotCountdown -= 1
+
     # if plot not wanted, then return
     if ezSkyPlotRangeL[1] < 600 or 600 < ezSkyPlotRangeL[0]:
-        plotCountdown -= 1
         return(1)
 
     plotName = 'ezSky600azEl_' + ezSkyInputS + '.png'
 
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-    plotCountdown -= 1
     plt.clf()
 
     fig = plt.figure()
@@ -2748,7 +2950,10 @@ def main():
     plotEzSky010raH()
     plotEzSky020decDeg()
     plotEzSky030gLatDeg()
+    plotEzSky031gLatDegSorted()
+    plotEzSky032gLatDegSortedCross()
     plotEzSky040gLonDeg()
+    plotEzSky041gLonDegSorted()
     plotEzSky070azDeg()
     plotEzSky080elDeg()
 
@@ -2788,8 +2993,14 @@ def main():
     ezSkyGridGalactic()
 
     plotEzSky500GMI()   # radio Sky Galactic Mercator   projection map of Interpolated power
+    #plotEzSkyMercator(500)
+    #plotEzSkyMercator(510)
     plotEzSky501GSI()   # radio Sky Galactic Sinusoidal projection map of Interpolated power
-    plotEzSky502GOI()   # radio Sky Galactic Mollweide  projection map of Interpolated power
+    #plotEzSkySinusoidal(501)
+    #plotEzSkySinusoidal(511)
+    #plotEzSky502GOI()   # radio Sky Galactic Mollweide  projection map of Interpolated power
+    plotEzSkyMollweide(502)
+    plotEzSkyMollweide(512)
 
     printGoodbye()
 

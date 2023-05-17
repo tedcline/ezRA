@@ -1,4 +1,4 @@
-programName = 'ezCon230406a.py'
+programName = 'ezCon230410a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
@@ -25,6 +25,9 @@ programRevision = programName
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
 
+# ezCon230410a.py, ezConVelGLonEdgeLevel, ezConGalCrossingGLat
+# ezCon230408a.py, commented ezConVelGLonEdgeLevel
+# ezCon230407a.py, ezCon105 "receding Velocity of the Local Standard of Rest (VLSR)"
 # ezCon230406a.py, -eX
 # ezCon230401a.py, from AntXTV changed to AntXTVT into velGLonP180[,],
 #   added antXTVTName=antXNameL[1]+'TVT' to *Gal.npz file
@@ -224,8 +227,8 @@ def printUsage():
     print('         (defines "close to Galactic plane crossing" in Galactic Latitude degrees)')
     print('    -ezConVelGLonEdgeFrac   0.5    ')
     print('         (velGLon level fraction for plotEzCon430velGLonEdges)')
-    print('    -ezConVelGLonEdgeLevel  0.5    ')
-    print('         (velGLon level for plotEzCon430velGLonEdges, if 0 then use only ezConVelGLonEdgeFrac)')
+    #print('    -ezConVelGLonEdgeLevel  0.5    ')
+    #print('         (velGLon level for plotEzCon430velGLonEdges, if 0 then use only ezConVelGLonEdgeFrac)')
     print()
     print('    -ezDefaultsFile ../bigDish8.txt     (additional file of ezRA arguments)')
     print()
@@ -313,6 +316,7 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConDispGrid                    # integer
     global ezConDispFreqBin                 # integer
     global ezConRawDispIndex                # integer
+    global ezConGalCrossingGLat             # float
     global ezConVelGLonEdgeFrac             # float
     global ezConVelGLonEdgeLevel            # float
     global ezConPlotRangeL                  # integer list
@@ -396,11 +400,14 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezConAntFreqBinSmooth'.lower():
                 ezConAntFreqBinSmooth = float(thisLine[1])
 
+            elif thisLine0Lower == '-ezConGalCrossingGLat'.lower():
+                ezConGalCrossingGLat = float(thisLine[1])
+
             elif thisLine0Lower == '-ezConVelGLonEdgeFrac'.lower():
                 ezConVelGLonEdgeFrac = float(thisLine[1])
 
-            elif thisLine0Lower == '-ezConVelGLonEdgeLevel'.lower():
-                ezConVelGLonEdgeLevel = float(thisLine[1])
+            #elif thisLine0Lower == '-ezConVelGLonEdgeLevel'.lower():
+            #    ezConVelGLonEdgeLevel = float(thisLine[1])
 
 
             # list arguments:
@@ -528,8 +535,9 @@ def ezConArgumentsCommandLine():
     global ezConDispGrid                    # integer
     global ezConDispFreqBin                 # integer
     global ezConRawDispIndex                # integer
+    global ezConGalCrossingGLat             # float
     global ezConVelGLonEdgeFrac             # float
-    global ezConVelGLonEdgeLevel            # float
+    #global ezConVelGLonEdgeLevel            # float
     global ezConPlotRangeL                  # integer list
 
     global cmdDirectoryS                    # string            creation
@@ -643,13 +651,17 @@ def ezConArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezConAntFreqBinSmooth = float(cmdLineSplit[cmdLineSplitIndex])
 
+            elif cmdLineArgLower == '-ezConGalCrossingGLat'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConGalCrossingGLat = float(cmdLineSplit[cmdLineSplitIndex])
+
             elif cmdLineArgLower == '-ezConVelGLonEdgeFrac'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezConVelGLonEdgeFrac = float(cmdLineSplit[cmdLineSplitIndex])
 
-            elif cmdLineArgLower == '-ezConVelGLonEdgeLevel'.lower():
-                cmdLineSplitIndex += 1      # point to first argument value
-                ezConVelGLonEdgeLevel = float(cmdLineSplit[cmdLineSplitIndex])
+            #elif cmdLineArgLower == '-ezConVelGLonEdgeLevel'.lower():
+            #    cmdLineSplitIndex += 1      # point to first argument value
+            #    ezConVelGLonEdgeLevel = float(cmdLineSplit[cmdLineSplitIndex])
 
 
             # list arguments:
@@ -823,12 +835,10 @@ def ezConArguments():
     global ezConDispGrid                    # integer
     global ezConDispFreqBin                 # integer
     global ezConRawDispIndex                # integer
+    global ezConGalCrossingGLat             # float
     global ezConVelGLonEdgeFrac             # float
     global ezConVelGLonEdgeLevel            # float
     global ezConPlotRangeL                  # integer list
-
-    global ezConGalCrossingGLat             # float
-
 
     # defaults
     if 1:
@@ -3237,7 +3247,7 @@ def createEzConOutEzb():
     if ezConAstroMath == 1:
         # use Python port from MIT Haystack Small Radio Telescope (SRT) from vlsr() in geom.c
         # https://www.haystack.mit.edu/haystack-public-outreach/srt-the-small-radio-telescope-for-education/
-        # VLSR = Velocity from the Local Standard of Rest
+        # VLSR = receding Velocity of the Local Standard of Rest
         #   to remove Doppler effects of earth and Sun Galactic movements
         # "/* sun 20km/s towards ra=18h dec=30.0 */"
         # https://en.wikipedia.org/wiki/Solar_apex
@@ -3333,7 +3343,7 @@ def createEzConOutEzb():
         # ezRA should study that velocity part on the right, the radial velocity of the Galactic hydrogen relative to the LSR.
         #
         # ezRA should calculate and subtract that velocity part on the left, the radial velocity of the telescope relative to the LSR.
-        # That ezRA telescope is on the moving Earth, with the Earth moving around the Sun, with the Sun moving relative to the Local Standard of Reference.
+        # That ezRA telescope is on the moving Earth, with the Earth moving around the Sun, with the Sun moving relative to the Local Standard of Rest.
         # Considering those motions in the opposite order, ezRA could calculate
         #     1. the Sun motion relative to the LSR
         #     2. the Earth motion revolving around the Sun once a year
@@ -3739,7 +3749,7 @@ def createEzConOutEzb():
                 #vStarSun = 0
                 #print(' vStarSun =', vStarSun, 'km/s')
 
-                # VLSR = Velocity from the Local Standard of Rest (km/s)
+                # VLSR = receding Velocity of the Local Standard of Rest (km/s)
                 #vlsrThis = -float((vStarSun - vStarEarthAroundSun) / (1000. * u.m / u.s))   # to extract from units as km/s
                 #vlsrThis = vStarSun - vStarEarthAroundSun
                 vlsrThis = vStarEarthAroundSun - vStarSun
@@ -4061,8 +4071,6 @@ def writeFileGal():
     # Declination (dec) is -90thru+90, adding 90, gives decP90 as 0thru180 which is more convenient.
     # galDecP90GLonP180Count is floats to allow mask replacement with np.nan later.
     galDecP90GLonP180Count = np.zeros([181, 361], dtype = int)      # 0thru180 decP90 by 0thru360 gLonP180
-
-    #ezConGalCrossingGLat = 5.      # defines 'close to Galactic plane crossing' in Galactic Latitude degrees
 
     for n in range(antLen):
         gLatDegThis = int(ezConOut[n, 3])                   # gLatDeg is -90 thru +90
@@ -5308,7 +5316,7 @@ def plotEzCon105vlsr():
     print('                         vlsrMin =', ezConOut[:, 5].min())
 
     plotEzCon1dSamplesAnt(plotName, ezConOut[:, 5], [], 'green',
-        'Velocity vs Local Standard of Rest (km/s)')
+        'receding Velocity of Local Standard of Rest (VLSR) (km/s)')
 
 
 

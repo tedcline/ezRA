@@ -79,6 +79,7 @@ please see these introductory PDFs from the ezRA directory:
 
 * [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
 * [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
+* [https://www.youtube.com/watch?v=15Q6_OCDTs0](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br>
 
 ---
 
@@ -118,6 +119,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Apr-6-2023
+May-17-2023
 
 ---
