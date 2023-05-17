@@ -78,8 +78,13 @@ please see these introductory PDFs from the ezRA directory:
 ## Videos:
 
 * [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
-* [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
-* [https://www.youtube.com/watch?v=15Q6_OCDTs0](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br>
+<br>
+* Pablo 1 [https://www.youtube.com/watch?v=2DbS5A42OJQ](https://www.youtube.com/watch?v=2DbS5A42OJQ)<br>
+* Pablo 2 [https://www.youtube.com/watch?v=N1TRyJ9w0As](https://www.youtube.com/watch?v=N1TRyJ9w0As)<br>
+* Pablo 3 [https://www.youtube.com/watch?v=8EUmCQAIBLg](https://www.youtube.com/watch?v=8EUmCQAIBLg)<br>
+* Pablo 4 [https://www.youtube.com/watch?v=15Q6_OCDTs0](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br>
+<br>
+* SARA [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
 ---
 
