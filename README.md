@@ -85,12 +85,12 @@ please see these introductory PDFs from the ezRA directory:
   * [ezRA Analysis 5 - Interference Filters](https://www.youtube.com/watch?v=XAitkAerXjM)<br>
   * [ezRA Analysis 6 - ezSky](https://www.youtube.com/watch?v=dj3_jikH59Y)<br>
   * [ezRA Analysis 7 - AntXTVT and VLSR](https://www.youtube.com/watch?v=038Apm0yAjY)<br>
-  * [ezRA Analysis 8 - ezGal](https://www.youtube.com/watch?v=YXuPDJVRbd0)<br><br>
+  * [ezRA Analysis 8 - ezGal](https://www.youtube.com/watch?v=YXuPDJVRbd0)<br>
 
-* Pablo 1 [https://www.youtube.com/watch?v=2DbS5A42OJQ](https://www.youtube.com/watch?v=2DbS5A42OJQ)<br>
-* Pablo 2 [https://www.youtube.com/watch?v=N1TRyJ9w0As](https://www.youtube.com/watch?v=N1TRyJ9w0As)<br>
-* Pablo 3 [https://www.youtube.com/watch?v=8EUmCQAIBLg](https://www.youtube.com/watch?v=8EUmCQAIBLg)<br>
-* Pablo 4 [https://www.youtube.com/watch?v=15Q6_OCDTs0](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br><br>
+* Pablo 1 [ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)
+* Pablo 2 [ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)
+* Pablo 3 [ezCon Plot Tour](https://www.youtube.com/watch?v=8EUmCQAIBLg)
+* Pablo 4 [ezCol Data Collecting Software in Action](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br><br>
 
 * SARA [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
