@@ -44,28 +44,6 @@ please see these introductory PDFs from the ezRA directory:
 
 * ezGal - GALaxy plots from one or more spectra *Gal.npz data files (Galaxy rotation, Velocity vs Galactic Longitude, Galaxy arm plots?).
 
-
-
-	ezCol - COLlect radio signals into integrated frequency spectrum ezRA .txt data files.
-
-		Or convert previous radio data with ezColBAA, ezColHay, ezColIFAvg,
-		ezColSc, etc.
-
-		ezFix - remove or separate samples, combine, edit, and split frequency spectrum
-		ezRA .txt data files.
-
-	ezCon - CONdense one or more frequency spectrum data .txt files into
-		one .ezb text data file, and perhaps one Galaxy crossing spectra *Gal.npz data file.
-
-	ezPlot - PLOT analysis from one or more .ezb condensed data files.
-
-	ezSky - SKY maps from one or more .ezb condensed data files.
-
-	ezGal - GALaxy plots from one or more spectra *Gal.npz data files (Galaxy rotation,
-		Velocity vs Galactic Longitude, Galaxy arm plots?).
-
-
-
 ## Videos:
 
 * [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
