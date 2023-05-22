@@ -30,6 +30,22 @@ please see these introductory PDFs from the ezRA directory:
 
 ## There are 5 major ezRA programs:
 
+* ezCol - COLlect radio signals into integrated frequency spectrum ezRA .txt data files.
+
+  * Or convert previous radio data with ezColBAA, ezColHay, ezColIFAvg, ezColSc, etc.
+
+  * ezFix - remove or separate samples, combine, edit, and split frequency spectrum ezRA .txt data files.
+
+* ezCon - CONdense one or more frequency spectrum data .txt files into one .ezb text data file, and perhaps one Galaxy crossing spectra *Gal.npz data file.
+
+* ezPlot - PLOT analysis from one or more .ezb condensed data files.
+
+* ezSky - SKY maps from one or more .ezb condensed data files.
+
+* ezGal - GALaxy plots from one or more spectra *Gal.npz data files (Galaxy rotation, Velocity vs Galactic Longitude, Galaxy arm plots?).
+
+
+
 	ezCol - COLlect radio signals into integrated frequency spectrum ezRA .txt data files.
 
 		Or convert previous radio data with ezColBAA, ezColHay, ezColIFAvg,
@@ -49,6 +65,25 @@ please see these introductory PDFs from the ezRA directory:
 		Velocity vs Galactic Longitude, Galaxy arm plots?).
 
 
+
+## Videos:
+
+* [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
+  * [ezRA Analysis 1 - Introduction, Data Collectors](https://www.youtube.com/watch?v=2TWXiAUpgCc)<br>
+  * [ezRA Analysis 2 - Spreadsheet Analysis](https://www.youtube.com/watch?v=9vKaob-jweM)<br>
+  * [ezRA Analysis 3 - Signal Progression](https://www.youtube.com/watch?v=7c-0rbNOOV4)<br>
+  * [ezRA Analysis 4 - More Plots and .ezb File](https://www.youtube.com/watch?v=bpU1wYJJrO4)<br>
+  * [ezRA Analysis 5 - Interference Filters](https://www.youtube.com/watch?v=XAitkAerXjM)<br>
+  * [ezRA Analysis 6 - ezSky](https://www.youtube.com/watch?v=dj3_jikH59Y)<br>
+  * [ezRA Analysis 7 - AntXTVT and VLSR](https://www.youtube.com/watch?v=038Apm0yAjY)<br>
+  * [ezRA Analysis 8 - ezGal](https://www.youtube.com/watch?v=YXuPDJVRbd0)<br>
+
+* Pablo 1 [ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)
+* Pablo 2 [ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)
+* Pablo 3 [ezCon Plot Tour](https://www.youtube.com/watch?v=8EUmCQAIBLg)
+* Pablo 4 [ezCol Data Collecting Software in Action](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br><br>
+
+* SARA [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
 ## Documentation for ezRA, in the ezRA directory, will eventually include:
 
@@ -74,28 +109,7 @@ please see these introductory PDFs from the ezRA directory:
     ezRA_24_ezSky.pdf
     ezRA_25_ezGal.pdf
 
-
-## Videos:
-
-* [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
-  * [ezRA Analysis 1 - Introduction, Data Collectors](https://www.youtube.com/watch?v=2TWXiAUpgCc)<br>
-  * [ezRA Analysis 2 - Spreadsheet Analysis](https://www.youtube.com/watch?v=9vKaob-jweM)<br>
-  * [ezRA Analysis 3 - Signal Progression](https://www.youtube.com/watch?v=7c-0rbNOOV4)<br>
-  * [ezRA Analysis 4 - More Plots and .ezb File](https://www.youtube.com/watch?v=bpU1wYJJrO4)<br>
-  * [ezRA Analysis 5 - Interference Filters](https://www.youtube.com/watch?v=XAitkAerXjM)<br>
-  * [ezRA Analysis 6 - ezSky](https://www.youtube.com/watch?v=dj3_jikH59Y)<br>
-  * [ezRA Analysis 7 - AntXTVT and VLSR](https://www.youtube.com/watch?v=038Apm0yAjY)<br>
-  * [ezRA Analysis 8 - ezGal](https://www.youtube.com/watch?v=YXuPDJVRbd0)<br>
-
-* Pablo 1 [ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)
-* Pablo 2 [ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)
-* Pablo 3 [ezCon Plot Tour](https://www.youtube.com/watch?v=8EUmCQAIBLg)
-* Pablo 4 [ezCol Data Collecting Software in Action](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br><br>
-
-* SARA [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
-
 ---
-
 
 ## Status:
 
