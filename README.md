@@ -77,11 +77,21 @@ please see these introductory PDFs from the ezRA directory:
 
 ## Videos:
 
-* [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br><br>
+* [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
+  * [ezRA Analysis 1 - Introduction, Data Collectors](https://www.youtube.com/watch?v=2TWXiAUpgCc)<br>
+  * [ezRA Analysis 2 - Spreadsheet Analysis](https://www.youtube.com/watch?v=9vKaob-jweM)<br>
+  * [ezRA Analysis 3 - Signal Progression](https://www.youtube.com/watch?v=7c-0rbNOOV4)<br>
+  * [ezRA Analysis 4 - More Plots and .ezb File](https://www.youtube.com/watch?v=bpU1wYJJrO4)<br>
+  * [ezRA Analysis 5 - Interference Filters](https://www.youtube.com/watch?v=XAitkAerXjM)<br>
+  * [ezRA Analysis 6 - ezSky](https://www.youtube.com/watch?v=dj3_jikH59Y)<br>
+  * [ezRA Analysis 7 - AntXTVT and VLSR](https://www.youtube.com/watch?v=038Apm0yAjY)<br>
+  * [ezRA Analysis 8 - ezGal](https://www.youtube.com/watch?v=YXuPDJVRbd0)<br><br>
+
 * Pablo 1 [https://www.youtube.com/watch?v=2DbS5A42OJQ](https://www.youtube.com/watch?v=2DbS5A42OJQ)<br>
 * Pablo 2 [https://www.youtube.com/watch?v=N1TRyJ9w0As](https://www.youtube.com/watch?v=N1TRyJ9w0As)<br>
 * Pablo 3 [https://www.youtube.com/watch?v=8EUmCQAIBLg](https://www.youtube.com/watch?v=8EUmCQAIBLg)<br>
 * Pablo 4 [https://www.youtube.com/watch?v=15Q6_OCDTs0](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br><br>
+
 * SARA [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
 ---
@@ -122,6 +132,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-May-17-2023
+May-21-2023
 
 ---

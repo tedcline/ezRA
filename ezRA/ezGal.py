@@ -1,4 +1,4 @@
-programName = 'ezGal230514a.py'
+programName = 'ezGal230521a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGal GALaxy explorer program,
@@ -26,6 +26,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGal230521a.py, renamed highGLonMin to gLonSpurMax
 # ezGal230514a.py, 'Sofue 2017 says 1e+11' to plotEzGal560galMass()
 # ezGal230512a.py, 'Possible Galactic Atomic Hydrogen', '"Keplerian Rotation"'
 # ezGal230511a.py, plotEzGal559planetRot()
@@ -190,8 +191,8 @@ def printUsage():
     print()
     #print('    -ezGalVelGLonEdgeLevelL  1.01   1.03   30    (velGLon level for ezGal540velGLonEdgesB)')
     #print('        (velGLon level for ezGal540velGLonEdgesB: level0, level1, gLonChangeLevel1)')
-    print('    -ezGalVelGLonEdgeLevelL  1.06   40   140    (velGLon level for ezGal540velGLonEdgesB)')
-    print('        (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, velGLonUEdge[gLon=0])')
+    print('    -ezGalVelGLonEdgeLevelL  1.06   40   140')
+    print('        (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, gLonSpurMax, velGLonUEdge[gLon=0])')
     print()
     print('    -ezGal540edgesUFile  edgesUFile.txt')
     print('        (read edgesUFile.txt for velGLonUEdge values')
@@ -345,17 +346,17 @@ def ezGalArgumentsFile(ezDefaultsFileNameInput):
                 pass    # unrecognized first word, but no error
 
     except (FileNotFoundError, IOError):
-    	#print ()
-    	#print ()
-    	#print ()
-    	#print ()
-    	#print ('   Warning: Error in opening file or reading ' + ezDefaultsFileName + ' file.')
-    	##print ('   ... Using defaults ...')
-    	#print ()
-    	#print ()
-    	#print ()
-    	#print ()
-    	pass
+        #print ()
+        #print ()
+        #print ()
+        #print ()
+        #print ('   Warning: Error in opening file or reading ' + ezDefaultsFileName + ' file.')
+        ##print ('   ... Using defaults ...')
+        #print ()
+        #print ()
+        #print ()
+        #print ()
+        pass
 
     else:
         fileDefaults.close()       #   then have processed all available lines in this Defaults file
@@ -522,7 +523,7 @@ def ezGalArguments():
 
     ezGal540edgesUFile = ''
     ezGal540edgesLFile = ''
-    ezGalVelGLonEdgeLevelL = [1.06, 40, 140]    # velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, velGLonUEdge[gLon=0])
+    ezGalVelGLonEdgeLevelL = [1.06, 0, 160]    # velGLon level for ezGal540velGLonEdgesB: velGLonLevel, gLonSpurMax, velGLonUEdge[gLon=0])
 
     ezGal61XGain = 120.             # maximum height in ezGal61XgLonSpectraCascade plots
     
@@ -1370,7 +1371,7 @@ def findVelGLonEdges():
     #   reads   ezGal540edgesLFile .txt file and
     #   writes 'ezGal540edgesLFileOut.txt' file with velGLonLEdge values
     #    -ezGalVelGLonEdgeLevelL  1.06   40   140    (velGLon level for ezGal540velGLonEdgesB)
-    #        (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, edgeUGLon0)
+    #        (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, gLonSpurMax, edgeUGLon0)
 
     global velGLonP180              # float 2d array
     global velGLonP180Count         # integer array
@@ -1490,14 +1491,15 @@ def findVelGLonEdges():
                         velGLonLEdge[gLonP180] = velocityBin[velGLonLEdgeFreqBinThis]
 
         # -ezGalVelGLonEdgeLevelL  1.06   40   140    (velGLon level for ezGal540velGLonEdgesB)
-        #   (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, velGLonUEdge[gLon=0])
-        highGLonMin = ezGalVelGLonEdgeLevelL[1]
+        #   (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, gLonSpurMax, velGLonUEdge[gLon=0])
+        gLonSpurMax = ezGalVelGLonEdgeLevelL[1]
         # for low +gLon, velGLonUEdgeFreqBinThis is on the gLonP180 line,
         #   from (x1, y1) to (x0, y0)
-        #   from (highGLonMin+180, velGLonUEdge[highGLonMin+180]) to (180, ezGalVelGLonEdgeLevelL[2])
+        #   from (gLonSpurMax+180, velGLonUEdge[gLonSpurMax+180]) to (180, ezGalVelGLonEdgeLevelL[2])
         # slopeLowGLon = (y1 - y0) / (x1 - x0)
-        # slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / (highGLonMin+180 - 180)
-        # slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / highGLonMin
+        # slopeLowGLon = (velGLonUEdge[gLonSpurMax+180] - ezGalVelGLonEdgeLevelL[2]) / (gLonSpurMax+180 - 180)
+        # slopeLowGLon = (velGLonUEdge[gLonSpurMax+180] - ezGalVelGLonEdgeLevelL[2]) / gLonSpurMax
+        slopeLowGLonSet = 0
         for gLonP180 in reversed(range(361)):
             if velGLonP180Count[gLonP180]:
                 gLon = gLonP180 - 180
@@ -1509,17 +1511,22 @@ def findVelGLonEdges():
                 velGLonP180AboveLevelFreqBins = np.where(ezGalVelGLonEdgeLevelL[0] <= velGLonP180[:, gLonP180])[0]
 
                 if velGLonP180AboveLevelFreqBins.any():
-                    if 0 <= gLon and gLon < highGLonMin:
+                    if 0 <= gLon and gLon < gLonSpurMax and slopeLowGLonSet:
                         # for low +gLon
                         velGLonUEdge[gLonP180] = ezGalVelGLonEdgeLevelL[2] + gLon * slopeLowGLon
                     else:
                         velGLonUEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[-1]     # use last  element of list
                         velGLonUEdge[gLonP180] = velocityBin[velGLonUEdgeFreqBinThis]
-                        if gLon == highGLonMin:
-                            slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / highGLonMin
+                        if gLon <= gLonSpurMax and not slopeLowGLonSet:
+                            # this is first gLon <= gLonSpurMax
+                            if gLon:
+                                slopeLowGLon = (velGLonUEdge[gLonP180] - ezGalVelGLonEdgeLevelL[2]) / gLon
+                            else:
+                                slopeLowGLon = (velGLonUEdge[gLonP180] - ezGalVelGLonEdgeLevelL[2]) / 0.001
+                            slopeLowGLonSet = 1
                     velGLonLEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[ 0]         # use first element of list
                     velGLonLEdge[gLonP180] = velocityBin[velGLonLEdgeFreqBinThis]
-                elif 0 <= gLon and gLon < highGLonMin:
+                elif 0 <= gLon and gLon < gLonSpurMax and slopeLowGLonSet:
                     # for low +gLon
                     velGLonUEdge[gLonP180] = ezGalVelGLonEdgeLevelL[2] + gLon * slopeLowGLon
 
