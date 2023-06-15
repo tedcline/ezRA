@@ -1,4 +1,4 @@
-programName = 'ezSky230413a.py'
+programName = 'ezSky230610a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
@@ -24,7 +24,11 @@ programRevision = programName
 
 # TTD:
 #       remove many global in main() ?????????
+#       MollweideL y scale not linear, so yticks wrong
 
+# ezSky230610a.py, ezSkyGalCrossingGLatCenter
+#   found ezSky512 MollweideL y scale not linear !
+# ezSky230527a.py, "Radec" to "RaDec"
 # ezSky230413a.py, yLim of ezSky031gLatDegSorted and ezSky032gLatDegSortedCross
 #   ezSky032gLatDegSortedCross still has a xTick bug if is the first plotted
 # ezSky230412a.py, added plotEzSky031gLatDegSorted(),
@@ -157,6 +161,8 @@ def printUsage():
     print('         (northern hemispere: south horizon declination = latitude - 90.)')
     print('         (written to file "ezSkyMaskBigDish_-49.7_-90.npz".)')
     print()
+    print('    -ezSkyGalCrossingGLatCenter   1.0')
+    print('         (defines center of Galactic plane crossing  in Galactic Latitude degrees)')
     print('    -ezSkyGalCrossingGLat   5.0')
     print('         (defines "close to Galactic plane crossing" in Galactic Latitude degrees)')
     print()
@@ -217,6 +223,7 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
     global ezSkyInput                       # integer
     global ezSkyVOGain                      # float
     global ezSkyHalfTallDec                 # integer
+    global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLat             # float
 
     global ezSkyMaskOutL                    # list of string and floats
@@ -267,6 +274,9 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
 
             elif fileLineSplit0Lower == '-ezSkyVOGain'.lower():
                 ezSkyVOGain = float(fileLineSplit[1])
+
+            elif fileLineSplit0Lower == '-ezSkyGalCrossingGLatCenter'.lower():
+                ezSkyGalCrossingGLatCenter = float(fileLineSplit[1])
 
             elif fileLineSplit0Lower == '-ezSkyGalCrossingGLat'.lower():
                 ezSkyGalCrossingGLat = float(fileLineSplit[1])
@@ -335,6 +345,7 @@ def ezSkyArgumentsCommandLine():
     global ezSkyInput                       # integer
     global ezSkyVOGain                      # float
     global ezSkyHalfTallDec                 # integer
+    global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLat             # float
 
     global ezSkyMaskOutL                    # list of string and floats
@@ -411,6 +422,9 @@ def ezSkyArgumentsCommandLine():
             elif cmdLineArgLower == 'ezSkyVOGain'.lower():
                 ezSkyVOGain = float(cmdLineSplit[cmdLineSplitIndex])
 
+            elif cmdLineArgLower == 'ezSkyGalCrossingGLatCenter'.lower():
+                ezSkyGalCrossingGLatCenter = float(cmdLineSplit[cmdLineSplitIndex])
+
             elif cmdLineArgLower == 'ezSkyGalCrossingGLat'.lower():
                 ezSkyGalCrossingGLat = float(cmdLineSplit[cmdLineSplitIndex])
 
@@ -482,6 +496,7 @@ def ezSkyArguments():
     global ezSkyHalfTallDec                 # integer
     global ezSkyPlotRangeL                  # integer list
     global plotCountdown                    # integer
+    global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLat             # float
 
     global ezSkyMaskOutL                    # list of string and floats
@@ -499,6 +514,8 @@ def ezSkyArguments():
     ezSkyDispGrid = 0
 
     ezSkyVOGain = 50.
+
+    ezSkyGalCrossingGLatCenter = 0.
     ezSkyGalCrossingGLat = 10.
     
     # (ezSkyHalfTallDec + 1 + ezSkyHalfTallDec) = thickness of tall plot trace (last drawn wins)
@@ -544,7 +561,8 @@ def ezSkyArguments():
     print()
     print('   ezSkyInput  =', ezSkyInput)
     print('   ezSkyVOGain =', ezSkyVOGain)
-    print('   ezSkyGalCrossingGLat =', ezSkyGalCrossingGLat)
+    print('   ezSkyGalCrossingGLatCenter =', ezSkyGalCrossingGLatCenter)
+    print('   ezSkyGalCrossingGLat       =', ezSkyGalCrossingGLat)
     print('   ezSkyHalfTallDec =', ezSkyHalfTallDec)
     print('   ezSkyDispGrid    =', ezSkyDispGrid)
     print('   ezSkyPlotRangeL  =', ezSkyPlotRangeL)
@@ -1002,6 +1020,9 @@ def plotEzSky032gLatDegSortedCross():
     global fileNameLast                     # string
     global antLen                           # integer
 
+    global ezSkyGalCrossingGLatCenter       # float
+    global ezSkyGalCrossingGLat             # float
+
     plotCountdown -= 1
 
     # if plot not wanted, then return
@@ -1018,8 +1039,8 @@ def plotEzSky032gLatDegSortedCross():
 
     # set non-Galactic-Crossings to np.nan, so will not plot
     plotData1d = np.sort(gLatDeg)
-    plotData1d[plotData1d < -ezSkyGalCrossingGLat] = np.nan
-    plotData1d[ezSkyGalCrossingGLat < plotData1d] = np.nan
+    plotData1d[plotData1d < ezSkyGalCrossingGLatCenter - ezSkyGalCrossingGLat] = np.nan
+    plotData1d[ezSkyGalCrossingGLatCenter + ezSkyGalCrossingGLat < plotData1d] = np.nan
 
     # causes xTick bug if no xTickLocsAnt yet =============================
     plotEzSky1dSamplesAnt(plotName, plotData1d, f'{np.count_nonzero(~np.isnan(plotData1d)):,} Galactic Crossing Samples Sorted by Value', [-90., 90.], 'green',
@@ -2255,20 +2276,21 @@ def ezSkyGridGalactic():
 def plotEzSky500GMI():
     # radio Sky Galactic Mercator projection map of Interpolated power
 
-    global galacticPower            # float   1d array
-    global galacticGLatHalfDeg      # integer 1d array
-    global galacticGLonHalfDeg      # integer 1d array
+    global galacticPower                    # float   1d array
+    global galacticGLatHalfDeg              # integer 1d array
+    global galacticGLonHalfDeg              # integer 1d array
 
-    global maskGalactic             # integer 2d array
-    #global ezSkyGalCrossingGLat     # float
+    global maskGalactic                     # integer 2d array
+    #global ezSkyGalCrossingGLatCenter       # float
+    #global ezSkyGalCrossingGLat             # float
 
-    global ezSkyInputS              # string
+    global ezSkyInputS                      # string
 
-    global ezSkyPlotRangeL          # integer list
-    global plotCountdown            # integer
-    global fileNameLast             # string
-    global titleS                   # string
-    #global ezSkyDispGrid           # integer
+    global ezSkyPlotRangeL                  # integer list
+    global plotCountdown                    # integer
+    global fileNameLast                     # string
+    global titleS                           # string
+    #global ezSkyDispGrid                   # integer
 
     plotCountdown -= 1
 
@@ -2384,20 +2406,21 @@ def plotEzSky501GSI():
     # radio Sky Galactic Sinusoidal projection map of Interpolated power
     # https://en.wikipedia.org/wiki/Sinusoidal_projection
     
-    global galacticPower            # float   1d array
-    global galacticGLatHalfDeg      # integer 1d array
-    global galacticGLonHalfDeg      # integer 1d array
+    global galacticPower                    # float   1d array
+    global galacticGLatHalfDeg              # integer 1d array
+    global galacticGLonHalfDeg              # integer 1d array
 
-    global maskGalactic             # integer 2d array
-    #global ezSkyGalCrossingGLat     # float
+    global maskGalactic                     # integer 2d array
+    #global ezSkyGalCrossingGLatCenter       # float
+    #global ezSkyGalCrossingGLat             # float
 
-    global ezSkyInputS              # string
+    global ezSkyInputS                      # string
 
-    global ezSkyPlotRangeL          # integer list
-    global plotCountdown            # integer
-    global fileNameLast             # string
-    global titleS                   # string
-    #global ezSkyDispGrid           # integer
+    global ezSkyPlotRangeL                  # integer list
+    global plotCountdown                    # integer
+    global fileNameLast                     # string
+    global titleS                           # string
+    #global ezSkyDispGrid                   # integer
 
     plotCountdown -= 1
 
@@ -2538,19 +2561,20 @@ def plotEzSkyMollweide(plotNumber):
     #def plotEzSky512GOID():
     # radio Sky Galactic Mollweide projection map of Data points
 
-    global galacticPower            # float   1d array
-    global galacticGLatHalfDeg      # integer 1d array
-    global galacticGLonHalfDeg      # integer 1d array
+    global galacticPower                    # float   1d array
+    global galacticGLatHalfDeg              # integer 1d array
+    global galacticGLonHalfDeg              # integer 1d array
 
-    global ezSkyInputS              # string
-    global maskGalactic             # integer 2d array
-    global ezSkyGalCrossingGLat     # float
+    global ezSkyInputS                      # string
+    global maskGalactic                     # integer 2d array
+    global ezSkyGalCrossingGLatCenter       # float
+    global ezSkyGalCrossingGLat             # float
 
-    global ezSkyPlotRangeL          # integer list
-    global plotCountdown            # integer
-    global fileNameLast             # string
-    global titleS                   # string
-    #global ezSkyDispGrid           # integer
+    global ezSkyPlotRangeL                  # integer list
+    global plotCountdown                    # integer
+    global fileNameLast                     # string
+    global titleS                           # string
+    #global ezSkyDispGrid                   # integer
 
     plotCountdown -= 1
 
@@ -2753,8 +2777,9 @@ def plotEzSkyMollweide(plotNumber):
         # draw red dots of true data paths, if defined as a Galactic Crossing.
         # warp each galacticGLatHalfDeg[i] and galacticGLonHalfDeg[i]
         #print(' galacticGLatHalfDeg =', galacticGLatHalfDeg)
-        ezSkyGalCrossingGLatHalfDegMax = int(180 + ezSkyGalCrossingGLat + ezSkyGalCrossingGLat)     # convert to halfDegrees
-        ezSkyGalCrossingGLatHalfDegMin = int(180 - ezSkyGalCrossingGLat - ezSkyGalCrossingGLat)     # convert to halfDegrees
+
+        ezSkyGalCrossingGLatHalfDegMax = int(180 + ezSkyGalCrossingGLatCenter + ezSkyGalCrossingGLatCenter + ezSkyGalCrossingGLat + ezSkyGalCrossingGLat)     # convert to halfDegrees
+        ezSkyGalCrossingGLatHalfDegMin = int(180 + ezSkyGalCrossingGLatCenter + ezSkyGalCrossingGLatCenter - ezSkyGalCrossingGLat - ezSkyGalCrossingGLat)     # convert to halfDegrees
         galacticGLatHalfDegMollweideL = []
         galacticGLonHalfDegMollweideL = []
         for i in range(len(galacticGLatHalfDeg)):

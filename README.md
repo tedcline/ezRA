@@ -1,7 +1,7 @@
 # ezRA - Easy Radio Astronomy
 
 <p align="center">
-  <img src="/ezRA/ezRA_logo.jpg?raw=true" alt="ezRA_logo"/>
+  <img src="/ezRA/doc/ezRA_logo.jpg?raw=true" alt="ezRA_logo"/>
 </p>
 
 The ezRA Easy Radio Astronomy set of programs are free PC tools to help folks beginning to explore Radio Astronomy, with 
@@ -21,10 +21,10 @@ Rather than duplicate those image bytes here in an online README.md file,
 please see these introductory PDFs from the ezRA directory:
 
 * "System Tour" showing what ezRA can do:<br>
-[ezRA_01_Tour.pdf](https://github.com/tedcline/ezRA/blob/master/ezRA/ezRA_01_Tour.pdf)<br>
+[ezRA_01_Tour.pdf](https://github.com/tedcline/ezRA/blob/master/ezRA/doc/ezRA_01_Tour.pdf)<br>
 
 * Quick overview of programs and documentation:<br>
-[ezRA_00_Introduction.pdf](https://github.com/tedcline/ezRA/blob/master/ezRA/ezRA_00_Introduction.pdf)<br>
+[ezRA_00_Introduction.pdf](https://github.com/tedcline/ezRA/blob/master/ezRA/doc/ezRA_00_Introduction.pdf)<br>
 
 =============================================
 
@@ -63,7 +63,7 @@ please see these introductory PDFs from the ezRA directory:
 
 * SARA [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
-## Documentation for ezRA, in the ezRA directory, will eventually include:
+## Documentation for ezRA, in the ezRA/doc directory, will eventually include:
 
     ezRA_00_Introduction.pdf
     ezRA_01_Tour.pdf
@@ -124,6 +124,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-May-21-2023
+Jun-15-2023
 
 ---

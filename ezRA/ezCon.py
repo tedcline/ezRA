@@ -1,4 +1,4 @@
-programName = 'ezCon230410a.py'
+programName = 'ezCon230610a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
@@ -25,6 +25,10 @@ programRevision = programName
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
 
+# ezCon230610a.py, ezConGalCrossingGLatCenter help typo
+# ezCon230603a.py, 'Doppler MHz from' only with samples from Ant
+# ezCon230527a.py, ezConGalCrossingGLatCenter, gLatDegThis now a float,
+#   ezCon027 no longer says 'Ref:  Doppler MHz from 1420.400 MHz'
 # ezCon230410a.py, ezConVelGLonEdgeLevel, ezConGalCrossingGLat
 # ezCon230408a.py, commented ezConVelGLonEdgeLevel
 # ezCon230407a.py, ezCon105 "receding Velocity of the Local Standard of Rest (VLSR)"
@@ -223,9 +227,11 @@ def printUsage():
     print('      -ezConAstroMath  1:    using math from MIT Haystack SRT')
     print('      -ezConAstroMath  2:    using math from slower Astropy library')
     print()
-    print('    -ezConGalCrossingGLat   5.0')
+    print('    -ezConGalCrossingGLatCenter   1.0')
+    print('         (defines center of Galactic plane crossing  in Galactic Latitude degrees)')
+    print('    -ezConGalCrossingGLat         5.0')
     print('         (defines "close to Galactic plane crossing" in Galactic Latitude degrees)')
-    print('    -ezConVelGLonEdgeFrac   0.5    ')
+    print('    -ezConVelGLonEdgeFrac         0.5    ')
     print('         (velGLon level fraction for plotEzCon430velGLonEdges)')
     #print('    -ezConVelGLonEdgeLevel  0.5    ')
     #print('         (velGLon level for plotEzCon430velGLonEdges, if 0 then use only ezConVelGLonEdgeFrac)')
@@ -316,6 +322,7 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConDispGrid                    # integer
     global ezConDispFreqBin                 # integer
     global ezConRawDispIndex                # integer
+    global ezConGalCrossingGLatCenter       # float
     global ezConGalCrossingGLat             # float
     global ezConVelGLonEdgeFrac             # float
     global ezConVelGLonEdgeLevel            # float
@@ -399,6 +406,9 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
 
             elif thisLine0Lower == '-ezConAntFreqBinSmooth'.lower():
                 ezConAntFreqBinSmooth = float(thisLine[1])
+
+            elif thisLine0Lower == '-ezConGalCrossingGLatCenter'.lower():
+                ezConGalCrossingGLatCenter = float(thisLine[1])
 
             elif thisLine0Lower == '-ezConGalCrossingGLat'.lower():
                 ezConGalCrossingGLat = float(thisLine[1])
@@ -535,6 +545,7 @@ def ezConArgumentsCommandLine():
     global ezConDispGrid                    # integer
     global ezConDispFreqBin                 # integer
     global ezConRawDispIndex                # integer
+    global ezConGalCrossingGLatCenter       # float
     global ezConGalCrossingGLat             # float
     global ezConVelGLonEdgeFrac             # float
     #global ezConVelGLonEdgeLevel            # float
@@ -650,6 +661,10 @@ def ezConArgumentsCommandLine():
             elif cmdLineArgLower == '-ezConAntFreqBinSmooth'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezConAntFreqBinSmooth = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezConGalCrossingGLatCenter'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConGalCrossingGLatCenter = float(cmdLineSplit[cmdLineSplitIndex])
 
             elif cmdLineArgLower == '-ezConGalCrossingGLat'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -835,6 +850,7 @@ def ezConArguments():
     global ezConDispGrid                    # integer
     global ezConDispFreqBin                 # integer
     global ezConRawDispIndex                # integer
+    global ezConGalCrossingGLatCenter       # float
     global ezConGalCrossingGLat             # float
     global ezConVelGLonEdgeFrac             # float
     global ezConVelGLonEdgeLevel            # float
@@ -891,6 +907,7 @@ def ezConArguments():
         ezConRefMode = 10
 
         # defines 'close to Galactic plane crossing' in Galactic Latitude degrees
+        ezConGalCrossingGLatCenter = 0.
         ezConGalCrossingGLat = 5.
 
         ezConVelGLonEdgeFrac =  0.5     # velGLon level fraction for plotEzCon430velGLonEdges()
@@ -978,7 +995,8 @@ def ezConArguments():
         print()
         print('   ezConAstroMath        =', ezConAstroMath)
         print()
-        print('   ezConGalCrossingGLat  =', ezConGalCrossingGLat)
+        print('   ezConGalCrossingGLatCenter  =', ezConGalCrossingGLatCenter)
+        print('   ezConGalCrossingGLat        =', ezConGalCrossingGLat)
         print('   ezConVelGLonEdgeFrac  =', ezConVelGLonEdgeFrac)
         print('   ezConVelGLonEdgeLevel =', ezConVelGLonEdgeLevel)
         print()
@@ -4047,19 +4065,20 @@ def writeFileStudy():
 def writeFileGal():
     # write velocity data arrays to file
 
-    global antXNameL                # list of strings
-    global antXTVT                  # float 2d array
-    global antLen                   # integer
-    global velGLonP180              # float 2d array     creation
-    global velGLonP180Count         # integer array      creation
-    global velGLonP180CountSum      # integer            creation
-    global galDecP90GLonP180Count   # integer array      creation
+    global antXNameL                    # list of strings
+    global antXTVT                      # float 2d array
+    global antLen                       # integer
+    global velGLonP180                  # float 2d array     creation
+    global velGLonP180Count             # integer array      creation
+    global velGLonP180CountSum          # integer            creation
+    global galDecP90GLonP180Count       # integer array      creation
 
-    global fileFreqMin              # float
-    global fileFreqMax              # float
-    global fileFreqBinQty           # integer
-    global ezConGalCrossingGLat     # float
-    global fileNameLast             # string
+    global fileFreqMin                  # float
+    global fileFreqMax                  # float
+    global fileFreqBinQty               # integer
+    global ezConGalCrossingGLatCenter   # float
+    global ezConGalCrossingGLat         # float
+    global fileNameLast                 # string
 
     print()
     print('   writeFileGal ===============')
@@ -4073,10 +4092,11 @@ def writeFileGal():
     galDecP90GLonP180Count = np.zeros([181, 361], dtype = int)      # 0thru180 decP90 by 0thru360 gLonP180
 
     for n in range(antLen):
-        gLatDegThis = int(ezConOut[n, 3])                   # gLatDeg is -90 thru +90
+        #gLatDegThis = int(ezConOut[n, 3])                   # gLatDeg is -90 thru +90
+        gLatDegThis = ezConOut[n, 3]                        # gLatDeg is -90. thru +90.
 
         # if n is close enough to Galactic plane, a Galactic plane crossing
-        if abs(gLatDegThis) <= ezConGalCrossingGLat:
+        if abs(gLatDegThis - ezConGalCrossingGLatCenter) <= ezConGalCrossingGLat:
             gLonP180 = int(ezConOut[n, 4]) + 180            # gLonP180 is RtoL from 0 thru 360
 
             # sum the current antXTVT spectrum to the grid column, and increment the column count
@@ -4441,6 +4461,7 @@ def plotEzCon2dSamples(plotName, plotData2d, plotXLabel, plotXLast, plotYLabel, 
     global yTickHeatL                           # string list   creation?
 
     global fileFreqBinQty                       # integer
+    #global freqCenter                           # float
 
 
     # plot heat map of ant
@@ -4503,7 +4524,9 @@ def plotEzCon2dSamples(plotName, plotData2d, plotXLabel, plotXLast, plotYLabel, 
         heat_map.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(32.))
         antYtickFn = lambda x, pos: f'{x / fileFreqBinQty:0.2f}'
     else:
-        heat_map.set_ylabel(plotYLabel + f':  Doppler MHz from {freqCenter:.3f} MHz',
+        #heat_map.set_ylabel(plotYLabel + f':  Doppler MHz from {freqCenter:.3f} MHz',
+        #    rotation=90, verticalalignment='bottom')
+        heat_map.set_ylabel(plotYLabel,
             rotation=90, verticalalignment='bottom')
         #  256 / 24 = 10.666666 freqBin per ytick
         #heat_map.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(10.666666))
@@ -4562,7 +4585,7 @@ def plotEzCon000rawRaw():
 
     # force new xTickLabelsHeatAntL before and after plotting
     xTickLabelsHeatAntL = []
-    plotEzCon2dSamples(plotName, raw, 'RawRaw', rawLen-1, 'RawRaw', 0)
+    plotEzCon2dSamples(plotName, raw, 'RawRaw', rawLen-1, f'RawRaw:  Doppler MHz', 0)
     xTickLabelsHeatAntL = []
 
 
@@ -4589,7 +4612,7 @@ def plotEzCon001raw():
 
     # force new xTickLabelsHeatAntL before and after plotting
     xTickLabelsHeatAntL = []
-    plotEzCon2dSamples(plotName, raw, 'Raw', rawLen-1, 'Raw', 0)
+    plotEzCon2dSamples(plotName, raw, 'Raw', rawLen-1, f'Raw:  Doppler MHz', 0)
     xTickLabelsHeatAntL = []
 
 
@@ -4603,6 +4626,7 @@ def plotEzCon002antRaw():
     global ant                                  # float 2d array
     global antMax                               # float array       creation
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     plotName = 'ezCon002antRaw.png'
 
@@ -4616,8 +4640,8 @@ def plotEzCon002antRaw():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, ant, 'Ant', antLenM1, 'AntRaw', 0)
-    
+    plotEzCon2dSamples(plotName, ant, 'Ant', antLenM1, f'AntRaw:  Doppler MHz from {freqCenter:.3f} MHz', 0)
+
 
 
 def plotEzCon007ant():
@@ -4628,6 +4652,7 @@ def plotEzCon007ant():
 
     global ant                                  # float 2d array
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     plotName = 'ezCon007ant.png'
 
@@ -4639,7 +4664,7 @@ def plotEzCon007ant():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, ant, 'Ant', antLenM1, 'Ant', 0)
+    plotEzCon2dSamples(plotName, ant, 'Ant', antLenM1, f'Ant:  Doppler MHz from {freqCenter:.3f} MHz', 0)
 
 
 
@@ -4651,6 +4676,7 @@ def plotEzCon017antMax2d():
 
     global ant                                  # float 2d array
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     plotName = 'ezCon017antMax.png'
 
@@ -4662,7 +4688,7 @@ def plotEzCon017antMax2d():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, ant, 'Ant', antLenM1, 'AntMax', 1)
+    plotEzCon2dSamples(plotName, ant, 'Ant', antLenM1, f'AntMax:  Doppler MHz from {freqCenter:.3f} MHz', 1)
 
 
 
@@ -4686,7 +4712,7 @@ def plotEzCon022refRaw():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, ref, 'Ref', antLenM1, 'RefRaw', 0)
+    plotEzCon2dSamples(plotName, ref, 'Ref', antLenM1, 'RefRaw:  Doppler MHz', 0)
 
 
 
@@ -4710,7 +4736,7 @@ def plotEzCon027ref():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, ref, 'Ref', antLenM1, 'Ref', 0)
+    plotEzCon2dSamples(plotName, ref, 'Ref', antLenM1, 'Ref:  Doppler MHz', 0)
 
 
 
@@ -4734,7 +4760,7 @@ def plotEzCon037refMax2d():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, ref, 'Ref', antLenM1, 'RefMax', 1)
+    plotEzCon2dSamples(plotName, ref, 'Ref', antLenM1, 'RefMax:  Doppler MHz', 1)
 
 
 
@@ -4750,6 +4776,7 @@ def plotEzCon047antB():
     global antBaseline                          # float array
     global antB                                 # float 2d array        creation
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     plotName = 'ezCon047antB.png'
 
@@ -4767,7 +4794,7 @@ def plotEzCon047antB():
     print('                         antBAvgAvg =', np.mean(antB))
     print('                         antBAvgMin = ', antB.min())
 
-    plotEzCon2dSamples(plotName, antB, 'Ant', antLenM1, 'AntB', 0)
+    plotEzCon2dSamples(plotName, antB, 'Ant', antLenM1, f'AntB:  Doppler MHz from {freqCenter:.3f} MHz', 0)
 
 
 
@@ -4778,6 +4805,7 @@ def plotEzCon057antBMax2d():
 
     global antB                                 # float 2d array
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     plotName = 'ezCon057antBMax.png'
 
@@ -4789,7 +4817,7 @@ def plotEzCon057antBMax2d():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, antB, 'Ant', antLenM1, 'AntBMax', 1)
+    plotEzCon2dSamples(plotName, antB, 'Ant', antLenM1, f'AntBMax:  Doppler MHz from {freqCenter:.3f} MHz', 1)
 
 
 
@@ -4804,6 +4832,7 @@ def plotEzCon061antRA():
     global ref                                  # float 2d array
     global antRA                                # float 2d array        creation
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     plotName = 'ezCon061antRA.png'
 
@@ -4821,8 +4850,8 @@ def plotEzCon061antRA():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, antRA, 'Ant', antLenM1, 'AntRA', 0)
-        
+    plotEzCon2dSamples(plotName, antRA, 'Ant', antLenM1, f'AntRA:  Doppler MHz from {freqCenter:.3f} MHz', 0)
+
 
 
 def plotEzCon067antRB():
@@ -4836,6 +4865,7 @@ def plotEzCon067antRB():
     global antRABaseline                        # float array
     global antRB                                # float 2d array        creation
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     plotName = 'ezCon067antRB.png'
 
@@ -4849,7 +4879,7 @@ def plotEzCon067antRB():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, antRB, 'Ant', antLenM1, 'AntRB', 0)
+    plotEzCon2dSamples(plotName, antRB, 'Ant', antLenM1, f'AntRB:  Doppler MHz from {freqCenter:.3f} MHz', 0)
 
 
 
@@ -4861,6 +4891,7 @@ def plotEzCon077antRBMax2d():
 
     global antRB                                # float 2d array
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     plotName = 'ezCon077antRBMax.png'
 
@@ -4872,8 +4903,8 @@ def plotEzCon077antRBMax2d():
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-    plotEzCon2dSamples(plotName, antRB, 'Ant', antLenM1, 'AntRBMax', 1)
-        
+    plotEzCon2dSamples(plotName, antRB, 'Ant', antLenM1, f'AntRBMax:  Doppler MHz from {freqCenter:.3f} MHz', 1)
+
 
 
 def plotEzCon081antXT():
@@ -4887,6 +4918,7 @@ def plotEzCon081antXT():
     global antXT                                # float 2d array        creation
     global antLen                               # integer
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     #plotName = 'ezCon081antXT.png'
     plotName = 'ezCon081' + antXNameL[0] + 'T.png'
@@ -4948,7 +4980,7 @@ def plotEzCon081antXT():
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
     #plotEzCon2dSamples(plotName, antXT, 'Ant', antLenM1, 'AntXT', 0)
-    plotEzCon2dSamples(plotName, antXT, 'Ant', antLenM1, antXNameL[1]+'T', 0)
+    plotEzCon2dSamples(plotName, antXT, 'Ant', antLenM1, antXNameL[1]+f'T:  Doppler MHz from {freqCenter:.3f} MHz', 0)
 
 
 
@@ -4963,6 +4995,7 @@ def plotEzCon082antXTV():
     global antXTV                               # float 2d array        creation
     global antLen                               # integer
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     #plotName = 'ezCon082antXTV.png'
     plotName = 'ezCon082' + antXNameL[0] + 'TV.png'
@@ -5044,7 +5077,8 @@ def plotEzCon082antXTV():
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
     #plotEzCon2dSamples(plotName, antXTV, 'Ant', antLenM1, 'AntXTV', 0)
-    plotEzCon2dSamples(plotName, antXTV, 'Ant', antLenM1, antXNameL[1]+'TV', 0)
+    plotEzCon2dSamples(plotName, antXTV, 'Ant', antLenM1, antXNameL[1]+f'TV:  Doppler MHz from {freqCenter:.3f} MHz', 0)
+
 
 
 def plotEzCon087antXTVT():
@@ -5058,6 +5092,7 @@ def plotEzCon087antXTVT():
     global antXTVT                              # float 2d array        creation
     global antLen                               # integer
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     #plotName = 'ezCon087antXTVT.png'
     plotName = 'ezCon087' + antXNameL[0] + 'TVT.png'
@@ -5115,7 +5150,7 @@ def plotEzCon087antXTVT():
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
     #plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVT', 0)
-    plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, antXNameL[1]+'TVT', 0)
+    plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, antXNameL[1]+f'TVT:  Doppler MHz from {freqCenter:.3f} MHz', 0)
 
 
 
@@ -5128,6 +5163,7 @@ def plotEzCon097antXTVTMax2d():
     global antXNameL                            # list of strings
     global antXTVT                              # float 2d array
     global antLenM1                             # integer
+    global freqCenter                           # float
 
     #plotName = 'ezCon097antXTVTMax.png'
     plotName = 'ezCon097' + antXNameL[0] + 'TVTMax.png'
@@ -5141,8 +5177,8 @@ def plotEzCon097antXTVTMax2d():
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
     #plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVTMax', 1)
-    plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, antXNameL[1]+'TVTMax', 1)
-        
+    plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, antXNameL[1]+f'TVTMax:  Doppler MHz from {freqCenter:.3f} MHz', 1)
+
 
 
 # one plot for each ezConOut column #########################################################
