@@ -47,14 +47,15 @@ please see these introductory PDFs from the ezRA directory:
 ## Videos:
 
 * [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
-  * [ezRA Analysis 1 - Introduction, Data Collectors](https://www.youtube.com/watch?v=2TWXiAUpgCc)<br>
-  * [ezRA Analysis 2 - Spreadsheet Analysis](https://www.youtube.com/watch?v=9vKaob-jweM)<br>
-  * [ezRA Analysis 3 - Signal Progression](https://www.youtube.com/watch?v=7c-0rbNOOV4)<br>
-  * [ezRA Analysis 4 - More Plots and .ezb File](https://www.youtube.com/watch?v=bpU1wYJJrO4)<br>
-  * [ezRA Analysis 5 - Interference Filters](https://www.youtube.com/watch?v=XAitkAerXjM)<br>
-  * [ezRA Analysis 6 - ezSky](https://www.youtube.com/watch?v=dj3_jikH59Y)<br>
-  * [ezRA Analysis 7 - AntXTVT and VLSR](https://www.youtube.com/watch?v=038Apm0yAjY)<br>
-  * [ezRA Analysis 8 - ezGal](https://www.youtube.com/watch?v=YXuPDJVRbd0)<br>
+  * [ezRA - Simple Overview](https://youtu.be/kHgwEbWKhzs)<br>
+  * [ezRA Analysis 1 - Introduction, Data Collectors](https://youtu.be/2TWXiAUpgCc)<br>
+  * [ezRA Analysis 2 - Spreadsheet Analysis](https://youtu.be/9vKaob-jweM)<br>
+  * [ezRA Analysis 3 - Signal Progression](https://youtu.be/7c-0rbNOOV4)<br>
+  * [ezRA Analysis 4 - More Plots and .ezb File](https://youtu.be/bpU1wYJJrO4)<br>
+  * [ezRA Analysis 5 - Interference Filters](https://youtu.be/XAitkAerXjM)<br>
+  * [ezRA Analysis 6 - ezSky](https://youtu.be/dj3_jikH59Y)<br>
+  * [ezRA Analysis 7 - AntXTVT and VLSR](https://youtu.be/038Apm0yAjY)<br>
+  * [ezRA Analysis 8 - ezGal](https://youtu.be/YXuPDJVRbd0)<br>
 
 * Pablo 1 [ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)
 * Pablo 2 [ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)
