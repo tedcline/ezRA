@@ -1,9 +1,9 @@
-programName = 'ezCon230610a.py'
+programName = 'ezCon230824a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
 #   CONdense one or more frequency spectrum data .txt files into
-#   one .ezb text data file, and perhaps one GALaxy *Gal.npz data file.
+#   one .ezb text data file, and perhaps GALaxy *Gal.npz and *GLon.npz data files.
 # https://github.com/tedcline/ezRA
 
 # Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
@@ -25,6 +25,29 @@ programRevision = programName
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
 
+# ezCon230824a.py, print ezConPlotRangeL in printGoodbye(),
+#   trouble using -ezConAntAvgSnipQtyL so always create xTickLabelsHeatAntL
+# ezCon230820a.py, removed 'Galaxy plane' from ezCon520 ezCon521 and ezCon690
+# ezCon230817c.py, ezCon337 and ezCon357 filenames from Avg to Max
+#   ezCon191 plt.yticks from GLatDeg to GLat
+# ezCon230806b.py, ezCon399SignalSampleByFreqBinL
+# ezCon230806a.py, ezCon399SignalSampleByFreqBinL
+# ezCon230728a.py, extracted ezConAntSampleSnipL from
+#   ezConAntSamplesUseLDo() into new last Ant filter ezConAntSampleSnipLDo()
+# ezCon230629a.py, removed ezConGalCrossingGLatCenterSnap and ezConGalCrossingGLonCenterSnap,
+#   output filenames *Nxx.xGal.npz and *Pxx.xGal.npz,
+#   output filenames *Nxxx.xGLon.npz and *Pxxx.xGLon.npz
+# ezCon230628a.py,
+#   ezConGalCrossingGLatCenterL and ezConGalCrossingGLatNear and
+#   ezConGalCrossingGLonCenterL and ezConGalCrossingGLonNear are now all floats,
+#   but ezConGalCrossingGLonCenterSnap and ezConGalCrossingGLonCenterSnap are integers
+# ezCon230627a.py,
+# ezCon230625a.py, ezConGalCrossingGLat duplicated with ezConGalCrossingGLatNear
+#   added ezConGalCrossingGLonNear and ezConGalCrossingGLonCenterL
+# ezCon230624a.py, ezConGalCrossingGLatCenterL to int degrees
+#   output filenames *NxxGal.npz and *PxxGal.npz
+# ezCon230623a.py, ezConGalCrossingGLatCenterL internally, and -ezConGalCrossingGLatCenterL,
+#   output filenames *Nxx.xGal.npz and *Pxx.xGal.npz
 # ezCon230610a.py, ezConGalCrossingGLatCenter help typo
 # ezCon230603a.py, 'Doppler MHz from' only with samples from Ant
 # ezCon230527a.py, ezConGalCrossingGLatCenter, gLatDegThis now a float,
@@ -130,7 +153,7 @@ def printUsage():
     print('  to read ezCol format .txt radio data file(s),')
     print('  analyse them, optionally creating many .png plot files,')
     print('  and write one .ezb condensed data text file,')
-    print('  and maybe write one Gal.npz Galaxy plane crossing velocity data file.')
+    print('  and maybe write one Gal.npz Galaxy crossing velocity data file.')
     print()
     print('  "radioDataFileDirectories" may be one or more .txt radio data files:')
     print('         py  ezCon.py  bigDish220320_05.txt')
@@ -223,18 +246,31 @@ def printUsage():
     print('    -ezConHeatVMinMaxL   1.0 1.4     (heat map z scale)')
     print()
     print('    -ezConAstroMath      0           (astroMath choice)')
-    print('      -ezConAstroMath  0:    no math (good for faster plots of most signals, but AntXTV wrong)')
+    print('      -ezConAstroMath  0:    no math (good for faster plots of most signals, but AntXTV is wrong)')
     print('      -ezConAstroMath  1:    using math from MIT Haystack SRT')
-    print('      -ezConAstroMath  2:    using math from slower Astropy library')
+    print('      -ezConAstroMath  2:    using math from authoritative slower AstroPy library')
     print()
-    print('    -ezConGalCrossingGLatCenter   1.0')
-    print('         (defines center of Galactic plane crossing  in Galactic Latitude degrees)')
-    print('    -ezConGalCrossingGLat         5.0')
-    print('         (defines "close to Galactic plane crossing" in Galactic Latitude degrees)')
     print('    -ezConVelGLonEdgeFrac         0.5    ')
     print('         (velGLon level fraction for plotEzCon430velGLonEdges)')
     #print('    -ezConVelGLonEdgeLevel  0.5    ')
     #print('         (velGLon level for plotEzCon430velGLonEdges, if 0 then use only ezConVelGLonEdgeFrac)')
+    print()
+    print('    -ezConGalCrossingGLatCenter   2.4')
+    print('         (adds center  of GLat crossing  in Galactic Latitude degrees)')
+    print('    -ezConGalCrossingGLatCenterL  -5.2  6.3  11')
+    print('         (adds centers of GLat crossings in Galactic Latitude degrees, as np.linspace(-5.2, 6.3, num=11))')
+    print('    -ezConGalCrossingGLatNear     2.3')
+    print('         (defines "close to GLat crossing" in Galactic Latitude degrees)')
+    print()
+    print('    -ezConGalCrossingGLonCenter   72.4')
+    print('         (adds center  of GLon crossing  in Galactic Longitude degrees)')
+    print('    -ezConGalCrossingGLonCenterL  69.6  82.4  13')
+    print('         (adds centers of GLon crossings in Galactic Longitude degrees, as np.linspace(69.6,  82.4, num=13))')
+    print('    -ezConGalCrossingGLonNear     2.7')
+    print('         (defines "close to GLon crossing" in Galactic Longitude degrees)')
+    print()
+    print('    -ezCon399SignalSampleByFreqBinL     18  1423')
+    print('         (plot antenna sample 1423 spectrum By FreqBin of signal 18 (of ezbMenu columns 10, 12, 14, 16, 18))')
     print()
     print('    -ezDefaultsFile ../bigDish8.txt     (additional file of ezRA arguments)')
     print()
@@ -315,6 +351,7 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConAntRABaselineFreqBinsFracL  # float list
     global ezConAntXTFreqBinsFracL          # float list
     global ezConAntXTVTFreqBinsFracL        # float list
+    global ezCon399SignalSampleByFreqBinL   # integer list
     global ezConHeatVMinMaxL                # float list
 
     global ezConAstroMath                   # integer
@@ -322,11 +359,15 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConDispGrid                    # integer
     global ezConDispFreqBin                 # integer
     global ezConRawDispIndex                # integer
-    global ezConGalCrossingGLatCenter       # float
-    global ezConGalCrossingGLat             # float
-    global ezConVelGLonEdgeFrac             # float
-    global ezConVelGLonEdgeLevel            # float
     global ezConPlotRangeL                  # integer list
+
+    global ezConVelGLonEdgeFrac             # float
+    #global ezConVelGLonEdgeLevel            # float
+
+    global ezConGalCrossingGLatCenterL      # float list
+    global ezConGalCrossingGLatNear         # float
+    global ezConGalCrossingGLonCenterL      # float list
+    global ezConGalCrossingGLonNear         # float
 
 
     print()
@@ -407,11 +448,34 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezConAntFreqBinSmooth'.lower():
                 ezConAntFreqBinSmooth = float(thisLine[1])
 
-            elif thisLine0Lower == '-ezConGalCrossingGLatCenter'.lower():
-                ezConGalCrossingGLatCenter = float(thisLine[1])
 
+            elif thisLine0Lower == '-ezConGalCrossingGLatCenter'.lower():
+                #ezConGalCrossingGLatCenterL.append(int(thisLine[1]))
+                ezConGalCrossingGLatCenterL += [float(thisLine[1])]
+
+            elif thisLine0Lower == '-ezConGalCrossingGLatCenterL'.lower():
+                ezConGalCrossingGLatCenterL += np.linspace(float(thisLine[1]), float(thisLine[2]), num=int(thisLine[3])).tolist()
+                #ezConGalCrossingGLatCenterL += range(int(thisLine[1]), int(thisLine[2]))
+
+            # grandfather -ezConGalCrossingGLat as -ezConGalCrossingGLatNear
             elif thisLine0Lower == '-ezConGalCrossingGLat'.lower():
-                ezConGalCrossingGLat = float(thisLine[1])
+                ezConGalCrossingGLatNear = float(thisLine[1])
+
+            elif thisLine0Lower == '-ezConGalCrossingGLatNear'.lower():
+                ezConGalCrossingGLatNear = float(thisLine[1])
+
+
+            elif thisLine0Lower == '-ezConGalCrossingGLonCenter'.lower():
+                #ezConGalCrossingGLonCenterL.append(int(thisLine[1]))
+                ezConGalCrossingGLonCenterL += [float(thisLine[1])]
+
+            elif thisLine0Lower == '-ezConGalCrossingGLonCenterL'.lower():
+                ezConGalCrossingGLonCenterL += np.linspace(float(thisLine[1]), float(thisLine[2]), num=int(thisLine[3])).tolist()
+                #ezConGalCrossingGLonCenterL += range(int(thisLine[1]), int(thisLine[2]))
+
+            elif thisLine0Lower == '-ezConGalCrossingGLonNear'.lower():
+                ezConGalCrossingGLonNear = float(thisLine[1])
+
 
             elif thisLine0Lower == '-ezConVelGLonEdgeFrac'.lower():
                 ezConVelGLonEdgeFrac = float(thisLine[1])
@@ -467,6 +531,10 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezConAntXTVTFreqBinsFracL'.lower():
                 ezConAntXTVTFreqBinsFracL[0] = float(thisLine[1])
                 ezConAntXTVTFreqBinsFracL[1] = float(thisLine[2])
+
+            elif thisLine0Lower == '-ezCon399SignalSampleByFreqBinL'.lower():
+                ezCon399SignalSampleByFreqBinL[0] = int(thisLine[1])
+                ezCon399SignalSampleByFreqBinL[1] = int(thisLine[2])
 
             elif thisLine0Lower == '-ezConHeatVMinMaxL'.lower():
                 ezConHeatVMinMaxL[0] = float(thisLine[1])
@@ -538,6 +606,7 @@ def ezConArgumentsCommandLine():
     global ezConAntRABaselineFreqBinsFracL  # float list
     global ezConAntXTFreqBinsFracL          # float list
     global ezConAntXTVTFreqBinsFracL        # float list
+    global ezCon399SignalSampleByFreqBinL   # integer list
     global ezConHeatVMinMaxL                # float list
 
     global ezConAstroMath                   # integer
@@ -545,11 +614,15 @@ def ezConArgumentsCommandLine():
     global ezConDispGrid                    # integer
     global ezConDispFreqBin                 # integer
     global ezConRawDispIndex                # integer
-    global ezConGalCrossingGLatCenter       # float
-    global ezConGalCrossingGLat             # float
+    global ezConPlotRangeL                  # integer list
+
     global ezConVelGLonEdgeFrac             # float
     #global ezConVelGLonEdgeLevel            # float
-    global ezConPlotRangeL                  # integer list
+
+    global ezConGalCrossingGLatCenterL      # float list
+    global ezConGalCrossingGLatNear         # float
+    global ezConGalCrossingGLonCenterL      # float list
+    global ezConGalCrossingGLonNear         # float
 
     global cmdDirectoryS                    # string            creation
 
@@ -662,13 +735,49 @@ def ezConArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezConAntFreqBinSmooth = float(cmdLineSplit[cmdLineSplitIndex])
 
+
             elif cmdLineArgLower == '-ezConGalCrossingGLatCenter'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConGalCrossingGLatCenter = float(cmdLineSplit[cmdLineSplitIndex])
+                ezConGalCrossingGLatCenterL += [int(cmdLineSplit[cmdLineSplitIndex])]
 
+            elif cmdLineArgLower == '-ezConGalCrossingGLatCenterL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConGalCrossingGLatCenterL0 = float(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezConGalCrossingGLatCenterL1 = float(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezConGalCrossingGLatCenterL2 = int(cmdLineSplit[cmdLineSplitIndex])
+                ezConGalCrossingGLatCenterL += np.linspace(ezConGalCrossingGLatCenterL0, ezConGalCrossingGLatCenterL1, num=ezConGalCrossingGLatCenterL2).tolist()
+                #ezConGalCrossingGLatCenterL += range(ezConGalCrossingGLatCenterL0, ezConGalCrossingGLatCenterL1)
+
+            # grandfather -ezConGalCrossingGLat as -ezConGalCrossingGLatNear
             elif cmdLineArgLower == '-ezConGalCrossingGLat'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConGalCrossingGLat = float(cmdLineSplit[cmdLineSplitIndex])
+                ezConGalCrossingGLatNear = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezConGalCrossingGLatNear'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConGalCrossingGLatNear = float(cmdLineSplit[cmdLineSplitIndex])
+
+
+            elif cmdLineArgLower == '-ezConGalCrossingGLonCenter'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConGalCrossingGLonCenterL += [int(cmdLineSplit[cmdLineSplitIndex])]
+
+            elif cmdLineArgLower == '-ezConGalCrossingGLonCenterL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConGalCrossingGLonCenterL0 = float(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezConGalCrossingGLonCenterL1 = float(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezConGalCrossingGLonCenterL2 = int(cmdLineSplit[cmdLineSplitIndex])
+                ezConGalCrossingGLonCenterL += np.linspace(ezConGalCrossingGLonCenterL0, ezConGalCrossingGLonCenterL1, num=ezConGalCrossingGLonCenterL2).tolist()
+                #ezConGalCrossingGLatCenterL += range(ezConGalCrossingGLatCenterL0, ezConGalCrossingGLatCenterL1)
+
+            elif cmdLineArgLower == '-ezConGalCrossingGLonNear'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConGalCrossingGLonNear = float(cmdLineSplit[cmdLineSplitIndex])
+
 
             elif cmdLineArgLower == '-ezConVelGLonEdgeFrac'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -751,6 +860,12 @@ def ezConArgumentsCommandLine():
                 ezConAntXTVTFreqBinsFracL[0] = float(cmdLineSplit[cmdLineSplitIndex])
                 cmdLineSplitIndex += 1
                 ezConAntXTVTFreqBinsFracL[1] = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezCon399SignalSampleByFreqBinL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezCon399SignalSampleByFreqBinL[0] = int(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezCon399SignalSampleByFreqBinL[1] = int(cmdLineSplit[cmdLineSplitIndex])
 
             elif cmdLineArgLower == '-ezConHeatVMinMaxL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -841,20 +956,28 @@ def ezConArguments():
     global ezConAntRABaselineFreqBinsFracL  # float list
     global ezConAntXTFreqBinsFracL          # float list
     global ezConAntXTVTFreqBinsFracL        # float list
+    global ezCon399SignalSampleByFreqBinL   # integer list
+    global ezCon399SignalSampleByFreqBin1d  # float list or numpy
+
     global ezConHeatVMinMaxL                # float list
 
     global ezConAstroMath                   # integer
 
     global fileNameLast                     # string
     global plotCountdown                    # integer
+
     global ezConDispGrid                    # integer
     global ezConDispFreqBin                 # integer
     global ezConRawDispIndex                # integer
-    global ezConGalCrossingGLatCenter       # float
-    global ezConGalCrossingGLat             # float
+    global ezConPlotRangeL                  # integer list
+
     global ezConVelGLonEdgeFrac             # float
     global ezConVelGLonEdgeLevel            # float
-    global ezConPlotRangeL                  # integer list
+
+    global ezConGalCrossingGLatCenterL      # float list
+    global ezConGalCrossingGLatNear         # float
+    global ezConGalCrossingGLonCenterL      # float list
+    global ezConGalCrossingGLonNear         # float
 
     # defaults
     if 1:
@@ -893,10 +1016,16 @@ def ezConArguments():
         ezConAntBaselineFreqBinsFracL   = [0, 0.2344, 0.7656, 1]
         ezConAntRABaselineFreqBinsFracL = [0, 0.2344, 0.7656, 1]
 
+        # for a bandwidth of 2.4 desired Doppler x, try (2.4 / 2 + x) / 2.4
+        #   like for Doppler -0.5, (2.4 / 2 + (-0.5 )) / 2.4 = 0.2917,
+        #   like for Doppler  4.5, (2.4 / 2 + ( 0.45)) / 2.4 = 0.6888
         ezConAntXTFreqBinsFracL         = [   0.15,   0.85      ]
 
         ezConAntXTVTFreqBinsFracL       = [   0.25,   0.75      ]
-        
+
+        ezCon399SignalSampleByFreqBinL = [10, 0]    # Ant, antenna sample 0
+        ezCon399SignalSampleByFreqBin1d = []        # flag as empty
+
         ezConHeatVMinMaxL = [0., 0.]        # default is to autoscale heatVMin of heatmaps
 
         ezConDispGrid    = 0
@@ -906,9 +1035,13 @@ def ezConArguments():
 
         ezConRefMode = 10
 
-        # defines 'close to Galactic plane crossing' in Galactic Latitude degrees
-        ezConGalCrossingGLatCenter = 0.
-        ezConGalCrossingGLat = 5.
+        ezConGalCrossingGLatCenterL = []
+        # defines 'close to GLat crossing" in Galactic Latitude degrees
+        ezConGalCrossingGLatNear    = 5.
+
+        ezConGalCrossingGLonCenterL = []
+        # defines 'close to GLon crossing" in Galactic Longitude degrees
+        ezConGalCrossingGLonNear    = 0.5
 
         ezConVelGLonEdgeFrac =  0.5     # velGLon level fraction for plotEzCon430velGLonEdges()
         ezConVelGLonEdgeLevel = 0.      # velGLon level for plotEzCon430velGLonEdges(), if not 0 then
@@ -939,6 +1072,8 @@ def ezConArguments():
     # process arguments from command line
     ezConArgumentsCommandLine()
 
+    # sanity tests
+
     if ezConAntXInput not in [-1, 0, 2, 4, 5, 6]:
         print()
         print()
@@ -951,6 +1086,22 @@ def ezConArguments():
         print()
         print()
         exit()
+
+    if ezCon399SignalSampleByFreqBinL[0] not in [10, 12, 14, 16, 18]:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print(' ========== FATAL ERROR: ', ezCon399SignalSampleByFreqBinL[0], 'is an unrecognized value for ezCon399SignalSampleByFreqBinL[0]')
+        print()
+        print()
+        print()
+        print()
+        exit()
+
+    if ezConGalCrossingGLatCenterL == []:
+        ezConGalCrossingGLatCenterL = [0.]
 
     if 1:
         # print status
@@ -987,6 +1138,7 @@ def ezConArguments():
         print('   ezConAntXTFreqBinsFracL         =', ezConAntXTFreqBinsFracL)
         print('   ezConUseVlsr                    =', ezConUseVlsr)
         print('   ezConAntXTVTFreqBinsFracL       =', ezConAntXTVTFreqBinsFracL)
+        print('   ezCon399SignalSampleByFreqBinL  =', ezCon399SignalSampleByFreqBinL)
         print()
         print('   ezConRawDispIndex     =', ezConRawDispIndex)
         print('   ezConDispGrid         =', ezConDispGrid)
@@ -995,8 +1147,12 @@ def ezConArguments():
         print()
         print('   ezConAstroMath        =', ezConAstroMath)
         print()
-        print('   ezConGalCrossingGLatCenter  =', ezConGalCrossingGLatCenter)
-        print('   ezConGalCrossingGLat        =', ezConGalCrossingGLat)
+        print('   ezConGalCrossingGLatCenterL =', ezConGalCrossingGLatCenterL)
+        print('   ezConGalCrossingGLatNear    =', ezConGalCrossingGLatNear)
+        print()
+        print('   ezConGalCrossingGLonCenterL =', ezConGalCrossingGLonCenterL)
+        print('   ezConGalCrossingGLonNear    =', ezConGalCrossingGLonNear)
+        print()
         print('   ezConVelGLonEdgeFrac  =', ezConVelGLonEdgeFrac)
         print('   ezConVelGLonEdgeLevel =', ezConVelGLonEdgeLevel)
         print()
@@ -1056,7 +1212,7 @@ def readDataDir():
         useSamplesRawLast  = 99999999999                # silly big number
         useSamplesRawStart = 0
         useSamplesRawStop  = useSamplesRawLast          # silly big number
-    sampleCount = 0         # increments whether or not the data line was collected
+    sampleCount = 0         # increments whether or not the data line was collected (ezConRawSamplesUseL)
 
 
     directoryList = cmdDirectoryS.split()
@@ -1317,9 +1473,11 @@ def readDataDir():
                                 else:
                                     elevation = np.array([dataElevation])
 
+                            # increments when the data line was collected (ezConRawSamplesUseL)
                             rawLen += 1
 
-                        sampleCount += 1        # increments whether or not the data line was collected
+                        # increments whether or not the data line was collected (ezConRawSamplesUseL)
+                        sampleCount += 1
 
                         # allow append to print line
                         print(f'    number of samples read = {sampleCount:,}',
@@ -1351,7 +1509,7 @@ def readDataDir():
     if not rawLen:
         print()
         print()
-        print(" ========== FATAL ERROR: no data file loaded")
+        print(' ========== FATAL ERROR: no data file loaded')
         print()
         print()
         print()
@@ -3183,6 +3341,82 @@ def ezConAntSamplesUseLDo():
     else:
         useSamplesAntMask = np.ones([antLen], dtype = bool)
 
+    #if ezConAntSampleSnipL:
+    if 0:
+        # This loop processes the requests in given order.
+        # Each snip changes the index of the higher indexes (all higher samples move left).
+        # Like a chain anchored at the left, and removing one link: total chain is shorter and the right side of the chain moves left by one link.
+        # This why it is easier to request ezConAntSampleSnipL values in decreasing order !
+        for n in ezConAntSampleSnipL:
+            useSamplesAntMask[n] = False
+
+    #print('                         useSamplesAntMask =', useSamplesAntMask)
+    print('                         useSamplesAntMask.sum() =', (useSamplesAntMask + 0).sum())
+    print('                         len(useSamplesAntMask) =', len(useSamplesAntMask))
+
+    # thin most data arrays to only antAvgKeepMask samples
+    azimuth     = azimuth    [useSamplesAntMask]
+    elevation   = elevation  [useSamplesAntMask]
+    dataTimeUtc = dataTimeUtc[useSamplesAntMask]
+    #rawIndex    = rawIndex   [useSamplesAntMask]
+    ant         = ant     [:, useSamplesAntMask]
+    ref         = ref     [:, useSamplesAntMask]
+    antLen = ant.shape[1]
+    antLenM1 = antLen - 1
+    refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'                         antLen = {antLen:,}')
+    print(f'                         refLen = {refLen:,}')
+    xTickLabelsHeatAntL = []        # probably just changed antLen, force new xTickLabelsHeatAntL
+    xTickLocsAnt        = []        # probably just changed antLen, force new xTickLocsAnt
+
+
+
+def ezConAntSampleSnipLDo():
+    global azimuth                  # float array
+    global elevation                # float array
+    global dataTimeUtc              # 'astropy.time.core.Time' object array
+    global ant                      # float 2d array
+    global ref                      # float 2d array
+    #global rawIndex                 # integer array     may be thinned ??????????????????????????????????????
+    global antLen                   # integer
+    global antLenM1                 # integer
+    #global refLen                   # integer
+    #global refLenM1                 # integer
+
+    global xTickLabelsHeatAntL      # string list
+    global xTickLocsAnt             # float array
+
+    global ezConAntSamplesUseL      # integer list
+    global ezConAntSampleSnipL      # integer list
+
+    #print(f'   before ezConAntSampleSnipLDo, antLen = ', {antLen:,}')
+    
+    print()
+    print('   ezConAntSampleSnipLDo ===============')
+
+    print('                         np.shape(ant)[1] =', np.shape(ant)[1])
+
+    #if ezConAntSamplesUseL:
+    if 0:
+        # ezConAntSamplesUseL allows more than one pair of list elements
+        useSamplesAntStart = ezConAntSamplesUseL[0]
+        useSamplesAntStop  = ezConAntSamplesUseL[1]
+        useSamplesAntIndex = 2                         # point to next start/stop pair, if any
+        useSamplesAntMask = np.zeros([antLen], dtype = bool)
+        for n in range(min(ezConAntSamplesUseL[-1] + 1, antLen)):
+            # need to update useSamplesAntStop and useSamplesAntStart ?
+            if useSamplesAntStop < n:
+                useSamplesAntStart = ezConAntSamplesUseL[useSamplesAntIndex]
+                useSamplesAntStop  = ezConAntSamplesUseL[useSamplesAntIndex + 1]
+                useSamplesAntIndex += 2        # point to next Start/Stop pair, if any
+
+            # is n inside a ANT want-to-use section ?
+            if useSamplesAntStart <= n and n <= useSamplesAntStop:
+                useSamplesAntMask[n] = True
+    else:
+        useSamplesAntMask = np.ones([antLen], dtype = bool)
+
     if ezConAntSampleSnipL:
         # This loop processes the requests in given order.
         # Each snip changes the index of the higher indexes (all higher samples move left).
@@ -4076,97 +4310,209 @@ def writeFileGal():
     global fileFreqMin                  # float
     global fileFreqMax                  # float
     global fileFreqBinQty               # integer
-    global ezConGalCrossingGLatCenter   # float
-    global ezConGalCrossingGLat         # float
+    global ezConGalCrossingGLatCenterL  # float list
+    global ezConGalCrossingGLatNear     # float
     global fileNameLast                 # string
+
+    # if Galactic Latitude Crossings not wanted, then return
+    if ezConGalCrossingGLatNear == 0.:
+        return(1)
 
     print()
     print('   writeFileGal ===============')
 
-    # Velocity by Galactic Longitude (gLon) grid.
-    # gLon is -180thru+180, adding 180, gives gLonP180 as 0thru360 which is more convenient.
-    velGLonP180 = np.zeros([fileFreqBinQty, 361], dtype = float)    # fileFreqBinQty by 0thru360 gLonP180
-    velGLonP180Count = np.zeros([361], dtype = int)                 # count of saved spectrums in velGLonP180
-    # Declination (dec) is -90thru+90, adding 90, gives decP90 as 0thru180 which is more convenient.
-    # galDecP90GLonP180Count is floats to allow mask replacement with np.nan later.
-    galDecP90GLonP180Count = np.zeros([181, 361], dtype = int)      # 0thru180 decP90 by 0thru360 gLonP180
+    for ezConGalCrossingGLatCenter in ezConGalCrossingGLatCenterL:
+        # Velocity by Galactic Longitude (gLon) grid.
+        # gLon is -180thru+180, adding 180, gives gLonP180 as 0thru360 which is more convenient.
+        velGLonP180 = np.zeros([fileFreqBinQty, 361], dtype = float)    # fileFreqBinQty by 0thru360 gLonP180
+        velGLonP180Count = np.zeros([361], dtype = int)                 # count of saved spectrums in velGLonP180
+        # Declination (dec) is -90thru+90, adding 90, gives decP90 as 0thru180 which is more convenient.
+        # galDecP90GLonP180Count is floats to allow mask replacement with np.nan later.
+        galDecP90GLonP180Count = np.zeros([181, 361], dtype = int)      # 0thru180 decP90 by 0thru360 gLonP180
 
-    for n in range(antLen):
-        #gLatDegThis = int(ezConOut[n, 3])                   # gLatDeg is -90 thru +90
-        gLatDegThis = ezConOut[n, 3]                        # gLatDeg is -90. thru +90.
+        for n in range(antLen):
+            gLatDegThis = ezConOut[n, 3]                        # gLatDeg is -90. thru +90.
 
-        # if n is close enough to Galactic plane, a Galactic plane crossing
-        if abs(gLatDegThis - ezConGalCrossingGLatCenter) <= ezConGalCrossingGLat:
-            gLonP180 = int(ezConOut[n, 4]) + 180            # gLonP180 is RtoL from 0 thru 360
+            # if n is close enough to Galactic GLat, a Galactic crossing
+            if abs(gLatDegThis - ezConGalCrossingGLatCenter) <= ezConGalCrossingGLatNear:
+                gLonP180 = int(ezConOut[n, 4]) + 180            # gLonP180 is RtoL from 0 thru 360
 
-            # sum the current antXTVT spectrum to the grid column, and increment the column count
-            # but reverse the freqBin elements,
-            #   because highest freqBin = highest freq = approaching fastest = most negative "velocity"
-            #velGLonP180[:, gLonP180] += antXTV[:, n][::-1]
-            velGLonP180[:, gLonP180] += antXTVT[:, n][::-1]
-            velGLonP180Count[gLonP180] += 1
+                # sum the current antXTVT spectrum to the grid column, and increment the column count
+                # but reverse the freqBin elements,
+                #   because highest freqBin = highest freq = approaching fastest = most negative "velocity"
+                #velGLonP180[:, gLonP180] += antXTV[:, n][::-1]
+                velGLonP180[:, gLonP180] += antXTVT[:, n][::-1]
+                velGLonP180Count[gLonP180] += 1
 
-            # For each declination, several gLat may be 'close enough' to count as a crossing.
-            # Increment at each crossing's dec and gLon.
-            galDecP90GLonP180Count[int(ezConOut[n, 2] + 90), gLonP180] += 1     # declination + 90
+                # For each declination, several gLat may be 'close enough' to count as a crossing.
+                # Increment at each crossing's dec and gLon.
+                galDecP90GLonP180Count[int(ezConOut[n, 2] + 90), gLonP180] += 1     # declination + 90
 
-    #print('velGLonP180 = ')
-    #print(velGLonP180)
-    #print(velGLonP180.shape)
-    #print()
+        #print('velGLonP180 = ')
+        #print(velGLonP180)
+        #print(velGLonP180.shape)
+        #print()
 
-    #print('velGLonP180Count = ')
-    #print(velGLonP180Count)
-    #print(velGLonP180Count.shape)
-    #print()
+        #print('velGLonP180Count = ')
+        #print(velGLonP180Count)
+        #print(velGLonP180Count.shape)
+        #print()
 
-    velGLonP180CountSum = velGLonP180Count.sum()
-    print(' velGLonP180CountSum =', velGLonP180CountSum)
+        print()
+        print(f' ezConGalCrossingGLatCenter = {ezConGalCrossingGLatCenter:04.1f}')
+        #print(' ezConGalCrossingGLatCenter =', ezConGalCrossingGLatCenter)
+        velGLonP180CountSum = velGLonP180Count.sum()
+        print(' velGLonP180CountSum =', velGLonP180CountSum)
 
-    if velGLonP180CountSum:       # if anything in velGLonP180 to save or plot
+        if velGLonP180CountSum:       # if anything in velGLonP180 to save or plot
+            # for fileNameLast of  data/2021_333_00.rad.txt  create fileGalWriteName as  data/2021_333_00.radGal.npz
+            #fileGalWriteName = fileNameLast.split(os.path.sep)[-1].split('.')[-2] + 'Gal.npz'
+            #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] + 'Gal.npz'
+            if ezConGalCrossingGLatCenter < 0:
+                # output filenames *Nxx.xGal.npz (N for Negative)
+                fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+                    + f'N{-ezConGalCrossingGLatCenter:04.1f}Gal.npz'
+                # output filenames *Gal.npz (N for Negative)
+                #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+                #    + f'N{-ezConGalCrossingGLatCenter:02d}Gal.npz'
+            else:
+                # output filenames *Pxx.xGal.npz (P for Negative)
+                fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+                    + f'P{ezConGalCrossingGLatCenter:04.1f}Gal.npz'
+                # output filenames *PxxGal.npz (P for Positive)
+                #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+                #    + f'P{ezConGalCrossingGLatCenter:02d}Gal.npz'
+            #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-8] \
+            #    + 'GalC.npz'   # ezGal combines .npz
+            print('   ezRAObsName = ', ezRAObsName)
+            np.savez_compressed(fileGalWriteName,
+                fileObsName=np.array(ezRAObsName),
+                fileFreqMin=np.array(fileFreqMin), 
+                fileFreqMax=np.array(fileFreqMax),
+                fileFreqBinQty=np.array(fileFreqBinQty),
+                velGLonP180=velGLonP180,
+                velGLonP180Count=velGLonP180Count,
+                galDecP90GLonP180Count=galDecP90GLonP180Count,
+                antXTVTName=antXNameL[1]+'TVT',
+                ezConGalCrossingGLatCenter=ezConGalCrossingGLatCenter,
+                ezConGalCrossingGLatNear=ezConGalCrossingGLatNear)
+            # antXTVTName was added to file definition later, on 230401
+            # ezConGalCrossingGLatCenter was added to file definition later, on 230623
+            # ezConGalCrossingGLatNear was added to file definition later, on 230625
 
-        # for fileNameLast of  data/2021_333_00.rad.txt  create fileGalWriteName as  data/2021_333_00.radGal.npz
-        #fileGalWriteName = fileNameLast.split(os.path.sep)[-1].split('.')[-2] + 'Gal.npz'
-        fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] + 'Gal.npz'
-        #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-8] + 'GalC.npz'   # ezGal combines .npz
-        #np.savez_compressed(fileGalWriteName, velGLonP180=velGLonP180, velGLonP180Count=velGLonP180Count)
-        print('   ezRAObsName = ', ezRAObsName)
-        np.savez_compressed(fileGalWriteName,
-            fileObsName=np.array(ezRAObsName),
-            fileFreqMin=np.array(fileFreqMin), 
-            fileFreqMax=np.array(fileFreqMax),
-            fileFreqBinQty=np.array(fileFreqBinQty),
-            velGLonP180=velGLonP180,
-            velGLonP180Count=velGLonP180Count,
-            galDecP90GLonP180Count=galDecP90GLonP180Count,
-            antXTVTName=antXNameL[1]+'TVT')
-        # antXTVTName was added to file definition later on 230401
-
-        #npzfile = np.load(directory + os.path.sep + fileReadName)
-        #ezRAObsName = npzfile['ezRAObsName'] 
-        #fileFreqMin    = npzfile['fileFreqMin'] 
-        #fileFreqMax    = npzfile['fileFreqMax']
-        #fileFreqBinQty = npzfile['fileFreqBinQty'] 
-        #velGLonP180      = npzfile['velGLonP180']
-        #velGLonP180Count = npzfile['velGLonP180Count']
-        #galDecP90GLonP180Count = npzfile['galDecP90GLonP180Count']
+            #npzfile = np.load(directory + os.path.sep + fileReadName)
+            #ezRAObsName = npzfile['ezRAObsName'] 
+            #fileFreqMin    = npzfile['fileFreqMin'] 
+            #fileFreqMax    = npzfile['fileFreqMax']
+            #fileFreqBinQty = npzfile['fileFreqBinQty'] 
+            #velGLonP180      = npzfile['velGLonP180']
+            #velGLonP180Count = npzfile['velGLonP180Count']
+            #galDecP90GLonP180Count = npzfile['galDecP90GLonP180Count']
 
 
-        # Prepare velGLonP180 for later plots.
-        # velGLonP180 has been filled with sums of samples.  Now for each column, convert to sum's average.
-        for gLonP180 in range(361):
-            if velGLonP180Count[gLonP180]:
-                velGLonP180[:, gLonP180] /= velGLonP180Count[gLonP180]
+            # Prepare velGLonP180 for later ezCon plots.
+            # velGLonP180 has been filled with sums of samples.
+            #   Now for each column, convert to sum's average.
+            for gLonP180 in range(361):
+                if velGLonP180Count[gLonP180]:
+                    velGLonP180[:, gLonP180] /= velGLonP180Count[gLonP180]
 
-        if 1:
-            # mask low values with Not-A-Number (np.nan) to not plot
-            #maskOffBelowThis = 0.975    # N0RQVHC
-            #maskOffBelowThis = 0.9      # WA6RSV
-            maskOffBelowThis = 1.0      # LTO15HC
-            print(' maskOffBelowThis = ', maskOffBelowThis)
-            maskThisOff = (velGLonP180 < maskOffBelowThis)
-            #velGLonP180[maskThisOff] = np.nan                   # maskOffBelowThis is the do not plot
-            velGLonP180[maskThisOff] = maskOffBelowThis         # maskOffBelowThis is the minumum everywhere
+            if 1:
+                # mask low values with Not-A-Number (np.nan) to not plot
+                #maskOffBelowThis = 0.975    # N0RQVHC
+                #maskOffBelowThis = 0.9      # WA6RSV
+                maskOffBelowThis = 1.0      # LTO15HC
+                print(' maskOffBelowThis = ', maskOffBelowThis)
+                maskThisOff = (velGLonP180 < maskOffBelowThis)
+                #velGLonP180[maskThisOff] = np.nan                   # maskOffBelowThis is the do not plot
+                velGLonP180[maskThisOff] = maskOffBelowThis         # maskOffBelowThis is the minumum everywhere
+
+
+
+def writeFileGLon():
+    # write velocity data arrays to file
+
+    global antXNameL                    # list of strings
+    global antXTVT                      # float 2d array
+    global antLen                       # integer
+    global velGLonP180                  # float 2d array     creation
+    global velGLonP180Count             # integer array      creation
+    global velGLonP180CountSum          # integer            creation
+
+    global fileFreqMin                  # float
+    global fileFreqMax                  # float
+    global fileFreqBinQty               # integer
+    global ezConGalCrossingGLonCenterL  # float list
+    global ezConGalCrossingGLonNear     # float
+    global fileNameLast                 # string
+
+    # if Galactic Longitude Crossings not wanted, then return
+    if not len(ezConGalCrossingGLonCenterL) or ezConGalCrossingGLonNear == 0.:
+        return(1)
+
+    print()
+    print('   writeFileGLon ===============')
+
+    # Velocity by Galactic Latitude (gLat) grid.
+    # gLat is -90thru+90, adding 90, gives gLatP90 as 0thru180 which is more convenient.
+    velGLatP90 = np.zeros([fileFreqBinQty, 181], dtype = float)    # fileFreqBinQty by 0thru180 gLatP90
+    velGLatP90Count = np.zeros([181], dtype = int)                 # count of saved spectrums in velGLatP90
+
+    for ezConGalCrossingGLonCenter in ezConGalCrossingGLonCenterL:
+        for n in range(antLen):
+            gLonDegThis = ezConOut[n, 4]                        # gLonDeg is -180. thru +180.
+
+            # if n is close enough to Galactic Longitude, a GLon crossing
+            if abs(gLonDegThis - ezConGalCrossingGLonCenter) <= ezConGalCrossingGLonNear:
+                gLatP90 = int(ezConOut[n, 3]) + 90            # gLatP90 is from 0 thru 180
+
+                # sum the current antXTVT spectrum to the grid column, and increment the column count
+                # but reverse the freqBin elements,
+                #   because highest freqBin = highest freq = approaching fastest = most negative "velocity"
+                velGLatP90[:, gLatP90] += antXTVT[:, n][::-1]
+                velGLatP90Count[gLatP90] += 1
+
+        #print('velGLatP90 = ')
+        #print(velGLatP90)
+        #print(velGLonP90.shape)
+        #print()
+
+        #print('velGLatP90Count = ')
+        #print(velGLatP90Count)
+        #print(velGLatP90Count.shape)
+        #print()
+
+        print()
+        print(' ezConGalCrossingGLonCenter =', ezConGalCrossingGLonCenter)
+        velGLatP90CountSum = velGLatP90Count.sum()
+        print(' velGLatP90CountSum =', velGLatP90CountSum)
+
+        if velGLatP90CountSum:       # if anything in velGLatP90 to save or plot
+            if ezConGalCrossingGLonCenter < 0:
+                # output filenames *Nxxx.xGLon.npz (N for Negative)
+                fileGLonWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+                    + f'N{-ezConGalCrossingGLonCenter:05.1f}GLon.npz'
+                # output filenames *NxxxGLon.npz (N for Negative)
+                #fileGLonWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+                #    + f'N{-ezConGalCrossingGLonCenter:03d}GLon.npz'
+            else:
+                # output filenames *Pxxx.xGLon.npz (P for Positive)
+                fileGLonWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+                    + f'P{ezConGalCrossingGLonCenter:05.1f}GLon.npz'
+                # output filenames *PxxxGLon.npz (P for Positive)
+                #fileGLonWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+                #    + f'P{ezConGalCrossingGLonCenter:03d}GLon.npz'
+            print('   ezRAObsName = ', ezRAObsName)
+            np.savez_compressed(fileGLonWriteName,
+                fileObsName=np.array(ezRAObsName),
+                fileFreqMin=np.array(fileFreqMin), 
+                fileFreqMax=np.array(fileFreqMax),
+                fileFreqBinQty=np.array(fileFreqBinQty),
+                velGLatP90=velGLatP90,
+                velGLatP90Count=velGLatP90Count,
+                antXTVTName=antXNameL[1]+'TVT',
+                ezConGalCrossingGLonCenter=ezConGalCrossingGLonCenter,
+                ezConGalCrossingGLonNear=ezConGalCrossingGLonNear)
 
 
 
@@ -4253,6 +4599,7 @@ def printGoodbye(startTime):
     #global refLen                   # integer
     global programRevision          # string
     global commandString            # string
+    global ezConPlotRangeL          # integer list
 
     # print status
     if 0:
@@ -4289,6 +4636,7 @@ def printGoodbye(startTime):
         print('   ezConAntXTFreqBinsFracL         =', ezConAntXTFreqBinsFracL)
         print('   ezConUseVlsr                    =', ezConUseVlsr)
         print('   ezConAntXTVTFreqBinsFracL       =', ezConAntXTVTFreqBinsFracL)
+        print('   ezCon399SignalSampleByFreqBinL  =', ezCon399SignalSampleByFreqBinL)
         print()
         print('   ezConAstroMath        =', ezConAstroMath)
         print()
@@ -4306,6 +4654,9 @@ def printGoodbye(startTime):
         print(f'   antLen = {antLen:,}')
         print(f'   rawLen / antLen = {rawLen / antLen:,}')
         print(f'   antLen / rawLen = {antLen / rawLen:,}')
+
+    print()
+    print(' ezConPlotRangeL =', ezConPlotRangeL)
 
     stopTime = time.time()
     stopTimeS = time.ctime()
@@ -4489,8 +4840,9 @@ def plotEzCon2dSamples(plotName, plotData2d, plotXLabel, plotXLast, plotYLabel, 
     if ezConDispGrid:
         heat_map.grid(b=True, which='major', color='black', linewidth=0.075)
 
-    #xTickLabelsHeatAntL = []
-    if not len(xTickLabelsHeatAntL):            # create xTickLabelsHeatAntL only if needed
+    xTickLabelsHeatAntL = []
+    #if not len(xTickLabelsHeatAntL):            # create xTickLabelsHeatAntL only if needed
+    if 1:
         # create xTickLabelsHeatAntL
         xticklabels = heat_map.get_xticklabels()
         #print(xticklabels)
@@ -6094,7 +6446,7 @@ def plotEzCon191sigProg():
          3200.,     3000., 2800.,    2600.,    2400.,  2200.,     2000.,    1800., 1600.,
          1400.,   1200.,      1000.,   800.,       600.,     400.,      200.,         0.],
         ['AntRaw', 'Ant', 'AntMax', 'AntBas', 'AntB', 'AntBMax', 'RefRaw', 'Ref', 'RefMax',
-        'AntRA', 'AntRABas', 'AntRB', 'AntRBMax', antXNameL[1]+'TV', antXNameL[1]+'TVT', antXNameL[1]+'TVTMax', 'GLatDeg'])
+        'AntRA', 'AntRABas', 'AntRB', 'AntRBMax', antXNameL[1]+'TV', antXNameL[1]+'TVT', antXNameL[1]+'TVTMax', 'GLat'])
     #    'AntRA', 'AntRABas', 'AntRB', 'AntRBMax', 'AntXTV', 'AntXTVT', 'AntXTVTMax', 'GLatDeg'])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
@@ -6490,7 +6842,7 @@ def plotEzCon201GrawAntRef():
         plt.xlim(0, rawLenM1)
         plt.xticks(xTickLocsRaw, xTickLabelsRaw, rotation=45, ha='right', rotation_mode='anchor')
 
-        plt.ylabel('Raw Spectrum Average   (Ant = blue, Ref = red)'
+        plt.ylabel('Last Raw Spectrum Average   (Ant = blue, Ref = red)'
             + '\n\n ezConRawSamplesUseL = ' + str(ezConRawSamplesUseL))
 
         if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
@@ -7584,7 +7936,7 @@ def plotEzCon337refByFreqBinMax():
     global plotCountdown            # integer
     global ref                      # float 2d array
 
-    plotName = 'ezCon337refByFreqBinAvg.png'
+    plotName = 'ezCon337refByFreqBinMax.png'
 
     plotCountdown -= 1
 
@@ -7626,7 +7978,7 @@ def plotEzCon357antBByFreqBinMax():
     global plotCountdown            # integer
     global antB                     # float 2d array
 
-    plotName = 'ezCon357antBByFreqBinAvg.png'
+    plotName = 'ezCon357antBByFreqBinMax.png'
 
     plotCountdown -= 1
 
@@ -7895,6 +8247,57 @@ def plotEzCon397antXTVTByFreqBinMax():
 
 
 
+def plotEzCon399SignalSampleByFreqBin():
+
+    global ezConPlotRangeL                  # integer list
+    global fileNameLast                     # string
+    global plotCountdown                    # integer
+    global ezCon399SignalSampleByFreqBinL   # integer list
+    global ezCon399SignalSampleByFreqBin1d  # float list or numpy
+    global antXNameL                        # list of strings
+
+    plotCountdown -= 1
+
+    if 399 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 399:
+        return(1)
+
+    ezCon399SampleS = str(ezCon399SignalSampleByFreqBinL[1])
+    ezCon399SignalSampleByFreqBinL[1] = min(ezCon399SignalSampleByFreqBinL[1], antLen)
+
+    if ezCon399SignalSampleByFreqBinL[0] == 10:
+        plotName = 'ezCon399AntByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
+        plotColorS = 'blue'
+        plotYLabel = 'Ant Spectrum, Sample ' + ezCon399SampleS
+    elif ezCon399SignalSampleByFreqBinL[0] == 12:
+        plotName = 'ezCon399RefByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
+        plotColorS = 'red'
+        plotYLabel = 'Ref Spectrum, Sample ' + ezCon399SampleS
+    elif ezCon399SignalSampleByFreqBinL[0] == 14:
+        plotName = 'ezCon399AntBByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
+        plotColorS = 'green'
+        plotYLabel = 'AntB Spectrum, Sample ' + ezCon399SampleS
+    elif ezCon399SignalSampleByFreqBinL[0] == 16:
+        plotName = 'ezCon399AntRBByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
+        plotColorS = 'orange'
+        plotYLabel = 'AntRB Spectrum, Sample ' + ezCon399SampleS
+    else:
+        # ezCon399SignalSampleByFreqBinL[0] == 18
+        plotName = 'ezCon399' + antXNameL[1] + 'TVTByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
+        plotColorS = 'violet'
+        plotYLabel = antXNameL[1] + 'TVT Spectrum, Sample ' + ezCon399SampleS
+
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    plotEzCon1dByFreqBin(plotName, ezCon399SignalSampleByFreqBin1d, plotColorS, plotYLabel)
+
+    # free ezCon399SignalSampleByFreqBin1d memory
+    ezCon399SignalSampleByFreqBin1d = []
+    ezCon399SignalSampleByFreqBin1d = None
+    del ezCon399SignalSampleByFreqBin1d
+
+
+
 #A#################################################################################################
 
 
@@ -8154,7 +8557,7 @@ def plotEzCon520velGLonPolar():
         ax.set_theta_zero_location('S', offset=0.)
         ax.set_thetagrids((90, 180, 270, 360), ('-90', '0', '90', '180 and -180'))
 
-        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Plane Spectrums')
+        ax.set_xlabel('Galactic Longitude (degrees) of Spectra')
         ax.set_ylabel('Radius Is Increasing "Velocity",\n\n' \
             + 'Radius Is Increasing Receding,\n\n' \
             + 'Radius Is Decreasing Doppler\n\n')
@@ -8215,7 +8618,7 @@ def plotEzCon521velGLonPolarCount():
         ax.set_theta_zero_location('S', offset=0.)
         ax.set_thetagrids((90, 180, 270, 360), ('-90', '0', '90', '180 and -180'))
 
-        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Plane Spectrums')
+        ax.set_xlabel('Galactic Longitude (degrees) of Spectra')
         velGLonP180CountNonzero = np.count_nonzero(velGLonP180Count)
         ax.set_ylabel('Velocity Data Counts by Galactic Longitude' \
             + f'\nVelocity Count: Sum={velGLonP180CountSum:,}' \
@@ -8614,7 +9017,7 @@ def plotEzCon690gLonDegP180_nnnByFreqBinAvg():
                 else:
                     gLonDegS = f'+{gLonP180 - 180:03d}'        # '+nnn' with leading zeros
 
-                plt.ylabel('Average ' + antXNameL[1] + 'TV Spectrum for Galaxy plane at' \
+                plt.ylabel('Average ' + antXNameL[1] + 'TV Spectrum' \
                     + '\n\nGalactic Longitude = ' + gLonDegS + ' degrees', \
                     rotation=90, verticalalignment='bottom')
 
@@ -8638,6 +9041,8 @@ def main():
     global antRB                    # float 2d array
     global antX                     # float 2d array
     global antXNameL                # list of strings
+    global ezCon399SignalSampleByFreqBinL   # integer list
+    global ezCon399SignalSampleByFreqBin1d  # float list or numpy
 
     global refRawAvg                # float array
 
@@ -8909,7 +9314,8 @@ def main():
             plotEzCon202antRawAvg()
             plotEzCon302antRawByFreqBinAvg()
 
-    if ezConAntSamplesUseL or ezConAntSampleSnipL:
+    #if ezConAntSamplesUseL or ezConAntSampleSnipL:
+    if ezConAntSamplesUseL:
         ezConAntSamplesUseLDo()
 
     if ezConAntAvgSnipQtyL:
@@ -8923,6 +9329,9 @@ def main():
 
     if ezConAntFreqBinSmooth < 999998.:
         ezConAntFreqBinSmoothDo()
+
+    if ezConAntSampleSnipL:
+        ezConAntSampleSnipLDo()
 
     plotEzCon007ant()
     plotEzCon207antAvg()                # creates antAvg
@@ -8978,6 +9387,8 @@ def main():
     plotEzCon257antBMax()               # creates antBMax
     # if antB not needed, free antB memory
     if ezConAntXInput != 4:
+        if ezCon399SignalSampleByFreqBinL[0] == 14:
+            ezCon399SignalSampleByFreqBin1d = antB[:, ezCon399SignalSampleByFreqBinL[1]]
         antB = []
         antB = None
         del antB
@@ -8988,11 +9399,15 @@ def main():
     plotEzCon061antRA()                 # creates antRA
     # if ant not needed, free ant memory
     if ezConAntXInput != 0:
+        if ezCon399SignalSampleByFreqBinL[0] == 10:
+            ezCon399SignalSampleByFreqBin1d = ant[:, ezCon399SignalSampleByFreqBinL[1]]
         ant = []
         ant = None
         del ant
     # if ref not needed, free ref memory
     if ezConAntXInput != 2:
+        if ezCon399SignalSampleByFreqBinL[0] == 12:
+            ezCon399SignalSampleByFreqBin1d = ref[:, ezCon399SignalSampleByFreqBinL[1]]
         ref = []
         ref = None
         del ref
@@ -9013,12 +9428,25 @@ def main():
 
     plotEzCon077antRBMax2d()
     plotEzCon277antRBMax()              # creates antRBMax
-    # if antRB not needed, free antRA memory
+    # if antRB not needed, free antRB memory
     if ezConAntXInput != 6:
+        if ezCon399SignalSampleByFreqBinL[0] == 16:
+            ezCon399SignalSampleByFreqBin1d = antRB[:, ezCon399SignalSampleByFreqBinL[1]]
         antRB = []
         antRB = None
         del antRB
 
+
+    if not len(ezCon399SignalSampleByFreqBin1d):        # if empty
+        if ezCon399SignalSampleByFreqBinL[0] == 10:
+            ezCon399SignalSampleByFreqBin1d = ant[:, ezCon399SignalSampleByFreqBinL[1]]
+        elif ezCon399SignalSampleByFreqBinL[0] == 12:
+            ezCon399SignalSampleByFreqBin1d = ref[:, ezCon399SignalSampleByFreqBinL[1]]
+        elif ezCon399SignalSampleByFreqBinL[0] == 14:
+            ezCon399SignalSampleByFreqBin1d = antB[:, ezCon399SignalSampleByFreqBinL[1]]
+        elif ezCon399SignalSampleByFreqBinL[0] == 16:
+            ezCon399SignalSampleByFreqBin1d = antRB[:, ezCon399SignalSampleByFreqBinL[1]]
+        # antXTVT does not exist yet
 
     ####### antX
 
@@ -9086,7 +9514,7 @@ def main():
 
     ####### antXTVT
 
-    plotEzCon087antXTVT()               # creates antXTVT, keeps antXTV for Galaxy plane crossing plots
+    plotEzCon087antXTVT()               # creates antXTVT, keeps antXTV for Galaxy crossing plots
     plotEzCon287antXTVTAvg()            # creates antXTVTAvg into ezConOut[:, 18]
     plotEzCon387antXTVTByFreqBinAvg()
     plotEzCon397antXTVTByFreqBinMax()
@@ -9095,9 +9523,14 @@ def main():
     plotEzCon097antXTVTMax2d()
     plotEzCon297antXTVTMax()            # creates antXTVTMax into ezConOut[:, 19]
     # free antXTVT memory
+    if not len(ezCon399SignalSampleByFreqBin1d):        # if empty
+        ezCon399SignalSampleByFreqBin1d = antXTVT[:, ezCon399SignalSampleByFreqBinL[1]]
     antXTVT = []
     antXTVT = None
     del antXTVT
+
+
+    plotEzCon399SignalSampleByFreqBin()
 
 
     #writeFileSdre()
@@ -9138,9 +9571,10 @@ def main():
 
     # Global arrays remaining: dataTimeUtc, antXTV, ezConOut
 
-    # Galaxy plane crossings plots
+    # Galaxy crossing plots
     writeFileGal()                      # creates fileGalWriteName like 2021_333_00.radGal.npz, velGLonP180,
                                         #   velGLonP180Count, velGLonP180CountSum, galDecP90GLonP180Count
+    writeFileGLon()
 
     plotEzCon510velGLon()
     plotEzCon511velGLonCount()          # creates ezCon511velGLonCount.txt
@@ -9164,4 +9598,12 @@ def main():
 
 if __name__== '__main__':
   main()
+
+# python3 ../ezRA/ezCon230623a.py  ~/aaaEzRABase/lto16h/data/2021_285_00.rad.txt -exzConGalCrossingGLatCenter23.4 -exzConGalCrossingGLatCenter-43.4 -exzConGalCrossingGLatCenterL-5.015.0201 -ezConAstroMath 1 -ezRAObsName  LTO16  -ezRAObsLat  40.3  -ezRAObsLon  -105.1  -ezRAObsAmsl  1524 -ezConPlotRangeL 191 191
+
+# python3 ../ezRA/ezCon230625a.py  ~/aaaEzRABase/lto16h/data/2021_285_00.rad.txt -exzConGalCrossingGLatCenter23 -exzConGalCrossingGLatCenter-43 -ezConGalCrossingGLonCenterL -5 16 -ezConAstroMath 1 -ezRAObsName  LTO16  -ezRAObsLat  40.3  -ezRAObsLon  -105.1  -ezRAObsAmsl  1524 -ezConPlotRangeL 191 191
+
+# ls -lhtr
+
+# python3 ../ezRA/ezCon230629a.py  /home/a/aaaEzRABase/lto16h/data/2021_171_00.rad.txt  -ezConAstroMath  1  -ezRAObsName  LTO16  -ezRAObsLat  40.3  -ezRAObsLon  -105.1  -ezRAObsAmsl  1524  -ezConPlotRangeL  191  191  -ezConRawFreqBinHide  91
 

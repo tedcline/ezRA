@@ -1,4 +1,4 @@
-programName = 'ezGal230521a.py'
+programName = 'ezGal230827a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGal GALaxy explorer program,
@@ -26,7 +26,12 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
-# ezGal230521a.py, renamed highGLonMin to gLonSpurMax
+# ezGal230827a.py, commented out GalC.npz file creation
+# ezGal230824a.py, print ezGalPlotRangeL in printGoodbye(),
+# ezGal230818a.py, default ezGalVelGLonEdgeLevelL to [1.01, 20, 160],
+#   error message if no data available for gLon = highGLonMin
+# ezGal230802a.py, commented   layout='constrained'   for laptop python3.8.10
+# ezGal230528a.py, 'Spectra for Galaxy plane at' to 'Velocity Spectra for'
 # ezGal230514a.py, 'Sofue 2017 says 1e+11' to plotEzGal560galMass()
 # ezGal230512a.py, 'Possible Galactic Atomic Hydrogen', '"Keplerian Rotation"'
 # ezGal230511a.py, plotEzGal559planetRot()
@@ -191,8 +196,8 @@ def printUsage():
     print()
     #print('    -ezGalVelGLonEdgeLevelL  1.01   1.03   30    (velGLon level for ezGal540velGLonEdgesB)')
     #print('        (velGLon level for ezGal540velGLonEdgesB: level0, level1, gLonChangeLevel1)')
-    print('    -ezGalVelGLonEdgeLevelL  1.06   40   140')
-    print('        (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, gLonSpurMax, velGLonUEdge[gLon=0])')
+    print('    -ezGalVelGLonEdgeLevelL  1.06   40   140    (velGLon level for ezGal540velGLonEdgesB)')
+    print('        (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, velGLonUEdge[gLon=0])')
     print()
     print('    -ezGal540edgesUFile  edgesUFile.txt')
     print('        (read edgesUFile.txt for velGLonUEdge values')
@@ -346,17 +351,17 @@ def ezGalArgumentsFile(ezDefaultsFileNameInput):
                 pass    # unrecognized first word, but no error
 
     except (FileNotFoundError, IOError):
-        #print ()
-        #print ()
-        #print ()
-        #print ()
-        #print ('   Warning: Error in opening file or reading ' + ezDefaultsFileName + ' file.')
-        ##print ('   ... Using defaults ...')
-        #print ()
-        #print ()
-        #print ()
-        #print ()
-        pass
+    	#print ()
+    	#print ()
+    	#print ()
+    	#print ()
+    	#print ('   Warning: Error in opening file or reading ' + ezDefaultsFileName + ' file.')
+    	##print ('   ... Using defaults ...')
+    	#print ()
+    	#print ()
+    	#print ()
+    	#print ()
+    	pass
 
     else:
         fileDefaults.close()       #   then have processed all available lines in this Defaults file
@@ -523,7 +528,8 @@ def ezGalArguments():
 
     ezGal540edgesUFile = ''
     ezGal540edgesLFile = ''
-    ezGalVelGLonEdgeLevelL = [1.06, 0, 160]    # velGLon level for ezGal540velGLonEdgesB: velGLonLevel, gLonSpurMax, velGLonUEdge[gLon=0])
+    #ezGalVelGLonEdgeLevelL = [1.06, 40, 140]    # velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, velGLonUEdge[gLon=0])
+    ezGalVelGLonEdgeLevelL = [1.01, 20, 160]    # velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, velGLonUEdge[gLon=0])
 
     ezGal61XGain = 120.             # maximum height in ezGal61XgLonSpectraCascade plots
     
@@ -703,14 +709,14 @@ def readDataDir():
         exit()
 
 
-    # for fileNameLast of  data/2021_333_00.txt  create fileVelWriteName as  data/2021_333_00GalC.npz
-    fileVelWriteName = fileNameLast.split(os.path.sep)[-1][:-7] + 'GalC.npz'   # ezGal combines *Gal.npz
-    print('      fileObsName = ', fileObsName)
-    np.savez_compressed(fileVelWriteName, fileObsName=np.array(fileObsName),
-        fileFreqMin=np.array(fileFreqMin), fileFreqMax=np.array(fileFreqMax),
-        fileFreqBinQty=np.array(fileFreqBinQty),
-        velGLonP180=velGLonP180, velGLonP180Count=velGLonP180Count,
-        galDecP90GLonP180Count=galDecP90GLonP180Count)
+    # # for fileNameLast of  data/2021_333_00.txt  create fileVelWriteName as  data/2021_333_00GalC.npz
+    # fileVelWriteName = fileNameLast.split(os.path.sep)[-1][:-7] + 'GalC.npz'   # ezGal combines *Gal.npz
+    # print('      fileObsName = ', fileObsName)
+    # np.savez_compressed(fileVelWriteName, fileObsName=np.array(fileObsName),
+    #     fileFreqMin=np.array(fileFreqMin), fileFreqMax=np.array(fileFreqMax),
+    #     fileFreqBinQty=np.array(fileFreqBinQty),
+    #     velGLonP180=velGLonP180, velGLonP180Count=velGLonP180Count,
+    #     galDecP90GLonP180Count=galDecP90GLonP180Count)
 
     # Prepare velGLonP180 for later plots.
     # velGLonP180 has been filled with sums of samples.  Now for each column, convert to sum's average.
@@ -1371,7 +1377,7 @@ def findVelGLonEdges():
     #   reads   ezGal540edgesLFile .txt file and
     #   writes 'ezGal540edgesLFileOut.txt' file with velGLonLEdge values
     #    -ezGalVelGLonEdgeLevelL  1.06   40   140    (velGLon level for ezGal540velGLonEdgesB)
-    #        (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, gLonSpurMax, edgeUGLon0)
+    #        (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, edgeUGLon0)
 
     global velGLonP180              # float 2d array
     global velGLonP180Count         # integer array
@@ -1396,6 +1402,7 @@ def findVelGLonEdges():
 
     print()
     print('          findVelGLonEdges ================================')
+    print('                         ezGalVelGLonEdgeLevelL =', ezGalVelGLonEdgeLevelL)
 
     # load velGLonUEdgeFile values from ezGal540edgesUFile file
     velGLonUEdgeFile = []
@@ -1408,7 +1415,7 @@ def findVelGLonEdges():
             print()
             print()
             print()
-            print('   Warning: Error in opening file or reading ' + ezGal540edgesUFile + ' file.')
+            print('   Error in opening file or reading ' + ezGal540edgesUFile + ' file.')
             print()
             print()
             print()
@@ -1431,7 +1438,7 @@ def findVelGLonEdges():
             print()
             print()
             print()
-            print('   Warning: Error in opening file or reading ' + ezGal540edgesLFile + ' file.')
+            print('   Error in opening file or reading ' + ezGal540edgesLFile + ' file.')
             print()
             print()
             print()
@@ -1491,15 +1498,15 @@ def findVelGLonEdges():
                         velGLonLEdge[gLonP180] = velocityBin[velGLonLEdgeFreqBinThis]
 
         # -ezGalVelGLonEdgeLevelL  1.06   40   140    (velGLon level for ezGal540velGLonEdgesB)
-        #   (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, gLonSpurMax, velGLonUEdge[gLon=0])
-        gLonSpurMax = ezGalVelGLonEdgeLevelL[1]
+        #   (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, velGLonUEdge[gLon=0])
+        highGLonMin = ezGalVelGLonEdgeLevelL[1]
         # for low +gLon, velGLonUEdgeFreqBinThis is on the gLonP180 line,
         #   from (x1, y1) to (x0, y0)
-        #   from (gLonSpurMax+180, velGLonUEdge[gLonSpurMax+180]) to (180, ezGalVelGLonEdgeLevelL[2])
+        #   from (highGLonMin+180, velGLonUEdge[highGLonMin+180]) to (180, ezGalVelGLonEdgeLevelL[2])
         # slopeLowGLon = (y1 - y0) / (x1 - x0)
-        # slopeLowGLon = (velGLonUEdge[gLonSpurMax+180] - ezGalVelGLonEdgeLevelL[2]) / (gLonSpurMax+180 - 180)
-        # slopeLowGLon = (velGLonUEdge[gLonSpurMax+180] - ezGalVelGLonEdgeLevelL[2]) / gLonSpurMax
-        slopeLowGLonSet = 0
+        # slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / (highGLonMin+180 - 180)
+        # slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / highGLonMin
+        slopeLowGLon = 999.     # silly value
         for gLonP180 in reversed(range(361)):
             if velGLonP180Count[gLonP180]:
                 gLon = gLonP180 - 180
@@ -1511,22 +1518,35 @@ def findVelGLonEdges():
                 velGLonP180AboveLevelFreqBins = np.where(ezGalVelGLonEdgeLevelL[0] <= velGLonP180[:, gLonP180])[0]
 
                 if velGLonP180AboveLevelFreqBins.any():
-                    if 0 <= gLon and gLon < gLonSpurMax and slopeLowGLonSet:
+                    #print('========= gLon =', gLon)
+                    if 0 <= gLon and gLon < highGLonMin:
                         # for low +gLon
+                        if 990. < slopeLowGLon:
+                            # slopeLowGLon never got calculated below
+                            print()
+                            print()
+                            print()
+                            print()
+                            print(f'   Error: ezGalVelGLonEdgeLevelL[1] ({highGLonMin}) value is invalid.')
+                            print(f'          No data available for gLon = {highGLonMin} degrees.')
+                            print(f'          ezGalVelGLonEdgeLevelL was', ezGalVelGLonEdgeLevelL)
+                            print()
+                            print()
+                            print()
+                            print()
+                            exit()
                         velGLonUEdge[gLonP180] = ezGalVelGLonEdgeLevelL[2] + gLon * slopeLowGLon
                     else:
                         velGLonUEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[-1]     # use last  element of list
                         velGLonUEdge[gLonP180] = velocityBin[velGLonUEdgeFreqBinThis]
-                        if gLon <= gLonSpurMax and not slopeLowGLonSet:
-                            # this is first gLon <= gLonSpurMax
-                            if gLon:
-                                slopeLowGLon = (velGLonUEdge[gLonP180] - ezGalVelGLonEdgeLevelL[2]) / gLon
-                            else:
-                                slopeLowGLon = (velGLonUEdge[gLonP180] - ezGalVelGLonEdgeLevelL[2]) / 0.001
-                            slopeLowGLonSet = 1
+                        if highGLonMin == gLon:
+                            slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / highGLonMin
+                        # # in case of a gap in gLon data, calculate slopeLowGLon for all highGLonMin <= gLon
+                        # if highGLonMin <= gLon:
+                        #     slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / highGLonMin
                     velGLonLEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[ 0]         # use first element of list
                     velGLonLEdge[gLonP180] = velocityBin[velGLonLEdgeFreqBinThis]
-                elif 0 <= gLon and gLon < gLonSpurMax and slopeLowGLonSet:
+                elif 0 <= gLon and gLon < highGLonMin:
                     # for low +gLon
                     velGLonUEdge[gLonP180] = ezGalVelGLonEdgeLevelL[2] + gLon * slopeLowGLon
 
@@ -2497,11 +2517,12 @@ def plotEzGal60XgLonSpectra():
 
             plt.clf()
 
-            fig, axs = plt.subplots(9, 10, figsize=(10, 6), layout='constrained')
+            #fig, axs = plt.subplots(9, 10, figsize=(10, 6), layout='constrained')
+            fig, axs = plt.subplots(9, 10, figsize=(10, 6))
             #print(' axs.flat[0:5] =', axs.flat[0:5])
             axsFlat = axs.flat
 
-            fig.suptitle(titleS + f'\nAverage {antXTVTName} Spectra for Galaxy plane at' \
+            fig.suptitle(titleS + f'\nAverage {antXTVTName} Velocity Spectra for' \
                 + f' Galactic Longitudes (Galactic Quadrant {gQuadrant})', fontsize=12)
 
             gLonP180Start = [-1, 180, 270, 0, 90][gQuadrant]
@@ -2598,10 +2619,11 @@ def plotEzGal605gLonSpectraCompare():
 
         plt.clf()
 
-        fig, axs = plt.subplots(6, 10, figsize=(10, 6), layout='constrained')
+        #fig, axs = plt.subplots(6, 10, figsize=(10, 6), layout='constrained')
+        fig, axs = plt.subplots(6, 10, figsize=(10, 6))
         axsFlat = axs.flat
 
-        fig.suptitle(titleS + f'\nAverage {antXTVTName} Spectra for Galaxy plane at' \
+        fig.suptitle(titleS + f'\nAverage {antXTVTName} Spectra for' \
             + ' Galactic Longitudes 4 to 240', fontsize=12)
 
         # 4 through 241 by 4
@@ -2859,6 +2881,7 @@ def printGoodbye(startTime):
 
     global programRevision          # string
     global commandString            # string
+    global ezGalPlotRangeL          # integer list
 
     # print status
     if 0:
@@ -2875,6 +2898,9 @@ def printGoodbye(startTime):
             print('   ezGalDispGrid            =', ezGalDispGrid)
             print('   ezGalDispFreqBin         =', ezGalDispFreqBin)
             #print('   ezGalDetectLevel         =', ezGalDetectLevel)
+
+    print()
+    print(' ezGalPlotRangeL =', ezGalPlotRangeL)
 
     stopTime = time.time()
     stopTimeS = time.ctime()

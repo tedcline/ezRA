@@ -13,6 +13,8 @@ The ezRA set of programs are still in development, but mostly work well.
 Interested folks on [GitHub](https://github.com/tedcline/ezRA)
 would left-click on the top right Green "Code" button and probably choose "Download ZIP"
 (about 30 MBytes, probably as "ezRA-master.zip" into your local "Downloads" directory).
+Then start exploring the many PDF files in your  ezRA/doc  directory.
+Also the videos listed below.
 
 =============================================
 
@@ -28,7 +30,7 @@ please see these introductory PDFs from the ezRA directory:
 
 =============================================
 
-## There are 5 major ezRA programs:
+## There are 6 major ezRA programs:
 
 * ezCol - COLlect radio signals into integrated frequency spectrum ezRA .txt data files.
 
@@ -42,7 +44,10 @@ please see these introductory PDFs from the ezRA directory:
 
 * ezSky - SKY maps from one or more .ezb condensed data files.
 
-* ezGal - GALaxy plots from one or more spectra *Gal.npz data files (Galaxy rotation, Velocity vs Galactic Longitude, Galaxy arm plots?).
+* ezGal - GALaxy plots from one or more spectra *Gal.npz data files (centered on one Galactic Latitude: Galaxy rotation, Galaxy mass,
+Velocity vs Galactic Longitude, Galaxy arm plots).
+
+* ezGLon - Galaxy LONgitude plots from one or more spectra *GLon.npz data files (centered on one Galactic Longitude: Galaxy arm cross-section plots).
 
 ## Videos:
 
@@ -87,6 +92,7 @@ please see these introductory PDFs from the ezRA directory:
     ezRA_23_ezPlot.pdf
     ezRA_24_ezSky.pdf
     ezRA_25_ezGal.pdf
+    ezRA_26_ezGLon.pdf
 
 ---
 
@@ -125,6 +131,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Jun-15-2023
+Aug-28-2023
 
 ---

@@ -1,4 +1,4 @@
-programName = 'ezPlot230406b.py'
+programName = 'ezPlot230824a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezPlot data Plotter program,
@@ -25,6 +25,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezPlot230824a.py, print ezPlotPlotRangeL in printGoodbye()
 # ezPlot230406b.py, -eX
 # ezPlot230326a.py, ezPlot700 - ezPlot790: avg vs calendar days
 # ezPlot230316a.py, -eX
@@ -710,6 +711,7 @@ def printGoodbye(startTime):
     global programRevision          # string
     global commandString            # string
     global fileWriteStudy           # file handle
+    global ezPlotPlotRangeL         # integer list
 
     # print status
     if 0:
@@ -730,6 +732,9 @@ def printGoodbye(startTime):
             print('   ezPlotDispGrid            =', ezPlotDispGrid)
             print('   ezPlotDispFreqBin         =', ezPlotDispFreqBin)
         print('   antLen =', antLen)
+
+    print()
+    print(' ezPlotPlotRangeL =', ezPlotPlotRangeL)
 
     stopTime = time.time()
     stopTimeS = time.ctime()
