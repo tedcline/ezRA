@@ -55,11 +55,13 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
 
   * [ezRA - Simple Overview](https://youtu.be/kHgwEbWKhzs)<br>
   * [ezRA - PZT Antenna Tests](https://youtu.be/VZrd2-VFiPE)
+<br>
 
   * [Pablo 1 - ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)<br>
   * [Pablo 2 - ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)<br>
   * [Pablo 3 - ezCon Plot Tour](https://www.youtube.com/watch?v=8EUmCQAIBLg)<br>
   * [Pablo 4 - ezCol Data Collecting Software in Action](https://www.youtube.com/watch?v=15Q6_OCDTs0)
+<br>
 
   * [ezRA Analysis 1 - Introduction, Data Collectors](https://youtu.be/2TWXiAUpgCc)<br>
   * [ezRA Analysis 2 - Spreadsheet Analysis](https://youtu.be/9vKaob-jweM)<br>
@@ -78,11 +80,9 @@ Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astr
   * ezRA_01_Tour.pdf
   * ezRA_05_Demonstration.pdf
 <br>
-
   * ezRA_10_Hardware_1.pdf
   * ezRA_11_Hardware_2.pdf
 <br>
-
   * ezRA_20a_Software.pdf
   * ezRA_20b_Windows_Install.pdf
   * ezRA_20c_Linux_Install.pdf
