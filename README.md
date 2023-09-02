@@ -53,6 +53,13 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
 
 * [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
   * [ezRA - Simple Overview](https://youtu.be/kHgwEbWKhzs)<br>
+  * [ezRA - PZT Antenna Tests](https://youtu.be/VZrd2-VFiPE)<br>
+<br>
+  * Pablo 1 [ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)
+  * Pablo 2 [ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)
+  * Pablo 3 [ezCon Plot Tour](https://www.youtube.com/watch?v=8EUmCQAIBLg)
+  * Pablo 4 [ezCol Data Collecting Software in Action](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br><br>
+<br>
   * [ezRA Analysis 1 - Introduction, Data Collectors](https://youtu.be/2TWXiAUpgCc)<br>
   * [ezRA Analysis 2 - Spreadsheet Analysis](https://youtu.be/9vKaob-jweM)<br>
   * [ezRA Analysis 3 - Signal Progression](https://youtu.be/7c-0rbNOOV4)<br>
@@ -62,48 +69,48 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
   * [ezRA Analysis 7 - AntXTVT and VLSR](https://youtu.be/038Apm0yAjY)<br>
   * [ezRA Analysis 8 - ezGal](https://youtu.be/YXuPDJVRbd0)<br>
 
-* Pablo 1 [ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)
-* Pablo 2 [ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)
-* Pablo 3 [ezCon Plot Tour](https://www.youtube.com/watch?v=8EUmCQAIBLg)
-* Pablo 4 [ezCol Data Collecting Software in Action](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br><br>
 
-* SARA [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
+* Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
 ## Documentation for ezRA, in the ezRA/doc directory, will eventually include:
 
-    ezRA_00_Introduction.pdf
-    ezRA_01_Tour.pdf
-    ezRA_05_Demonstration.pdf
+  * ezRA_00_Introduction.pdf
+  * ezRA_01_Tour.pdf
+  * ezRA_05_Demonstration.pdf
+<br>
 
-    ezRA_10_Hardware_1.pdf
-    ezRA_11_Hardware_2.pdf
+  * ezRA_10_Hardware_1.pdf
+  * ezRA_11_Hardware_2.pdf
+<br>
 
-    ezRA_20a_Software.pdf
-    ezRA_20b_Windows_Install.pdf
-    ezRA_20c_Linux_Install.pdf
-    ezRA_21a_ezCol.pdf
-        ezRA_21d_ezColBAA.pdf
-        ezRA_21c_ezColHay.pdf
-        ezRA_21b_ezColIFAvg.pdf
-        ezRA_21e_ezColSC.pdf
-        ezRA_21y_ezRename.pdf
-        ezRA_21z_ezFix.pdf
-    ezRA_22_ezCon.pdf
-    ezRA_23_ezPlot.pdf
-    ezRA_24_ezSky.pdf
-    ezRA_25_ezGal.pdf
-    ezRA_26_ezGLon.pdf
+  * ezRA_20a_Software.pdf
+  * ezRA_20b_Windows_Install.pdf
+  * ezRA_20c_Linux_Install.pdf
+  * ezRA_21a_ezCol.pdf
+    * ezRA_21d_ezColBAA.pdf
+    * ezRA_21c_ezColHay.pdf
+    * ezRA_21b_ezColIFAvg.pdf
+    * ezRA_21e_ezColSC.pdf
+    * ezRA_21y_ezRename.pdf
+    * ezRA_21z_ezFix.pdf
+  * ezRA_22_ezCon.pdf
+  * ezRA_23_ezPlot.pdf
+  * ezRA_24_ezSky.pdf
+  * ezRA_25_ezGal.pdf
+  * ezRA_26_ezGLon.pdf
 
 ---
 
 ## Status:
 
-    ezCon's default "-ezConAstroMath  2" now calculates the   correct   VLSR values.
+  * ezCon's default "-ezConAstroMath  2" now calculates the   correct   VLSR values.
 
 Known bugs:
 
-    ezCon's "-ezConAstroMath  1" did calculate wrong Right Ascension values.
-	Now fixed ?  Does it work for your earth location ?  10x faster !
+  * ezCon's "-ezConAstroMath  1" did calculate wrong Right Ascension values.
+    <br>
+    Now fixed ?  Does it work for your earth location ?  10x faster !
+    <br>
     ezCon's default still is the slower "-ezConAstroMath  2".
 
 Thanks to Todd Ullery, the  ezColX.py  was an experimental multiple process version of  ezCol.py , to improve dashboard responsiveness.
@@ -114,10 +121,10 @@ The experiment has completed successfully, ezColX is now named ezCol, and the na
 
 These files need lots of cleanup, but should work or be helpful:
 
-    ezColBAA.py
-    ezColHay.py
-    ezColIFAvg.py
-    ezColSc.py
+  * ezColBAA.py
+  * ezColHay.py
+  * ezColIFAvg.py
+  * ezColSc.py
 
 Always need more documentation.
 
@@ -131,6 +138,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Aug-28-2023
+Sep-2-2023
 
 ---
