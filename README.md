@@ -78,11 +78,9 @@ Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astr
 
   * ezRA_00_Introduction.pdf
   * ezRA_01_Tour.pdf
-  * ezRA_05_Demonstration.pdf
-<br>
+  * ezRA_05_Demonstration.pdf<br><br>
   * ezRA_10_Hardware_1.pdf
-  * ezRA_11_Hardware_2.pdf
-<br>
+  * ezRA_11_Hardware_2.pdf<br><br>
   * ezRA_20a_Software.pdf
   * ezRA_20b_Windows_Install.pdf
   * ezRA_20c_Linux_Install.pdf
