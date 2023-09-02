@@ -51,15 +51,16 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
 
 ## Videos:
 
-* [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
+[https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
+
   * [ezRA - Simple Overview](https://youtu.be/kHgwEbWKhzs)<br>
-  * [ezRA - PZT Antenna Tests](https://youtu.be/VZrd2-VFiPE)<br>
-<br>
-  * Pablo 1 [ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)
-  * Pablo 2 [ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)
-  * Pablo 3 [ezCon Plot Tour](https://www.youtube.com/watch?v=8EUmCQAIBLg)
-  * Pablo 4 [ezCol Data Collecting Software in Action](https://www.youtube.com/watch?v=15Q6_OCDTs0)<br><br>
-<br>
+  * [ezRA - PZT Antenna Tests](https://youtu.be/VZrd2-VFiPE)
+
+  * [Pablo 1 - ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)<br>
+  * [Pablo 2 - ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)<br>
+  * [Pablo 3 - ezCon Plot Tour](https://www.youtube.com/watch?v=8EUmCQAIBLg)<br>
+  * [Pablo 4 - ezCol Data Collecting Software in Action](https://www.youtube.com/watch?v=15Q6_OCDTs0)
+
   * [ezRA Analysis 1 - Introduction, Data Collectors](https://youtu.be/2TWXiAUpgCc)<br>
   * [ezRA Analysis 2 - Spreadsheet Analysis](https://youtu.be/9vKaob-jweM)<br>
   * [ezRA Analysis 3 - Signal Progression](https://youtu.be/7c-0rbNOOV4)<br>
@@ -67,10 +68,9 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
   * [ezRA Analysis 5 - Interference Filters](https://youtu.be/XAitkAerXjM)<br>
   * [ezRA Analysis 6 - ezSky](https://youtu.be/dj3_jikH59Y)<br>
   * [ezRA Analysis 7 - AntXTVT and VLSR](https://youtu.be/038Apm0yAjY)<br>
-  * [ezRA Analysis 8 - ezGal](https://youtu.be/YXuPDJVRbd0)<br>
+  * [ezRA Analysis 8 - ezGal](https://youtu.be/YXuPDJVRbd0)
 
-
-* Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
+Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
 ## Documentation for ezRA, in the ezRA/doc directory, will eventually include:
 
