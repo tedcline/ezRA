@@ -1,4 +1,4 @@
-programName = 'ezCol230406a.py'
+programName = 'ezCol231025a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCol Data COLlector program,
@@ -29,6 +29,7 @@ programRevision = programName
 # 221202, works on Win7Pro 'Python 3.8.10'
 # 221130, works on Ubuntu22 'Python 3.10.6'
 
+# ezCol231025a.py, added ezColAntBtwnRef to ezColArgumentsFile()
 # ezCol230406a.py, -eX
 # ezCol230316a.py, help screen edits, -eX
 # ezCol230315a.py, no ezColDashboard needed centerFreqRefHz, major ezColUsbRelay improvements
@@ -341,6 +342,9 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
 
             elif thisLine0Lower == '-ezColTextFontSize'.lower():
                 ezColTextFontSize = int(thisLineSplit[1])
+
+            elif thisLine0Lower == '-ezColAntBtwnRef'.lower():
+                ezColAntBtwnRef = int(thisLineSplit[1])
 
             # float arguments
             elif thisLine0Lower == '-ezColCenterFreqAnt'.lower():
