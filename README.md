@@ -126,6 +126,10 @@ Always need more documentation.
 
 Did ezRA work for you ?
 
+<p align="center">
+  <img src="/ezRA/doc/ezRA_users240111.png?raw=true" alt="ezRA_users240111"/>
+</p>
+
 Comments are encouraged !
 
 Help improve ezRA.
@@ -135,5 +139,7 @@ Help improve ezRA.
 TedClineGit@gmail.com
 <br>
 Jan-11-2024
+
+(World Map by juicy_fish on Freepik.com)
 
 ---
