@@ -1,4 +1,4 @@
-programName = 'ezGal230827a.py'
+programName = 'ezGal231212a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGal GALaxy explorer program,
@@ -26,8 +26,10 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
-# ezGal230827a.py, commented out GalC.npz file creation
-# ezGal230824a.py, print ezGalPlotRangeL in printGoodbye(),
+# ezGal231212a.py, per Ted's Oct 18, 2023 at 8:14 PM email,
+#   ezGal511 renamed to ezGal519, to align with the "Count" ezSky309,
+#   ezGal525 renamed to ezGal529, to align with the future "Count" ezGal519
+# ezGal230820a.py, removed 'Galaxy plane' from ezGal520 ezGal521 ezGal525 and ezGal710
 # ezGal230818a.py, default ezGalVelGLonEdgeLevelL to [1.01, 20, 160],
 #   error message if no data available for gLon = highGLonMin
 # ezGal230802a.py, commented   layout='constrained'   for laptop python3.8.10
@@ -709,14 +711,14 @@ def readDataDir():
         exit()
 
 
-    # # for fileNameLast of  data/2021_333_00.txt  create fileVelWriteName as  data/2021_333_00GalC.npz
-    # fileVelWriteName = fileNameLast.split(os.path.sep)[-1][:-7] + 'GalC.npz'   # ezGal combines *Gal.npz
-    # print('      fileObsName = ', fileObsName)
-    # np.savez_compressed(fileVelWriteName, fileObsName=np.array(fileObsName),
-    #     fileFreqMin=np.array(fileFreqMin), fileFreqMax=np.array(fileFreqMax),
-    #     fileFreqBinQty=np.array(fileFreqBinQty),
-    #     velGLonP180=velGLonP180, velGLonP180Count=velGLonP180Count,
-    #     galDecP90GLonP180Count=galDecP90GLonP180Count)
+    # for fileNameLast of  data/2021_333_00.txt  create fileVelWriteName as  data/2021_333_00GalC.npz
+    fileVelWriteName = fileNameLast.split(os.path.sep)[-1][:-7] + 'GalC.npz'   # ezGal combines *Gal.npz
+    print('      fileObsName = ', fileObsName)
+    np.savez_compressed(fileVelWriteName, fileObsName=np.array(fileObsName),
+        fileFreqMin=np.array(fileFreqMin), fileFreqMax=np.array(fileFreqMax),
+        fileFreqBinQty=np.array(fileFreqBinQty),
+        velGLonP180=velGLonP180, velGLonP180Count=velGLonP180Count,
+        galDecP90GLonP180Count=galDecP90GLonP180Count)
 
     # Prepare velGLonP180 for later plots.
     # velGLonP180 has been filled with sums of samples.  Now for each column, convert to sum's average.
@@ -883,7 +885,7 @@ def plotEzGal510velGLon():
 
 
 
-def plotEzGal511velGLonCount():
+def plotEzGal519velGLonCount():
 
     global plotCountdown            # integer
     global velGLonP180Count         # integer array
@@ -896,9 +898,9 @@ def plotEzGal511velGLonCount():
     plotCountdown -= 1
 
     # if anything in velGLonP180 to plot
-    if ezGalPlotRangeL[0] <= 511 and 511 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
+    if ezGalPlotRangeL[0] <= 519 and 519 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
 
-        pltNameS = 'ezGal511velGLonCount.png'
+        pltNameS = 'ezGal519velGLonCount.png'
         print()
         print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
 
@@ -930,7 +932,7 @@ def plotEzGal511velGLonCount():
 
 
         # print out velGLonCount status
-        fileWriteGLonName = 'ezGal511velGLonCount.txt'
+        fileWriteGLonName = 'ezGal519velGLonCount.txt'
         fileWriteGLon = open(fileWriteGLonName, 'w')
         if not (fileWriteGLon.mode == 'w'):
             print()
@@ -1150,7 +1152,7 @@ def plotEzGal520velGLonPolarI():
         ax.text( 3.05, radiusTextQuadrant*0.95, 'Galactic Center', color='blue')
         ax.text(-2.2, radiusTextQuadrant*0.95, 'Sun at\nCenter', color='blue', horizontalalignment='right')
 
-        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Plane Spectra')
+        ax.set_xlabel('Galactic Longitude (degrees) of Spectra')
         ax.set_ylabel('Increasing Radius Is Increasing "Velocity",\n\n' \
             + 'Increasing Radius Is Increasing Receding,\n\n' \
             + 'Increasing Radius Is Decreasing Doppler Frequency\n\n')
@@ -1214,7 +1216,7 @@ def plotEzGal521velGLonPolarD():
         ax.text( 3.05, radiusTextQuadrant*0.95, 'Galactic Center', color='blue')
         ax.text(-2.2, radiusTextQuadrant*0.95, 'Sun at\nCenter', color='blue', horizontalalignment='right')
 
-        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Plane Spectra')
+        ax.set_xlabel('Galactic Longitude (degrees) of Spectra')
         ax.set_ylabel('Decreasing Radius Is Increasing "Velocity",\n\n' \
             + 'Decreasing Radius Is Increasing Receding,\n\n' \
             + 'Decreasing Radius Is Decreasing Doppler Frequency\n\n')
@@ -1225,7 +1227,7 @@ def plotEzGal521velGLonPolarD():
 
 
 
-def plotEzGal525velGLonPolarCount():
+def plotEzGal529velGLonPolarCount():
 
     global plotCountdown            # integer
     global velGLonP180Count         # integer array
@@ -1239,9 +1241,9 @@ def plotEzGal525velGLonPolarCount():
     plotCountdown -= 1
 
     # if anything in velGLonP180 to plot
-    if ezGalPlotRangeL[0] <= 525 and 525 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
+    if ezGalPlotRangeL[0] <= 529 and 529 <= ezGalPlotRangeL[1] and velGLonP180CountSum:
 
-        pltNameS = 'ezGal525velGLonPolarCount.png'     # Velocity by Galactic Longitude with pcolormesh
+        pltNameS = 'ezGal529velGLonPolarCount.png'     # Velocity by Galactic Longitude with pcolormesh
         print()
         print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
 
@@ -1281,7 +1283,7 @@ def plotEzGal525velGLonPolarCount():
         ax.text(-3.05, radiusTextQuadrant*0.95, 'Toward', color='blue', horizontalalignment='right')
         ax.text( 3.05, radiusTextQuadrant*0.95, 'Galactic Center', color='blue')
 
-        ax.set_xlabel('Galactic Longitude (degrees) of Galaxy Plane Spectra')
+        ax.set_xlabel('Galactic Longitude (degrees) of Spectra')
         ax.set_ylabel('Velocity Data Counts by Galactic Longitude' \
             + f'\n\nVelocity Count Sum = {velGLonP180CountSum:,}' \
             + f'\n\nVelocity Count Nonzero = {np.count_nonzero(velGLonP180Count)}' \
@@ -2868,7 +2870,7 @@ def plotEzGal710gLonDegP180_nnnByFreqBinAvg():
                     gLonDegS = f'+{gLonP180 - 180:03d}'        # '+nnn' with leading zeros
 
                 plt.ylabel(f'{antXTVTName} Average Velocity Spectrum' \
-                    + f'\n\nfor Galaxy plane at Galactic Longitude = {gLonDegS} deg', \
+                    + f'\n\nGalactic Longitude = {gLonDegS} degrees', \
                     rotation=90, verticalalignment='bottom')
 
                 if os.path.exists(pltNameS): # to force plot file date update, if file exists, delete it
@@ -2881,7 +2883,6 @@ def printGoodbye(startTime):
 
     global programRevision          # string
     global commandString            # string
-    global ezGalPlotRangeL          # integer list
 
     # print status
     if 0:
@@ -2898,9 +2899,6 @@ def printGoodbye(startTime):
             print('   ezGalDispGrid            =', ezGalDispGrid)
             print('   ezGalDispFreqBin         =', ezGalDispFreqBin)
             #print('   ezGalDetectLevel         =', ezGalDetectLevel)
-
-    print()
-    print(' ezGalPlotRangeL =', ezGalPlotRangeL)
 
     stopTime = time.time()
     stopTimeS = time.ctime()
@@ -2966,14 +2964,14 @@ def main():
 
     # velocity plots
     plotEzGal510velGLon()
-    plotEzGal511velGLonCount()          # creates ezGal511velGLonCount.txt
+    plotEzGal519velGLonCount()          # creates ezGal519velGLonCount.txt
 
     plotEzGal516velGLonAvg()            # velocity spectrum Averages
     plotEzGal517velGLonMax()            # velocity spectrum Maximums
 
     plotEzGal520velGLonPolarI()
     plotEzGal521velGLonPolarD()
-    plotEzGal525velGLonPolarCount()
+    plotEzGal529velGLonPolarCount()
 
     plotEzGal530galDecGLon()
 

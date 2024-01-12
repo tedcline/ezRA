@@ -1,4 +1,4 @@
-programName = 'ezGLon230824a.py'
+programName = 'ezGLon230930a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGLon single Galactic LONgitude explorer program,
@@ -26,6 +26,7 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGLon230930a.py, ezGLon510
 # ezGLon230824a.py, print ezGlonPlotRangeL in printGoodbye()
 # ezGLon230818a.py, ezGlon571galArmsSunMag5 and ezGLon581galArmsSunIMag5
 # ezGLon230810ca.py, ezGLon580galArmsSunI with Magnified gLat angle test
@@ -1917,6 +1918,251 @@ def plotEzGLon581galArmsSunIMag5():
 
 
 
+def plotEzGLon582galArmsSunRIMag5():
+    # plot Interpolated Galactic Arms with Sun at right with Magnified x5 gLat angles
+
+    global plotCountdown            # integer
+    global velGLatP90               # float 2d array
+    global velGLatP90Count          # integer array
+    global velGLatP90CountSum       # integer
+    global ezGLonGalCrossingGLonCenter      # float 
+    global ezGLonGalCrossingGLonNear        # float
+
+    global velocitySpanMax          # float
+    global velocityBin              # float array
+
+    global titleS                   # string
+    #global ezGLonDispGrid           # integer
+    global ezGLonPlotRangeL         # integer list
+
+    global fileFreqBinQty           # integer
+    global velocityBin              # float array
+
+
+
+
+
+#    global velGLonP180              # float 2d array
+#    global velGLonP180Count         # integer array
+#    global velGLonP180CountSum      # integer
+
+    plotCountdown -= 1
+
+    # if not wanted, or nothing in velGLatP90 to save or plot
+    if not (ezGLonPlotRangeL[0] <= 582 and 582 <= ezGLonPlotRangeL[1] and velGLatP90CountSum):
+        return(0)       # plot not needed
+
+    #pltNameS = 'ezGLon582galArmsSunRIMag5.png'
+    #pltNameS = 'ezGLon582galArmsSunRIMag5Xxxx.xXxxx.x.png'
+    if 0 <= ezGLonGalCrossingGLonCenter:
+        pltNameS = f'ezGLon582galArmsSunRIMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
+    else:
+        pltNameS = f'ezGLon582galArmsSunRIMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
+    if 0 <= ezGLonGalCrossingGLonNear:
+        pltNameS += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
+    else:
+        pltNameS += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+    print()
+    print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+
+    plt.clf()
+
+    if velGLatP90CountSum:         # if anything in velGLatP90 to plot
+
+        galSunRadiusKm = 26000. * 9.46e12                   # = 2.4596e+17
+        galSunRadiusKm2 = galSunRadiusKm * galSunRadiusKm   # = 6.0496322e+34
+        galSunRadiusKpc = galSunRadiusKm * 3.24078e-17      # in kiloparsecs
+        galSunRadiusPlotLimit = galSunRadiusKm * 4.
+
+        x = []
+        y = []
+        z = []
+
+        # longest plotRadii needed, to draw edge toward top right corner, at
+        #   sqrt(20*20 + 30*30) is 36.06
+        plotRadiiEdgeMany = np.linspace(0., 37., 371)       # each tenth of kiloparsec
+        velGLatP90MinMany = np.full_like(plotRadiiEdgeMany, velGLatP90.min())
+
+        # ezGLonGalCrossingGLonCenter is used to create plotRadii 
+        #gLonDegRad = ezGLonGalCrossingGLonCenter * np.pi / 180.
+        gLonDegRad = ezGLonGalCrossingGLonCenter * 0.01745329251
+
+        cosGLonDegRad = math.cos(gLonDegRad)
+        sinGLonDegRad = math.sin(gLonDegRad)
+
+        # JJ's p54 Eq3
+        #   R = R0*V0*sin(l) / ( V0*sin(l) + Vr )
+        galGasVelRadiusKm = galSunRadiusKm * 220. * np.sin(gLonDegRad) \
+            / (220. * np.sin(gLonDegRad) + velocityBin)   # in km
+        # shape(galGasVelRadiusKm) = (256,)
+        # but that denominator was often near zero, so trim +/- large galGasVelRadiusKm
+        galGasVelRadiusKm[galSunRadiusPlotLimit  < galGasVelRadiusKm] = np.nan
+        galGasVelRadiusKm[galGasVelRadiusKm < -galSunRadiusPlotLimit] = np.nan
+        # trim negative galGasVelRadiusKm
+        galGasVelRadiusKm[galGasVelRadiusKm < 0.] = np.nan
+
+        # JJ's p54 Eq4
+        #   r = +-sqrt( R*R     - R0*R0*sin(l)*sin(l) ) + R0*cos(l)
+        #   r = +-sqrt( addend1 + addend2             ) + addend3
+        #   but negative values of r are ignored because they have no physical reality
+        addend1 = galGasVelRadiusKm * galGasVelRadiusKm     # = np.multiply()
+        addend2 = -galSunRadiusKm2 * sinGLonDegRad * sinGLonDegRad
+        addend3 = galSunRadiusKm * cosGLonDegRad
+        addend1p2 = addend1 + addend2
+        # trim negative addend1p2 before sqrt()
+        addend1p2[addend1p2 < 0.] = np.nan
+
+        # use positive sqrt()
+        addend12 = np.sqrt(addend1p2)      # np.sqrt passes np.nan
+        plotRadii = (addend12 + addend3) * 3.24078e-17      #  in kiloparsec
+
+        # trim negative plotRadii
+        plotRadii[plotRadii < 0.] = np.nan
+
+        notIsNanPlotRadiiPos = np.logical_not(np.isnan(plotRadii))
+        notIsNanPlotRadiiPosAny = notIsNanPlotRadiiPos.any()
+
+        if notIsNanPlotRadiiPosAny:
+            for gLatDeg in range(-90, 91):
+                gLatDegP90 = gLatDeg + 90
+
+                if velGLatP90Count[gLatDegP90] > 0:       # if column used
+                    #gLatDegRad = gLatDeg * np.pi / 180.
+                    #gLatDegRad = gLatDeg * 0.01745329251
+                    gLatDegRad = gLatDeg * 0.01745329251 * 5.   # Mag5
+
+                    cosGLatDegRad = math.cos(gLatDegRad)
+                    sinGLatDegRad = math.sin(gLatDegRad)
+
+                    # plot a radius, but not an edge
+                    gLatDegRadMany = np.full(fileFreqBinQty, gLatDegRad)
+
+                    # append only those x values where corresponding plotRadii is not a nan
+                    #x = plotRadii * cos(gLatDeg - 90.)
+                    #x = plotRadii * sin(gLatDegRad)
+                    #x = plotRadii * sinGLatDegRad
+                    x += (-plotRadii[notIsNanPlotRadiiPos] * sinGLatDegRad).tolist()
+
+                    # append only those y values where corresponding plotRadii is not a nan
+                    #y = plotRadii * sin(gLatDeg - 90.)
+                    #y = plotRadii * -cos(gLatDegRad)
+                    #y = plotRadii * -cosGLatDegRad
+                    #y += (-plotRadii[notIsNanPlotRadiiPos] * -cosGLatDegRad - galSunRadiusKpc).tolist()
+                    y += (-plotRadii[notIsNanPlotRadiiPos] * -cosGLatDegRad).tolist()
+
+                    # append only those z values where corresponding plotRadii is not a nan
+                    z += velGLatP90[:,gLatDegP90][notIsNanPlotRadiiPos].tolist()
+
+        # use negative sqrt()
+        addend12 = -np.sqrt(addend1p2)      # np.sqrt passes np.nan
+        plotRadii = (addend12 + addend3) * 3.24078e-17      #  in kiloparsec
+
+        # trim negative plotRadii
+        plotRadii[plotRadii < 0.] = np.nan
+
+        notIsNanPlotRadiiNeg = np.logical_not(np.isnan(plotRadii))
+        
+        if notIsNanPlotRadiiNeg.any():
+            for gLatDeg in range(-90, 91):
+                gLatDegP90 = gLatDeg + 90
+
+                if velGLatP90Count[gLatDegP90] > 0:       # if column used
+                    #gLatDegRad = gLatDeg * np.pi / 180.
+                    gLatDegRad = gLatDeg * 0.01745329251
+
+                    cosGLatDegRad = math.cos(gLatDegRad)
+                    sinGLatDegRad = math.sin(gLatDegRad)
+
+                    # plot a radius, but not an edge
+                    gLatDegRadMany = np.full(fileFreqBinQty, gLatDegRad)
+
+                    # append only those x values where corresponding plotRadii is not a nan
+                    # append only those x values where corresponding plotRadii is not a nan
+                    #x = plotRadii * cos(gLatDeg - 90.)
+                    #x = plotRadii * sin(gLatDegRad)
+                    #x = plotRadii * sinGLatDegRad
+                    x += (-plotRadii[notIsNanPlotRadiiNeg] * sinGLatDegRad).tolist()
+
+                    # append only those y values where corresponding plotRadii is not a nan
+                    #y = plotRadii * sin(gLatDeg - 90.)
+                    #y = plotRadii * -cos(gLatDegRad)
+                    #y = plotRadii * -cosGLatDegRad
+                    #y += (-plotRadii[notIsNanPlotRadiiNeg] * -cosGLatDegRad - galSunRadiusKpc).tolist()
+                    y += (-plotRadii[notIsNanPlotRadiiNeg] * -cosGLatDegRad).tolist()
+
+                    # append only those z values where corresponding plotRadii is not a nan
+                    z += velGLatP90[:,gLatDegP90][notIsNanPlotRadiiNeg].tolist()
+
+        elif not notIsNanPlotRadiiPosAny:
+            # if not notIsNanPlotRadiiNeg.any() and not notIsNanPlotRadiiPosAny:
+            # plot an edge radius, all as velGLatP90.min()
+            for gLatDeg in range(-90, 91):
+                gLatDegP90 = gLatDeg + 90
+
+                #gLatDegRad = gLatDeg * np.pi / 180.
+                gLatDegRad = gLatDeg * 0.01745329251
+
+                cosGLatDegRad = math.cos(gLatDegRad)
+                sinGLatDegRad = math.sin(gLatDegRad)
+
+                # plot an edge radius, all as velGLatP90.min()
+                x += (-plotRadiiEdgeMany * sinGLatDegRad).tolist()
+                #y += (-plotRadiiEdgeMany * -cosGLatDegRad - galSunRadiusKpc).tolist()
+                y += (-plotRadiiEdgeMany * -cosGLatDegRad).tolist()
+                z += velGLatP90MinMany.tolist()
+
+        #xi = np.linspace(-20., 20., 401)   # in kiloparsec
+        #yi = np.linspace(20., -20., 401)   # in kiloparsec
+        #xi = np.linspace(20., -20., 401)   # in kiloparsec
+        xi = np.linspace(40., 0., 401)   # in kiloparsec, Sun to the right
+        yi = np.linspace(-20., 20., 401)   # in kiloparsec
+        xi, yi = np.meshgrid(xi, yi)
+        ##zi = griddata((x, y), z, (xi, yi), method='linear')
+        #x = -x
+        #y = -y
+        zi = griddata((y, x), z, (xi, yi), method='linear')
+        # free memory
+        x = []
+        y = []
+        z = []
+
+        ###zi = gaussian_filter(zi, 9.)
+
+        fig = plt.figure()
+        ax = fig.add_subplot()
+
+        img = plt.imshow(zi, aspect='auto', cmap=plt.get_cmap('gnuplot'))
+        # Add a color bar which maps values to colors.
+        plt.colorbar(img, orientation='vertical', pad=0.1)
+
+        #polarPlot = ax.plot[[[0., 200], [400., 200.]], 'white')
+        # horizonal thin white line
+        plt.axhline(y = 200., linewidth=0.5, color='white')
+        # vertical thin white line
+        plt.axvline(x = 200., linewidth=0.5, color='white')
+
+        # Plot yellow Sun at the right
+        polarPlot = ax.scatter(400., 200., c='black', s=120, alpha=1.)
+        polarPlot = ax.scatter(400., 200., c='yellow', s=100, alpha=1.)
+
+        plt.title(titleS)
+        plt.xticks(range(0, 401, 50),
+            ['-40', '-35', '-30', '-25', '-20', '-15', '-10', '-5', '0'])
+        #    ['-20', '-15', '-10', '-5', '0', '5', '10', '15', '20'])
+        plt.yticks(range(400, -1, -50),
+            ['  -4', '-3', '-2', '-1', '0', '1', '2', '3', '4'])
+        #    ['-20', '-15', '-10', '-5', '0', '5', '10', '15', '20'])
+        ax.set_facecolor("black")
+
+        ax.set_xlabel('Distance (kiloparsecs)')
+        ax.set_ylabel('Possible Galactic Atomic Hydrogen\n\nSun = Yellow Dot, GLat Magnification = 5')
+
+        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
+            os.remove(pltNameS)
+        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+
+
+
 def plotEzGLon60XgLonSpectra():
 
     global velGLatP90               # float 2d array
@@ -2437,6 +2683,7 @@ def main():
         plotEzGlon571galArmsSunMag5()
         plotEzGLon580galArmsSunI()
         plotEzGLon581galArmsSunIMag5()
+        plotEzGLon582galArmsSunRIMag5()
 
         if 0:
             plotEzGLon516velGLatAvg()            # velocity spectrum Averages

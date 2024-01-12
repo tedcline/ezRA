@@ -1,11 +1,11 @@
-programName = 'ezPlot230824a.py'
+programName = 'ezPlot240108a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezPlot data Plotter program,
 #   PLOT analysis from one or more .ezb data files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,22 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezPlot231213a.py, ttd: add
+#   -ezPlotAntSamplesUseL   25   102  (first Ant Sample number    last Ant Sample number),
+#   colors by signal
+
+# ezPlot240108a.py, ezPlot191 Ant to AntXTVT top-bottom order reversed
+# ezPlot240107a.py, -ezPlotAntXTVTMaxPluckQtyL and -ezPlotAntXTVTMaxPluckValL,
+#   and             -ezPlotAntXTVTAvgPluckQtyL and -ezPlotAntXTVTAvgPluckValL,
+#   and             -ezPlotAntXTVTPluck
+# ezPlot231211a.py,
+#   ezSky200 AntXTVT violet needs      best contrast, use green
+#   ezSky200 AntB           needs next best contrast, use red
+#       AntXTVT violet   becomes newgreen
+#       Ref     red      becomes violet
+#       AntB    green    becomes red
+#               newgreen becomes green
+# ezPlot230929a.py, ezPlot800 - ezPlot890: slope to sample value vs time
 # ezPlot230824a.py, print ezPlotPlotRangeL in printGoodbye()
 # ezPlot230406b.py, -eX
 # ezPlot230326a.py, ezPlot700 - ezPlot790: avg vs calendar days
@@ -92,6 +108,19 @@ def printUsage():
     print('    -ezRAObsLon    -98.5696          (Observatory Longitude (degrees))')
     print('    -ezRAObsAmsl   563.88            (Observatory Above Mean Sea Level (meters))')
     print()
+    print('    -ezPlotAntXTVTMaxPluckQtyL   3    5')
+    print('         (Pluck (ignore) AntXTVTMax samples with the 3 Quantity lowest, and 5 highest, sorted AntXTVTMax)')
+    print('    -ezPlotAntXTVTMaxPluckValL  .01   .03')
+    print('         (Pluck (ignore) AntXTVTMax samples with Values below .01 or above .03)')
+    print()
+    print('    -ezPlotAntXTVTAvgPluckQtyL   3    5')
+    print('         (Pluck (ignore) AntXTVT    samples with the 3 Quantity lowest, and 5 highest, sorted AntXTVT)')
+    print('    -ezPlotAntXTVTAvgPluckValL  .01   .03')
+    print('         (Pluck (ignore) AntXTVT    samples with Values below .01 or above .03)')
+    print()
+    print('    -ezPlotAntXTVTPluck         33')
+    print('         (Pluck (ignore) AntXTVTMax and AntXTVT sample 33')
+    print()
     print('    -ezPlotPlotRangeL     0  300     (save only this range of ezPlot plots to file, to save time)')
     print('    -ezPlotDispGrid       1          (turn on graphical display plot grids)')
     print()
@@ -155,6 +184,12 @@ def ezPlotArgumentsFile(ezDefaultsFileNameInput):
 
     #global ezPlotAstroMath                  # integer
 
+    global ezPlotAntXTVTMaxPluckQtyL        # integer list
+    global ezPlotAntXTVTMaxPluckValL        # float list
+    global ezPlotAntXTVTAvgPluckQtyL        # integer list
+    global ezPlotAntXTVTAvgPluckValL        # float list
+    global ezPlotAntXTVTPluckL              # integer list
+
     global ezPlotDispGrid                   # integer
     global ezPlotPlotRangeL                 # integer list
 
@@ -198,17 +233,41 @@ def ezPlotArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezRAObsName'.lower():
                 ezRAObsName = thisLine[1]
 
-            # integer arguments:
+
             elif thisLine0Lower == '-ezPlotDispGrid'.lower():
                 ezPlotDispGrid = int(thisLine[1])
 
             #elif thisLine0Lower == '-ezPlotAstroMath'.lower():
             #    ezPlotAstroMath = int(thisLine[1])
 
+            elif thisLine0Lower == '-ezPlotAntXTVTMaxPluckQtyL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTMaxPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezPlotAntXTVTMaxPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
-            # float arguments:
+            elif thisLine0Lower == '-ezPlotAntXTVTMaxPluckValL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTMaxPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezPlotAntXTVTMaxPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
 
-            # list arguments:
+            elif thisLine0Lower == '-ezPlotAntXTVTAvgPluckQtyL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezPlotAntXTVTAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif thisLine0Lower == '-ezPlotAntXTVTAvgPluckValL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTAvgPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezPlotAntXTVTAvgPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif thisLine0Lower == '-ezPlotAntXTVTPluck'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTPluckL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+
             elif thisLine0Lower == '-ezPlotPlotRangeL'.lower():
                 ezPlotPlotRangeL[0] = int(thisLine[1])
                 ezPlotPlotRangeL[1] = int(thisLine[2])
@@ -251,6 +310,12 @@ def ezPlotArgumentsCommandLine():
     global ezRAObsName                      # string
 
     #global ezPlotAstroMath                  # integer
+
+    global ezPlotAntXTVTMaxPluckQtyL        # integer list
+    global ezPlotAntXTVTMaxPluckValL        # float list
+    global ezPlotAntXTVTAvgPluckQtyL        # integer list
+    global ezPlotAntXTVTAvgPluckValL        # float list
+    global ezPlotAntXTVTPluckL              # integer list
 
     global ezPlotDispGrid                   # integer
     global ezPlotPlotRangeL                 # integer list
@@ -314,7 +379,6 @@ def ezPlotArgumentsCommandLine():
                 ezRAObsName = cmdLineSplit[cmdLineSplitIndex]   # cmd line allows only one ezRAObsName word
             
 
-            # integer arguments:
             elif cmdLineArgLower == '-ezPlotDispGrid'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezPlotDispGrid = int(cmdLineSplit[cmdLineSplitIndex])
@@ -323,15 +387,39 @@ def ezPlotArgumentsCommandLine():
             #    cmdLineSplitIndex += 1      # point to first argument value
             #    ezPlotAstroMath = int(cmdLineSplit[cmdLineSplitIndex])
 
+            elif cmdLineArgLower == '-ezPlotAntXTVTMaxPluckQtyL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTMaxPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezPlotAntXTVTMaxPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
-            # float arguments:
+            elif cmdLineArgLower == '-ezPlotAntXTVTMaxPluckValL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTMaxPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezPlotAntXTVTMaxPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
 
-            # list arguments:
+            elif cmdLineArgLower == '-ezPlotAntXTVTAvgPluckQtyL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezPlotAntXTVTAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == '-ezPlotAntXTVTAvgPluckValL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTAvgPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezPlotAntXTVTAvgPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
             elif cmdLineArgLower == '-ezPlotPlotRangeL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezPlotPlotRangeL[0] = int(cmdLineSplit[cmdLineSplitIndex])
                 cmdLineSplitIndex += 1
                 ezPlotPlotRangeL[1] = int(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezPlotAntXTVTPluck'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotAntXTVTPluckL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
             elif cmdLineArgLower == '-ezDefaultsFile'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -384,6 +472,12 @@ def ezPlotArguments():
 
     #global ezPlotAstroMath                  # integer
 
+    global ezPlotAntXTVTMaxPluckQtyL        # integer list
+    global ezPlotAntXTVTMaxPluckValL        # float list
+    global ezPlotAntXTVTAvgPluckQtyL        # integer list
+    global ezPlotAntXTVTAvgPluckValL        # float list
+    global ezPlotAntXTVTPluckL              # integer list
+
     global fileNameLast                     # string
     global plotCountdown                    # integer
     global ezPlotDispGrid                   # integer
@@ -401,9 +495,15 @@ def ezPlotArguments():
 
     #ezPlotAstroMath = 1
 
+    ezPlotAntXTVTMaxPluckQtyL = []      # empty to disable
+    ezPlotAntXTVTMaxPluckValL = []      # empty to disable
+    ezPlotAntXTVTAvgPluckQtyL = []      # empty to disable
+    ezPlotAntXTVTAvgPluckValL = []      # empty to disable
+    ezPlotAntXTVTPluckL       = []      # empty to disable
+
     ezPlotPlotRangeL = [0, 9999]        # save this range of plots to file
 
-    plotCountdown = 80                  # number of plots still to print
+    plotCountdown = 90                  # number of plots still to print
 
     # Program argument priority:
     #    Start with the argument value defaults inside the programs.
@@ -761,6 +861,244 @@ def printGoodbye(startTime):
 
 
 
+# Pluck filters #########################################################
+
+
+
+def ezPlotAntXTVTMaxPluckDo():
+
+    global ezPlotIn                  # float and int 2d array
+    #global antXTV                   # float 2d array
+    #global antXTVT                  # float 2d array
+    global antLen                   # integer
+    global antLenM1                 # integer
+    global xTickLocsAnt             # float array
+
+    global ezPlotAntXTVTMaxPluckQtyL         # integer list
+    global ezPlotAntXTVTMaxPluckValL         # float list
+
+    if not ezPlotAntXTVTMaxPluckQtyL and not ezPlotAntXTVTMaxPluckValL:    # if both empty, no plucking needed
+        return(1)
+
+    #print(f'   before ezPlotAntXTVTMaxPluckQtyL, antLen = ', {antLen:,}')
+
+    print()
+    print('   ezPlotAntXTVTMaxPluckDo ===============')
+
+    print('   np.shape(ezPlotIn)[0] =', np.shape(ezPlotIn)[0])
+    print('   np.shape(ezPlotIn)[1] =', np.shape(ezPlotIn)[1])
+
+    #antXTVTMax = np.amax(ezPlotIn[:, 19], axis=0)
+    antXTVTMax = ezPlotIn[:, 19]
+    #print('   antXTVTMax =', antXTVTMax)
+    print(f'   len(antXTVTMax) = {len(antXTVTMax):,}')
+    print()
+
+    # assume want to keep all antXTVTMax samples
+    antXTVTMaxPluckQtyKeepMask = np.ones(antLen, dtype=bool)
+
+    if ezPlotAntXTVTMaxPluckQtyL:
+        # get indexes of increasing antXTVTMax
+        antXTVTMaxIdxByIncreasing = antXTVTMax.argsort()
+        #print('   antXTVTMaxIdxByIncreasing =', antXTVTMaxIdxByIncreasing)
+        print(f'   len(antXTVTMaxIdxByIncreasing) = {len(antXTVTMaxIdxByIncreasing):,}')
+        print()
+
+        print('   ezPlotAntXTVTMaxPluckQtyL =', ezPlotAntXTVTMaxPluckQtyL)
+        print()
+
+        # mask off requested lowest-valued antXTVTMax samples
+        for i in range(ezPlotAntXTVTMaxPluckQtyL[0]):     # i starts with 0
+            antXTVTMaxPluckQtyKeepMask[antXTVTMaxIdxByIncreasing[i]] = False
+        # mask off requested highest-valued antXTVTMax samples
+        for i in range(ezPlotAntXTVTMaxPluckQtyL[1]):     # i starts with 0
+            antXTVTMaxPluckQtyKeepMask[antXTVTMaxIdxByIncreasing[-1-i]] = False
+
+    if ezPlotAntXTVTMaxPluckValL:
+        print('   ezPlotAntXTVTMaxPluckValL =', ezPlotAntXTVTMaxPluckValL)
+        print()
+
+        # mask off antXTVTMax samples with values equal or less than requested low
+        antXTVTMaxPluckQtyKeepMask[antXTVTMax <= ezPlotAntXTVTMaxPluckValL[0]] = False
+        # mask off antXTVTMax samples with values equal or greater than requested high
+        antXTVTMaxPluckQtyKeepMask[ezPlotAntXTVTMaxPluckValL[1] <= antXTVTMax] = False
+
+    #print('   antXTVTMaxPluckQtyKeepMask =', antXTVTMaxPluckQtyKeepMask)
+    print(f'   antXTVTMaxPluckQtyKeepMask.sum() =', antXTVTMaxPluckQtyKeepMask.sum())
+    print(f'   len(antXTVTMaxPluckQtyKeepMask) = {len(antXTVTMaxPluckQtyKeepMask):,}')
+
+    # thin most data arrays to keep only antXTVTMaxPluckQtyKeepMask samples
+    #azimuth     = azimuth    [antXTVTMaxPluckQtyKeepMask]
+    #elevation   = elevation  [antXTVTMaxPluckQtyKeepMask]
+    #dataTimeUtc = dataTimeUtc[antXTVTMaxPluckQtyKeepMask]
+    #rawIndex    = rawIndex   [antXTVTMaxPluckQtyKeepMask]
+    # thin ezPlotIn[n, :]
+    ezPlotIn     = ezPlotIn    [antXTVTMaxPluckQtyKeepMask, :]
+    #antXTV      = antXTV      [:, antXTVTMaxPluckQtyKeepMask]    # keep antXTV for Galaxy crossing plots
+    #antXTVT     = antXTVT     [:, antXTVTMaxPluckQtyKeepMask]
+    antLen = ezPlotIn.shape[0]
+    antLenM1 = antLen - 1
+    #refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'   antLen = {antLen:,}')
+    #print(f'   refLen = {refLen:,}')
+    xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
+
+
+
+def ezPlotAntXTVTAvgPluckDo():
+
+    global ezPlotIn                  # float and int 2d array
+    global antXTV                   # float 2d array
+    global antXTVT                  # float 2d array
+    global antLen                   # integer
+    global antLenM1                 # integer
+    global xTickLocsAnt             # float array
+
+    global ezPlotAntXTVTAvgPluckQtyL         # integer list
+    global ezPlotAntXTVTAvgPluckValL         # float list
+
+    if not ezPlotAntXTVTAvgPluckQtyL and not ezPlotAntXTVTAvgPluckValL:    # if both empty, no plucking needed
+        return(1)
+
+    #print(f'   before ezPlotAntXTVTAvgPluckQtyL, antLen = ', {antLen:,}')
+
+    print()
+    print('   ezPlotAntXTVTAvgPluckDo ===============')
+
+    print('   np.shape(ezPlotIn)[0] =', np.shape(ezPlotIn)[0])
+    print('   np.shape(ezPlotIn)[1] =', np.shape(ezPlotIn)[1])
+
+    #antXTVTAvg = np.mean(ezPlotIn[:, 18], axis=0)
+    antXTVTAvg = ezPlotIn[:, 18]
+    #print('   antXTVTAvg =', antXTVTAvg)
+    print(f'   len(antXTVTAvg) = {len(antXTVTAvg):,}')
+    print()
+
+    # assume want to keep all antXTVTAvg samples
+    antXTVTAvgPluckQtyKeepMask = np.ones(antLen, dtype=bool)
+
+    if ezPlotAntXTVTAvgPluckQtyL:
+        # get indexes of increasing antXTVTAvg
+        antXTVTAvgIdxByIncreasing = antXTVTAvg.argsort()
+        #print('   antXTVTAvgIdxByIncreasing =', antXTVTAvgIdxByIncreasing)
+        print(f'   len(antXTVTAvgIdxByIncreasing) = {len(antXTVTAvgIdxByIncreasing):,}')
+        print()
+
+        print('   ezPlotAntXTVTAvgPluckQtyL =', ezPlotAntXTVTAvgPluckQtyL)
+        print()
+
+        # mask off requested lowest-valued antXTVTAvg samples
+        for i in range(ezPlotAntXTVTAvgPluckQtyL[0]):     # i starts with 0
+            antXTVTAvgPluckQtyKeepMask[antXTVTAvgIdxByIncreasing[i]] = False
+        # mask off requested highest-valued antXTVTAvg samples
+        for i in range(ezPlotAntXTVTAvgPluckQtyL[1]):     # i starts with 0
+            antXTVTAvgPluckQtyKeepMask[antXTVTAvgIdxByIncreasing[-1-i]] = False
+
+    if ezPlotAntXTVTAvgPluckValL:
+        print('   ezPlotAntXTVTAvgPluckValL =', ezPlotAntXTVTAvgPluckValL)
+        print()
+
+        # mask off antXTVTAvg samples with values equal or less than requested low
+        antXTVTAvgPluckQtyKeepMask[antXTVTAvg <= ezPlotAntXTVTAvgPluckValL[0]] = False
+        # mask off antXTVTAvg samples with values equal or greater than requested high
+        antXTVTAvgPluckQtyKeepMask[ezPlotAntXTVTAvgPluckValL[1] <= antXTVTAvg] = False
+
+    #print('   antXTVTAvgPluckQtyKeepMask =', antXTVTAvgPluckQtyKeepMask)
+    print(f'   antXTVTAvgPluckQtyKeepMask.sum() =', antXTVTAvgPluckQtyKeepMask.sum())
+    print(f'   len(antXTVTAvgPluckQtyKeepMask) = {len(antXTVTAvgPluckQtyKeepMask):,}')
+
+    # thin most data arrays to keep only antXTVTAvgPluckQtyKeepMask samples
+    #azimuth     = azimuth    [antXTVTAvgPluckQtyKeepMask]
+    #elevation   = elevation  [antXTVTAvgPluckQtyKeepMask]
+    #dataTimeUtc = dataTimeUtc[antXTVTAvgPluckQtyKeepMask]
+    #rawIndex    = rawIndex   [antXTVTAvgPluckQtyKeepMask]
+    # thin ezPlotIn[n, :]
+    ezPlotIn     = ezPlotIn    [antXTVTAvgPluckQtyKeepMask, :]
+    #antXTV      = antXTV      [:, antXTVTAvgPluckQtyKeepMask]    # keep antXTV for Galaxy crossing plots
+    #antXTVT     = antXTVT     [:, antXTVTAvgPluckQtyKeepMask]
+    antLen = ezPlotIn.shape[0]
+    antLenM1 = antLen - 1
+    #refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'   antLen = {antLen:,}')
+    #print(f'   refLen = {refLen:,}')
+    xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
+
+
+
+def ezPlotAntXTVTPluckDo():
+
+    global ezPlotIn                  # float and int 2d array
+    global antXTV                   # float 2d array
+    global antXTVT                  # float 2d array
+    global antLen                   # integer
+    global antLenM1                 # integer
+    global xTickLocsAnt             # float array
+
+    global ezPlotAntXTVTPluckL       # integer list
+
+    #print(f'   before ezPlotAntXTVTPluckDo, antLen = ', {antLen:,}')
+
+    print()
+    print('   ezPlotAntXTVTPluckDo ===============')
+
+    #print('   antXTVT =', antXTVT)
+    print('                         np.shape(ezPlotIn)[0] =', np.shape(ezPlotIn)[0])
+    print('                         np.shape(ezPlotIn)[1] =', np.shape(ezPlotIn)[1])
+    print()
+
+    # assume want to keep all AntXTVT samples
+    antXTVTPluckKeepMask = np.ones(antLen, dtype=bool)
+
+    print('   ezPlotAntXTVTPluckL =', ezPlotAntXTVTPluckL)
+    print()
+
+    # This ezPlotAntXTVTPluckLDo() starts with the current indices of AntXT.
+    # This loop processes the requests in given order.
+    # Each pluck changes the index of the higher indexes (all higher samples move left).
+    # Like a chain anchored at the left, and removing one link, the total chain is shortened and the right side of the chain moves left by one link.
+    # This why it is easier to request ezPlotAntXTVTPluckL values in decreasing order !
+    for i in range(len(ezPlotAntXTVTPluckL)):
+        ezPlotAntXTVTPluckThis = ezPlotAntXTVTPluckL[i]
+        if antLen <= ezPlotAntXTVTPluckThis:
+            print()
+            print()
+            print()
+            print(f' ========== FATAL ERROR: ezPlotAntXTVTPluckL[{i}] is too large a number.')
+            print(f'                         ezPlotAntXTVTPluckL =', ezPlotAntXTVTPluckL)
+            print(f'                         current length of Ant <= ezPlotAntXTVTPluckL[{i}]')
+            print(f'                         {antLen} <= {ezPlotAntXTVTPluckThis}')
+            print()
+            print()
+            print()
+            exit()
+        else:
+            antXTVTPluckKeepMask[ezPlotAntXTVTPluckThis] = False
+
+    #print('                         antXTVTPluckKeepMask =', antXTVTPluckKeepMask)
+    print(f'                         len(antXTVTPluckKeepMask) = {len(antXTVTPluckKeepMask):,}')
+    print(f'                         antXTVTPluckKeepMask.sum() =', antXTVTPluckKeepMask.sum())
+
+    # thin most data arrays to keep only antXTVTPluckKeepMask samples
+    #azimuth     = azimuth    [antXTVTPluckKeepMask]
+    #elevation   = elevation  [antXTVTPluckKeepMask]
+    #dataTimeUtc = dataTimeUtc[antXTVTPluckKeepMask]
+    #rawIndex    = rawIndex   [antXTVTPluckKeepMask]
+    # thin ezPlotIn[n, :]
+    ezPlotIn     = ezPlotIn    [antXTVTPluckKeepMask, :]
+    #antXTV      = antXTV      [:, antXTVTPluckKeepMask]    # keep antXTV for Galaxy crossing plots
+    #antXTVT     = antXTVT     [:, antXTVTPluckKeepMask]
+    antLen = ezPlotIn.shape[0]
+    antLenM1 = antLen - 1
+    #refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'   antLen = {antLen:,}')
+    #print(f'   refLen = {refLen:,}')
+    xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
+
+
+
 #A#####################################################################################
 
 
@@ -842,6 +1180,8 @@ def plotEzPlot1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColo
 
 # ezPlotIn column plots #########################################################
 
+
+
 def plotEzPlot000timeUtcMjdSorted():
 
     global fileNameLast                         # string
@@ -880,7 +1220,7 @@ def plotEzPlot000timeUtcMjdSorted():
 
     # MJD relative to the start of the minimum MJD
     plotEzPlot1dSamplesAnt(plotName, ezPlotIn[ezPlotInIdxByMjdRel, 0]-int(timeUtcMjdMin),
-        f'{antLen:,} Samples, sorted Chronologically', [], 'green',
+        f'{antLen:,} Samples, sorted Chronologically', [], 'red',
         'UTC Time in Relative Modified Julian Days - Chronological' \
             + '\n\nMinimum = ' + timeUtcMjdMinS \
             + '\n\nMaximum = ' + timeUtcMjdMaxS)
@@ -1206,7 +1546,7 @@ def plotEzPlot120ref():
     print('                         refAvgAvg =', np.mean(ezPlotIn[:, 12]))
     print('                         refAvgMin =', ezPlotIn[:, 12].min())
 
-    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 12], '', [], 'red',
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 12], '', [], 'violet',
         'Ref Reference Spectrum Average')
 
 
@@ -1231,7 +1571,7 @@ def plotEzPlot130refMax():
     print('                         refMaxAvg =', np.mean(ezPlotIn[:, 13]))
     print('                         refMaxMin =', ezPlotIn[:, 13].min())
 
-    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 13], '', [], 'red',
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 13], '', [], 'violet',
         'Ref Reference Spectrum Maximum')
 
 
@@ -1256,7 +1596,7 @@ def plotEzPlot140antB():
     print('                         antBAvgAvg =', np.mean(ezPlotIn[:, 14]))
     print('                         antBAvgMin =', ezPlotIn[:, 14].min())
 
-    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 14], '', [], 'green',
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 14], '', [], 'red',
         'AntB Spectrum Average')
 
 
@@ -1280,7 +1620,7 @@ def plotEzPlot150antBMax():
     print('                         antBMaxAvg =', np.mean(ezPlotIn[:, 15]))
     print('                         antBMaxMin =', ezPlotIn[:, 15].min())
 
-    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 15], '', [], 'green',
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 15], '', [], 'red',
         'AntB Spectrum Maximum')
 
 
@@ -1355,7 +1695,7 @@ def plotEzPlot180antXTVT():
     print('                         AntXTVTAvgAvg =', np.mean(ezPlotIn[:, 18]))
     print('                         AntXTVTAvgMin =', ezPlotIn[:, 18].min())
 
-    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 18], '', [], 'violet',
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 18], '', [], 'green',
         'AntXTVT Spectrum Average')
 
 
@@ -1379,7 +1719,7 @@ def plotEzPlot190antXTVTMax():
     print('                         AntXTVTMaxAvg =', np.mean(ezPlotIn[:, 19]))
     print('                         AntXTVTMaxMin =', ezPlotIn[:, 19].min())
 
-    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 19], '', [], 'violet',
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 19], '', [], 'green',
         'AntXTVT Spectrum Maximum')
 
 
@@ -1440,7 +1780,8 @@ def plotEzPlot191sigProg():
         for x in gLatDegVertLineX:
             plt.axvline(x = x, linewidth=0.5, color='k')
 
-    plt.plot(gLatDegY, c='blue')
+    #plt.plot(gLatDegY, c='blue')
+    plt.plot(gLatDegY, c='red')
 
 
     # using antAvg, calculate a gain to fit it within -100 to +100 of its average
@@ -1457,7 +1798,8 @@ def plotEzPlot191sigProg():
         antAvgGain = 93. / (antAvgMax  - antAvgAvg)
     else:
         antAvgGain = 93. / (antAvgAvg - antAvgMin)
-    plt.plot(antAvgGain * (ezPlotIn[:, 10] - antAvgAvg) + 2000., c='blue')
+    #plt.plot(antAvgGain * (ezPlotIn[:, 10] - antAvgAvg) + 2000., c='blue')
+    plt.plot(antAvgGain * (ezPlotIn[:, 10] - antAvgAvg) + 200., c='blue')
 
 
     # using antMax, calculate a gain to fit it within -100 to +100 of its average
@@ -1474,7 +1816,8 @@ def plotEzPlot191sigProg():
         antMaxGain = 93. / (antMaxMax  - antMaxAvg)
     else:
         antMaxGain = 93. / (antMaxAvg - antMaxMin)
-    plt.plot(antMaxGain * (ezPlotIn[:, 11] - antMaxAvg) + 1800., c='blue')
+    #plt.plot(antMaxGain * (ezPlotIn[:, 11] - antMaxAvg) + 1800., c='blue')
+    plt.plot(antMaxGain * (ezPlotIn[:, 11] - antMaxAvg) + 400., c='blue')
 
 
     # using refAvg, calculate a gain to fit it within -100 to +100 of its average
@@ -1491,7 +1834,8 @@ def plotEzPlot191sigProg():
         refAvgGain = 93. / (refAvgMax  - refAvgAvg)
     else:
         refAvgGain = 93. / (refAvgAvg - refAvgMin)
-    plt.plot(refAvgGain * (ezPlotIn[:, 12] - refAvgAvg) + 1600., c='red')
+    #plt.plot(refAvgGain * (ezPlotIn[:, 12] - refAvgAvg) + 1600., c='violet')
+    plt.plot(refAvgGain * (ezPlotIn[:, 12] - refAvgAvg) + 600., c='violet')
 
 
     # using refMax, calculate a gain to fit it within -100 to +100 of its average
@@ -1508,7 +1852,8 @@ def plotEzPlot191sigProg():
         refMaxGain = 93. / (refMaxMax  - refMaxAvg)
     else:
         refMaxGain = 93. / (refMaxAvg - refMaxMin)
-    plt.plot(refMaxGain * (ezPlotIn[:, 13] - refMaxAvg) + 1400., c='red')
+    #plt.plot(refMaxGain * (ezPlotIn[:, 13] - refMaxAvg) + 1400., c='violet')
+    plt.plot(refMaxGain * (ezPlotIn[:, 13] - refMaxAvg) + 800., c='violet')
 
 
     # using antBAvg, calculate a gain to fit it within -100 to +100 of its average
@@ -1525,7 +1870,8 @@ def plotEzPlot191sigProg():
         antBAvgGain = 93. / (antBAvgMax  - antBAvgAvg)
     else:
         antBAvgGain = 93. / (antBAvgAvg - antBAvgMin)
-    plt.plot(antBAvgGain * (ezPlotIn[:, 14] - antBAvgAvg) + 1200., c='green')
+    #plt.plot(antBAvgGain * (ezPlotIn[:, 14] - antBAvgAvg) + 1200., c='red')
+    plt.plot(antBAvgGain * (ezPlotIn[:, 14] - antBAvgAvg) + 1000., c='red')
 
 
     # using antBMax, calculate a gain to fit it within -100 to +100 of its average
@@ -1542,7 +1888,8 @@ def plotEzPlot191sigProg():
         antBMaxGain = 93. / (antBMaxMax  - antBMaxAvg)
     else:
         antBMaxGain = 93. / (antBMaxAvg - antBMaxMin)
-    plt.plot(antBMaxGain * (ezPlotIn[:, 15] - antBMaxAvg) + 1000., c='green')
+    #plt.plot(antBMaxGain * (ezPlotIn[:, 15] - antBMaxAvg) + 1000., c='red')
+    plt.plot(antBMaxGain * (ezPlotIn[:, 15] - antBMaxAvg) + 1200., c='red')
 
 
     # using antRBAvg, calculate a gain to fit it within -100 to +100 of its average
@@ -1559,7 +1906,8 @@ def plotEzPlot191sigProg():
         antRBAvgGain = 93. / (antRBAvgMax  - antRBAvgAvg)
     else:
         antRBAvgGain = 93. / (antRBAvgAvg - antRBAvgMin)
-    plt.plot(antRBAvgGain * (ezPlotIn[:, 16] - antRBAvgAvg) + 800., c='orange')
+    #plt.plot(antRBAvgGain * (ezPlotIn[:, 16] - antRBAvgAvg) + 800., c='orange')
+    plt.plot(antRBAvgGain * (ezPlotIn[:, 16] - antRBAvgAvg) + 1400., c='orange')
 
 
     # using antRBMax, calculate a gain to fit it within -100 to +100 of its average
@@ -1576,7 +1924,8 @@ def plotEzPlot191sigProg():
         antRBMaxGain = 93. / (antRBMaxMax  - antRBMaxAvg)
     else:
         antRBMaxGain = 93. / (antRBMaxAvg - antRBMaxMin)
-    plt.plot(antRBMaxGain * (ezPlotIn[:, 17] - antRBMaxAvg) + 600., c='orange')
+    #plt.plot(antRBMaxGain * (ezPlotIn[:, 17] - antRBMaxAvg) + 600., c='orange')
+    plt.plot(antRBMaxGain * (ezPlotIn[:, 17] - antRBMaxAvg) + 1600., c='orange')
 
 
     # using antXTVTAvg, calculate a gain to fit it within -100 to +100 of its average
@@ -1593,7 +1942,8 @@ def plotEzPlot191sigProg():
         antXTVTAvgGain = 93. / (antXTVTAvgMax  - antXTVTAvgAvg)
     else:
         antXTVTAvgGain = 93. / (antXTVTAvgAvg - antXTVTAvgMin)
-    plt.plot(antXTVTAvgGain * (ezPlotIn[:, 18] - antXTVTAvgAvg) + 400., c='violet')
+    #plt.plot(antXTVTAvgGain * (ezPlotIn[:, 18] - antXTVTAvgAvg) + 400., c='green')
+    plt.plot(antXTVTAvgGain * (ezPlotIn[:, 18] - antXTVTAvgAvg) + 1800., c='green')
 
 
     # using antXTVTMax, calculate a gain to fit it within -100 to +100 of its average
@@ -1610,7 +1960,8 @@ def plotEzPlot191sigProg():
         antXTVTMaxGain = 93. / (antXTVTMaxMax  - antXTVTMaxAvg)
     else:
         antXTVTMaxGain = 93. / (antXTVTMaxAvg - antXTVTMaxMin)
-    plt.plot(antXTVTMaxGain * (ezPlotIn[:, 19] - antXTVTMaxAvg) + 200., c='violet')
+    #plt.plot(antXTVTMaxGain * (ezPlotIn[:, 19] - antXTVTMaxAvg) + 200., c='green')
+    plt.plot(antXTVTMaxGain * (ezPlotIn[:, 19] - antXTVTMaxAvg) + 2000., c='green')
 
 
     plt.title(titleS)
@@ -1646,9 +1997,11 @@ def plotEzPlot191sigProg():
 
     plt.ylabel('Signal Computation Progression\nfrom Ant to AntXTVT')
     plt.ylim(-150, 2150)
+    #      2000., 1800.,    1600., 1400.,
+    #     1200.,  1000.,     800.,    600.,       400.,      200.,         0.],
     plt.yticks([ \
-          2000., 1800.,    1600., 1400.,
-         1200.,  1000.,     800.,    600.,       400.,      200.,         0.],
+        200.,   400.,     600.,  800.,
+        1000.,  1200.,     1400.,   1600.,      1800.,     2000.,        0.],
         ['Ant', 'AntMax', 'Ref', 'RefMax',
         'AntB', 'AntBMax', 'AntRB', 'AntRBMax', 'AntXTVT', 'AntXTVTMax', 'GLatDeg'])
 
@@ -1657,11 +2010,11 @@ def plotEzPlot191sigProg():
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
+
 def plotEzPlot698azimuth():
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
-
 
     if 698 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 698:
         plotCountdown -= 1
@@ -1685,11 +2038,11 @@ def plotEzPlot698azimuth():
     del azimuth
 
 
+
 def plotEzPlot699elevation():
     global fileNameLast                         # string
     global plotCountdown                        # integer
     global ezPlotPlotRangeL                     # integer list
-
 
     if 699 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 699:
         plotCountdown -= 1
@@ -2569,7 +2922,7 @@ def plotEzPlot510sortedAntMax():
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
 
-    plotEzPlot1dSamplesSorted(plotName, 11, 'AntMax Spectrum Average by Sidereal day')
+    plotEzPlot1dSamplesSorted(plotName, 11, 'AntMax Spectrum Average Sorted by Value')
 
 
 
@@ -2802,7 +3155,7 @@ def plotEzPlot610histAntMax():
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plotCountdown -= 1
 
-    plotEzPlot1dSamplesHist(plotName, 11, 'AntMax Spectrum Average by Sidereal day')
+    plotEzPlot1dSamplesHist(plotName, 11, 'AntMax Spectrum Average Histogram')
 
 
 
@@ -2963,7 +3316,7 @@ def studyTime(column, data1dName):
     global ezPlotIn                             # float and int 2d array
 
     # '5 * str(column - 10)' below provides a (unique?) 5-character string.
-    #  RefMax is .ezb file column 13, so later, in the large ezConStudyxxx.txt file,
+    #  RefMax is .ezb file column 13, so later, in the large ezPlotStudyxxx.txt file,
     #  search for ' 33333' to easily find the RefMax section.
     OutString = f'\n  {fileNameLast}  ================================== ' \
         + f'{5 * str(column - 10)} Time study of {data1dName}\n'
@@ -3362,6 +3715,235 @@ def plotEzPlot790calAntXTVTMax():
 
 #A#################################################################################################
 
+def plotEzPlot1dSamplesSlope(plotName, ezPlotInColumn, plotYLabel):
+
+    global titleS                               # string
+    global ezPlotDispGrid                       # integer
+
+    global ezPlotIn                             # float 2d array
+
+    plt.clf()
+
+    # find slope to sample value vs time: (this sample value - last sample value) / (this MJD time - last MJD time)
+    #plt.plot(np.sort(ezPlotIn[:, ezPlotInColumn]))       # sorted by value
+    plt.plot((ezPlotIn[1:, ezPlotInColumn] - ezPlotIn[:-1, ezPlotInColumn]) / (ezPlotIn[1:, 0] - ezPlotIn[:-1, 0]))
+
+    plt.title(titleS)
+    plt.grid(ezPlotDispGrid)
+
+    plt.xlabel(f'{antLen:,} Samples')
+    xTickLocsAnt, xTickLabelsAnt = plt.xticks()
+    # may remove silly values, and shorten lists, so best to process indices in decreasing order
+    for i in range(len(xTickLocsAnt) - 1)[::-1]:
+        xTickLocsAntIInt = int(xTickLocsAnt[i])
+        if 0 <= xTickLocsAntIInt and xTickLocsAntIInt <= antLen:
+            xTickLabelsAnt[i] = f'{xTickLocsAntIInt:,}'
+        else:       # remove silly values
+            xTickLocsAnt = np.delete(xTickLocsAnt, i)
+            xTickLabelsAnt = np.delete(xTickLabelsAnt, i)
+    plt.xticks(xTickLocsAnt, xTickLabelsAnt, rotation=45, ha='right', rotation_mode='anchor')
+    plt.xlim(1, antLenM1)
+
+    plt.ylabel(plotYLabel)
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+
+
+
+def plotEzPlot800slopeAnt():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 800 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 800:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot800slopeAnt.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 10, 'Ant Spectrum Average Value Slope')
+
+
+
+def plotEzPlot810slopeAntMax():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 810 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 810:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot810slopeAntMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 11, 'AntMax Spectrum Average Value Slope')
+
+
+
+def plotEzPlot820slopeRef():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 820 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 820:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot820slopeRef.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 12, 'Ref Spectrum Average Value Slope')
+
+
+
+def plotEzPlot830slopeRefMax():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 830 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 830:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot830slopeRefMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 13, 'RefMax Spectrum Average Value Slope')
+
+
+
+def plotEzPlot840slopeAntB():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 840 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 840:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot840slopeAntB.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 14, 'AntB Spectrum Average Value Slope')
+
+
+
+def plotEzPlot850slopeAntBMax():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 850 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 850:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot850slopeAntBMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 15, 'AntBMax Spectrum Average Value Slope')
+
+
+
+def plotEzPlot860slopeAntRB():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 860 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 860:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot860slopeAntRB.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 16, 'AntRB Spectrum Average Value Slope')
+
+
+
+def plotEzPlot870slopeAntRBMax():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 870 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 870:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot870slopeAntRBMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 17, 'AntRBMax Spectrum Average Value Slope')
+
+
+
+def plotEzPlot880slopeAntXTVT():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 880 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 880:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot880slopeAntXTVT.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 18, 'AntXTVT Spectrum Average Value Slope')
+
+
+
+def plotEzPlot890slopeAntXTVTMax():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 890 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 890:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot890slopeAntXTVTMax.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesSlope(plotName, 19, 'AntXTVTMax Spectrum Average Value Slope')
+
+
+
+#A#################################################################################################
+
 
 
 def main():
@@ -3484,6 +4066,13 @@ def main():
     openFileStudy()         # In case it will eventually error.  Creates fileWriteNameStudy, fileWriteStudy
 
     plotPrep()              # creates antLenM1, titleS, ezPlotInIdxByMjdRel
+
+    if ezPlotAntXTVTMaxPluckQtyL or ezPlotAntXTVTMaxPluckValL :
+        ezPlotAntXTVTMaxPluckDo()       # thin ezPlotIn[:, :], antLen, and antLenM1
+    if ezPlotAntXTVTAvgPluckQtyL or ezPlotAntXTVTAvgPluckValL :
+        ezPlotAntXTVTAvgPluckDo()       # thin ezPlotIn[:, :], antLen, and antLenM1
+    if ezPlotAntXTVTPluckL:
+        ezPlotAntXTVTPluckDo()          # thin ezPlotIn[:, :], antLen, and antLenM1
 
     # plot ezPlots with X-axis: #+HHMM
 
@@ -3631,6 +4220,25 @@ def main():
 
     plotEzPlot780calAntXTVT()
     plotEzPlot790calAntXTVTMax()
+
+
+
+    # plot ezPlots with slope to sample value vs time
+
+    plotEzPlot800slopeAnt()
+    plotEzPlot810slopeAntMax()
+
+    plotEzPlot820slopeRef()
+    plotEzPlot830slopeRefMax()
+
+    plotEzPlot840slopeAntB()
+    plotEzPlot850slopeAntBMax()
+
+    plotEzPlot860slopeAntRB()
+    plotEzPlot870slopeAntRBMax()
+
+    plotEzPlot880slopeAntXTVT()
+    plotEzPlot890slopeAntXTVTMax()
 
 
 

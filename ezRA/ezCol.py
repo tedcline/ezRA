@@ -1,4 +1,4 @@
-programName = 'ezCol230406a.py'
+programName = 'ezCol231211a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCol Data COLlector program,
@@ -29,6 +29,11 @@ programRevision = programName
 # 221202, works on Win7Pro 'Python 3.8.10'
 # 221130, works on Ubuntu22 'Python 3.10.6'
 
+# ezCol231211a.py, if ezColUsbRelay, add ' Relay' or ' R' to end of ezColCenterFreqRef display lines
+# ezCol231108a.py, ezColAntBtwnRef into ezColArgumentsFile()
+# ezCol231004c.py, write commandStringEnd in file header
+# ezCol231004b.py, write commandString in file header
+# ezCol231004a.py, write commandString in file header
 # ezCol230406a.py, -eX
 # ezCol230316a.py, help screen edits, -eX
 # ezCol230315a.py, no ezColDashboard needed centerFreqRefHz, major ezColUsbRelay improvements
@@ -323,6 +328,9 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
 
             elif thisLine0Lower == '-ezColGain'.lower():
                 ezColGain = int(thisLineSplit[1])
+
+            elif thisLine0Lower == '-ezColAntBtwnRef'.lower():
+                ezColAntBtwnRef = int(thisLineSplit[1])
 
             elif thisLine0Lower == '-ezColVerbose'.lower():
                 ezColVerbose = int(thisLineSplit[1])
@@ -780,6 +788,8 @@ def main():
     global ezColDashboard                   # integer
     global ezColDispGrid                    # integer
 
+    global ezColUsbRelay                    # integer
+    global commandString                    # string
     global dateDayLastS                     # string
     global rmsAvgHistory                    # float array
     global rmsAvgHistoryLen                 # integer
@@ -872,6 +882,11 @@ def main():
     bandWidthHz = ezColBandWidth * 1e6                          # in float Hz
 
     programState = 0                # 0: Collect, 1: Pause, 2: Exit, in case no ezColDashboard
+    
+    if ezColUsbRelay:
+        ezColUsbRelayS = ' Relay'
+    else:
+        ezColUsbRelayS = ''
 
     # initialize dashboard
     if ezColDashboard:
@@ -1034,6 +1049,7 @@ def main():
         #    #mng.window.state('zoomed')
 
 
+    commandStringEnd = ' '.join(commandString.split()[1:])
 
     # if does not exist - create new 'data' directory
     if not os.path.exists('data'):
@@ -1165,7 +1181,10 @@ def main():
 
                 # open() with 1 to write to file after every '\n'
                 fileWrite = open(fileNameS, 'w', 1)
-                fileWrite.write('from ' + programRevision + '\n' \
+
+                # write file header
+                #fileWrite.write('from ' + programRevision + '\n' \
+                fileWrite.write(f'from {programRevision} {commandStringEnd}\n' \
                     + f'lat {ezRAObsLat:g} ' \
                     + f'long {ezRAObsLon:g} ' \
                     + 'amsl ' + str(ezRAObsAmsl) \
@@ -1227,7 +1246,7 @@ def main():
                 print(f'Integration   {timeStampUtcSecRelThis - timeStampUtcSecRelLast:0.1f}  sec')
                 print( 'ezColIntegQty', ezColIntegQty)
                 print('---')
-                print(f'ezColCenterFreqRef {ezColCenterFreqRef:0.6f}')
+                print(f'ezColCenterFreqRef {ezColCenterFreqRef:0.6f}{ezColUsbRelayS}')
                 print(f'ezColCenterFreqAnt {ezColCenterFreqAnt:0.6f}')
                 print(f'FreqMin            {freqMinAnt:0.6f}')
                 print(f'FreqMax            {freqMaxAnt:0.6f}')
@@ -1285,7 +1304,7 @@ def main():
 
                 # write column 4 (right)
                 fig.text(0.77, 0.95, \
-                    f'{ezColCenterFreqRef:0.6f}\n{ezColCenterFreqAnt:0.6f}\n' \
+                    f'{ezColCenterFreqRef:0.6f}{ezColUsbRelayS[:2]}\n{ezColCenterFreqAnt:0.6f}\n' \
                         + f'{freqMinAnt:0.6f}\n{freqMaxAnt:0.6f}\n\n\n{fileSample:d}   ' \
                     + dataFlagsS, \
                     horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)

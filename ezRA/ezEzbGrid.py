@@ -1,4 +1,4 @@
-programName = 'ezEzbGrid230305a.py'
+programName = 'ezEzbGrid231227b.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezEzbGrid .ezb Data File Coordinate Grid Creator.
@@ -20,6 +20,8 @@ programRevision = programName
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+# ezEzbGrid231227b.py, -ezEzbGrid 2
+# ezEzbGrid231227a.py, AntB values increment, like AntRB
 # ezEzbGrid230305a.py, boilerplate from ezSky
 # ezEzbGrid221121a.py, defaultKS, inputing ezEzbGridRangeL, ezEzbGridBoxL, and ezEzbGridLineL
 # ezEzbGrid221113a.py, changed time for good ezSky601AzEl
@@ -989,7 +991,8 @@ def createEzConOutEzb():
             elif ezEzbGrid == 2:
                 # RaDec grid
                 # extract 6 "This" coordinates
-                raDegThis  = raDeg[n]       # hours
+                raHThis    = raH[n]         # hours
+                raDegThis  = raHThis * 15.  # degrees
                 decDegThis = decDeg[n]      # degrees
 
                 cTarget = SkyCoord(ra=raDegThis*15.*u.deg, dec=decDegThis*u.deg,
@@ -1051,16 +1054,15 @@ def createEzConOutEzb():
         if not samplesQtyProcessed:
             ezConOut = np.array([
                 dataTimeUtc[n].mjd, raHThis, decDegThis, gLatDegThis, gLonDegThis, vlsrThis,
-                1., azDegThis, elDegThis, 0.,
-                1., 2., 3., 4.,
-                5., n, 7., 8., 9., 1.])
+                1., azDegThis, elDegThis, 9.,
+                0.5, 1., 2., 3., n,
+                5., n, 7., 8., 9.])
         else:
             ezConOut = np.concatenate([ezConOut, np.array([
                 dataTimeUtc[n].mjd, raHThis, decDegThis, gLatDegThis, gLonDegThis, vlsrThis,
-                1., azDegThis, elDegThis, 0.,
-                1., 2., 3., 4.,
-                5., n, 7., 8., 9., 1.]) ])
-
+                1., azDegThis, elDegThis, 9.,
+                0.5, 1., 2., 3., n,
+                5., n, 7., 8., 9.]) ])
 
         samplesQtyProcessed += 1
 

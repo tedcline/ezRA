@@ -1,4 +1,4 @@
-programName = 'ezCon230824a.py'
+programName = 'ezCon240108a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
@@ -6,7 +6,7 @@ programRevision = programName
 #   one .ezb text data file, and perhaps GALaxy *Gal.npz and *GLon.npz data files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,57 @@ programRevision = programName
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
 
+# ezCon240108a, ezCon191 Ant to AntXTVT top-bottom order reversed
+# ezCon240107a, Copyright (c) 2024
+# ezCon240106b, fixed some Pluck routines
+# ezCon240106a, fixed some Pluck routines
+# ezCon240105b.py, ezConAntSamplePluck to ezConAntPluck,
+#   fixed some Pluck routines
+# ezCon240105a.py, dusting, added HH:MM to studyTime() OutString
+# ezCon240104a.py, "Snip" might mean shorten, so replaced almost all "Snip" with "Pluck",
+#   like   -ezConAntXTVTMaxPluckQtyL and -ezConAntXTVTAvgPluckQtyL,
+#   added  -ezConAntXTVTMaxPluckValL and -ezConAntXTVTAvgPluckValL and -ezConAntXTVTPluck,
+#   revised ezConAntXTVTMaxPluckDo() and  ezConAntXTVTAvgPluckDo() and  ezConAntXTVTPluckDo(),
+#   removed "rawLen-refQty ="
+# ezCon240101a.py, ezConAntXTVTMaxSnipQtyL before ezConAntXTVTAvgSnipQtyL,
+#   antLen ?= rawLen-refQty
+# ezCon231231a.py, fileRawLen
+# ezCon231213b.py, plot antXTV and antXTVT after filtering antXTVT
+# ezCon231213a.py, ezCon098 and ezCon398 'Downsampled by Maxing',
+#   removed dead ezCon386
+# ezCon231212c.py, per Ted's Oct 18, 2023 at 8:14 PM email,
+#   ezCon511 renamed to ezCon519, to align with the future ezGal519,
+#   ezCon521 renamed to ezCon529, to align with the future ezGal529,
+#   ezCon560 renamed to ezCon800, to avoid alignment with the ezGal560 Galactic angular velocity plot,
+#   ezCon382 now FreqBin increases down
+# ezCon231212b.py, continued,
+#   ezCon386 to ezCon088antXTVTByFreqBinAllFall    Spectra, Downsampled by Averaging with Time Increasing Down
+#               ezCon098antXTVTMaxByFreqBinAllFall Spectra, Downsampled by Averaging with Time Increasing Down
+#   ezCon382 to ezCon383antXTVByFreqBinAvg
+#   ezCon388 to ezCon382antXTByFreqBinAvgRfi
+#   ezCon389 to ezCon388antXTVTByFreqBinAll    Spectra, Downsampled by Averaging
+#   ezCon397 to ezCon397antXTVTMaxByFreqBin
+#               ezCon398antXTVTMaxByFreqBinAll Spectra, Downsampled by Averaging
+# ezCon231212a.py, continued
+# ezCon231211b.py, continued
+# ezCon231211a.py, 
+#   -ezConAntXTVTAvgSnipQtyL,
+#   -ezConAntXTVTMaxSnipQtyL
+# ezCon231210a.py, 
+#   ezCon386 AntXTVT Spectra, Downsampled by Averaging with Time Increasing Up
+#   ezCon389 AntXTVT Spectra, Downsampled by Averaging
+# ezCon231209a.py, ezConAstroMath default to 1 (seems to work for me)
+#   ezSky200 AntXTVT violet needs      best contrast, use green
+#   ezSky200 AntB           needs next best contrast, use red
+#       AntXTVT violet   becomes newgreen
+#       Ref     red      becomes violet
+#       AntB    green    becomes red
+#               newgreen becomes green
+# ezCon231202a.py, ezCon389 had ezCon398 typo
+# ezCon231108a.py, hid help of (unfinished??) -ezConUseSubRef,
+#   ezCon389antXTVTByFreqBinAll(),
+#   ezCon392antXTVByFreqBinMax()
+# ezCon231002a.py, -ezConUseSubRef
 # ezCon230824a.py, print ezConPlotRangeL in printGoodbye(),
 #   trouble using -ezConAntAvgSnipQtyL so always create xTickLabelsHeatAntL
 # ezCon230820a.py, removed 'Galaxy plane' from ezCon520 ezCon521 and ezCon690
@@ -188,7 +239,7 @@ def printUsage():
     print("    -ezConAddElDeg        -2.6       (add to data file's recorded Elevation (degrees))")
     print()
     print('    -ezConRawSamplesUseL  0 100      (first Raw Sample number    last Raw Sample number)')
-    #print('    -ezConRawSampleSnip    29        ( Raw Sample number)')
+    #print('    -ezConRawSamplePluck    29        ( Raw Sample number)')
     #print('    -ezConRawAvgTrimFracL  .01  .98')
     #print('         (trim Raw samples with RawAvg values outside low high (as fractions of sorted rawLen))')
     print('    -ezConRawFreqBinHide  129        (hide Raw freqBin 129 by copying from freqBin 128)')
@@ -204,24 +255,26 @@ def printUsage():
     print('      -ezConRefMode    10: REF = last REF sample marked in data, if none will use sample 0')
     #print('      -ezConRefMode    20: REF detection by ezCon software (for refPulser hardware)')
     print()
-    print('    -ezConAntSamplesUseL   25   102  (first Ant Sample number    last Ant Sample number)')
-    print('    -ezConAntSampleSnip    29        (Snip (ignore) Ant Sample number)')
-    print('    -ezConAntAvgSnipQtyL   3    5')
-    print('         (Snip (ignore) Ant samples with the 3 Quantity lowest, and 5 highest, sorted AntAvg values)')
-    print('    -ezConAntAvgSnipFracL  .02  .03')
-    print('         (Snip (ignore) Ant samples with the lowest 2% and highest 3% AntAvg values (antLen Fractions))')
+    print('    -ezConAntSamplesUseL    25   102  (first Ant Sample number    last Ant Sample number)')
+    print('    -ezConAntPluck          29        (Pluck (ignore) Ant Sample number)')
+    print('    -ezConAntAvgPluckQtyL    3    5')
+    print('         (Pluck (ignore) Ant samples with the 3 Quantity lowest, and 5 highest, sorted AntAvg values)')
+    print('    -ezConAntAvgPluckFracL  .02  .03')
+    print('         (Pluck (ignore) Ant samples with the lowest 2% and highest 3% AntAvg values (antLen Fractions))')
     #print('    -ezConAntFreqBinHide  129        (hide Ant freqBin 129 by copying from freqBin 128)')
-    print('    -ezConAntFreqBinSmooth 1.1       ',
+    print('    -ezConAntFreqBinSmooth  1.1       ',
         '(RFI spur limiter: maximum muliplier over 4 neighboring freqBin of same Ant sample)')
     print()
-    print('    -ezConRefAvgSnipQtyL   3    5')
-    print('         (Snip (ignore) Ref samples with the 3 Quantity lowest, and 5 highest, sorted RefAvg values)')
-    print('    -ezConRefAvgSnipFracL  .02  .03')
-    print('         (Snip (ignore) Ref samples with the lowest 2% and highest 3% RefAvg values (antLen Fractions))')
+    print('    -ezConRefAvgPluckQtyL    3    5')
+    print('         (Pluck (ignore) Ref samples with the 3 Quantity lowest, and 5 highest, sorted RefAvg values)')
+    print('    -ezConRefAvgPluckFracL  .02  .03')
+    print('         (Pluck (ignore) Ref samples with the lowest 2% and highest 3% RefAvg values (antLen Fractions))')
     #print('    -ezConRefFreqBinHide  129        (hide Ref freqBin 129 by copying from freqBin 128)')
     #print('    -ezConRefFreqBinSmooth 1.1       ',
     #    '(RFI spur limiter: maximum muliplier over 4 neighboring freqBin of same Ref sample)')
     print()
+#    print('    -ezConUseSubRef 1                (use Subtraction of last Reference sample, not Division)')
+#    print()
     print('    -ezConAntBaselineFreqBinsFracL   0  0.2344  0.7657  1')
     print('         (AntBaseline        FreqBin bands: start stop start stop (as fractions of bandwidth))')
     print()
@@ -238,6 +291,19 @@ def printUsage():
     print()
     print('    -ezConAntXTVTFreqBinsFracL          0.4     0.6')
     print('         (AntXTVTFreqBinsFrac FreqBin band:  start stop          (as fractions of bandwidth))')
+    print()
+    print('    -ezConAntXTVTMaxPluckQtyL   3    5')
+    print('         (Pluck (ignore) AntXTVTMax samples with the 3 Quantity lowest, and 5 highest, sorted AntXTVTMax)')
+    print('    -ezConAntXTVTMaxPluckValL  .01   .03')
+    print('         (Pluck (ignore) AntXTVTMax samples with Values below .01 or above .03)')
+    print()
+    print('    -ezConAntXTVTAvgPluckQtyL   3    5')
+    print('         (Pluck (ignore) AntXTVT    samples with the 3 Quantity lowest, and 5 highest, sorted AntXTVT)')
+    print('    -ezConAntXTVTAvgPluckValL  .01   .03')
+    print('         (Pluck (ignore) AntXTVT    samples with Values below .01 or above .03)')
+    print()
+    print('    -ezConAntXTVTPluck         33')
+    print('         (Pluck (ignore) AntXTVTMax and AntXTVT sample 33')
     print()
     print('    -ezConPlotRangeL     0  300      (save only this range of ezCon plots to file, to save time)')
     print('    -ezConRawDispIndex   1           (also Display the Raw sample Index on x axis)')
@@ -331,6 +397,7 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConAddAzDeg                    # float - correction factor, add to file's Azimuth   (Degrees)
     global ezConAddElDeg                    # float - correction factor, add to file's Elevation (Degrees)
 
+    global ezConUseSubRef                   # integer
     global ezConAntXInput                   # integer
     global ezConUseVlsr                     # integer
 
@@ -338,19 +405,26 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConRawFreqBinHideL             # integer list
 
     global ezConAntSamplesUseL              # integer list
-    global ezConAntSampleSnipL              # integer list
-    global ezConAntAvgSnipQtyL              # integer list
-    global ezConAntAvgSnipFracL             # float list
+    global ezConAntPluckL                   # integer list
+    global ezConAntAvgPluckQtyL             # integer list
+    global ezConAntAvgPluckFracL            # float list
     global ezConAntFreqBinSmooth            # float - RFI spur limiter: max muliplier over 4 neighboring freqBin
 
-    global ezConRefAvgSnipQtyL              # integer list
-    global ezConRefAvgSnipFracL             # float list
+    global ezConRefAvgPluckQtyL             # integer list
+    global ezConRefAvgPluckFracL            # float list
     global ezConRefMode                     # integer
 
     global ezConAntBaselineFreqBinsFracL    # float list
     global ezConAntRABaselineFreqBinsFracL  # float list
     global ezConAntXTFreqBinsFracL          # float list
     global ezConAntXTVTFreqBinsFracL        # float list
+
+    global ezConAntXTVTMaxPluckQtyL         # integer list
+    global ezConAntXTVTMaxPluckValL         # float list
+    global ezConAntXTVTAvgPluckQtyL         # integer list
+    global ezConAntXTVTAvgPluckValL         # float list
+    global ezConAntXTVTPluckL               # integer list
+
     global ezCon399SignalSampleByFreqBinL   # integer list
     global ezConHeatVMinMaxL                # float list
 
@@ -368,7 +442,6 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConGalCrossingGLatNear         # float
     global ezConGalCrossingGLonCenterL      # float list
     global ezConGalCrossingGLonNear         # float
-
 
     print()
     print('   ezConArgumentsFile(' + ezDefaultsFileNameInput + ') ===============')
@@ -410,6 +483,9 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
                 ezRAObsName = thisLine[1]
 
             # integer arguments:
+            elif thisLine0Lower == '-ezConUseSubRef'.lower():
+                ezConUseSubRef = int(thisLine[1])
+
             elif thisLine0Lower == '-ezConAntXInput'.lower():
                 ezConAntXInput = int(thisLine[1])
 
@@ -431,8 +507,8 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezConRefMode'.lower():
                 ezConRefMode = int(thisLine[1])
 
-            elif thisLine0Lower == '-ezConAntSampleSnip'.lower():
-                ezConAntSampleSnipL.append(int(thisLine[1]))
+            elif thisLine0Lower == '-ezConAntPluck'.lower():
+                ezConAntPluckL.append(int(thisLine[1]))
 
 
             # float arguments:
@@ -496,21 +572,21 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
                 ezConAntSamplesUseL.append(int(thisLine[1]))
                 ezConAntSamplesUseL.append(int(thisLine[2]))
 
-            elif thisLine0Lower == '-ezConAntAvgSnipQtyL'.lower():
-                ezConAntAvgSnipQtyL.append(int(thisLine[1]))
-                ezConAntAvgSnipQtyL.append(int(thisLine[2]))
+            elif thisLine0Lower == '-ezConAntAvgPluckQtyL'.lower():
+                ezConAntAvgPluckQtyL.append(int(thisLine[1]))
+                ezConAntAvgPluckQtyL.append(int(thisLine[2]))
 
-            elif thisLine0Lower == '-ezConAntAvgSnipFracL'.lower():
-                ezConAntAvgSnipFracL.append(float(thisLine[1]))
-                ezConAntAvgSnipFracL.append(float(thisLine[2]))
+            elif thisLine0Lower == '-ezConAntAvgPluckFracL'.lower():
+                ezConAntAvgPluckFracL.append(float(thisLine[1]))
+                ezConAntAvgPluckFracL.append(float(thisLine[2]))
 
-            elif thisLine0Lower == '-ezConRefAvgSnipQtyL'.lower():
-                ezConRefAvgSnipQtyL.append(int(thisLine[1]))
-                ezConRefAvgSnipQtyL.append(int(thisLine[2]))
+            elif thisLine0Lower == '-ezConRefAvgPluckQtyL'.lower():
+                ezConRefAvgPluckQtyL.append(int(thisLine[1]))
+                ezConRefAvgPluckQtyL.append(int(thisLine[2]))
 
-            elif thisLine0Lower == '-ezConRefAvgSnipFracL'.lower():
-                ezConRefAvgSnipFracL.append(float(thisLine[1]))
-                ezConRefAvgSnipFracL.append(float(thisLine[2]))
+            elif thisLine0Lower == '-ezConRefAvgPluckFracL'.lower():
+                ezConRefAvgPluckFracL.append(float(thisLine[1]))
+                ezConRefAvgPluckFracL.append(float(thisLine[2]))
 
             elif thisLine0Lower == '-ezConAntBaselineFreqBinsFracL'.lower():
                 ezConAntBaselineFreqBinsFracL[0] = float(thisLine[1])
@@ -531,6 +607,25 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezConAntXTVTFreqBinsFracL'.lower():
                 ezConAntXTVTFreqBinsFracL[0] = float(thisLine[1])
                 ezConAntXTVTFreqBinsFracL[1] = float(thisLine[2])
+
+            elif thisLine0Lower == '-ezConAntXTVTMaxPluckQtyL'.lower():
+                ezConAntXTVTMaxPluckQtyL.append(int(thisLine[1]))
+                ezConAntXTVTMaxPluckQtyL.append(int(thisLine[2]))
+
+            elif thisLine0Lower == '-ezConAntXTVTMaxPluckValL'.lower():
+                ezConAntXTVTMaxPluckValL.append(float(thisLine[1]))
+                ezConAntXTVTMaxPluckValL.append(float(thisLine[2]))
+
+            elif thisLine0Lower == '-ezConAntXTVTAvgPluckQtyL'.lower():
+                ezConAntXTVTAvgPluckQtyL.append(int(thisLine[1]))
+                ezConAntXTVTAvgPluckQtyL.append(int(thisLine[2]))
+
+            elif thisLine0Lower == '-ezConAntXTVTAvgPluckValL'.lower():
+                ezConAntXTVTAvgPluckValL.append(float(thisLine[1]))
+                ezConAntXTVTAvgPluckValL.append(float(thisLine[2]))
+
+            elif thisLine0Lower == '-ezConAntXTVTPluck'.lower():
+                ezConAntXTVTPluckL.append(int(thisLine[1]))
 
             elif thisLine0Lower == '-ezCon399SignalSampleByFreqBinL'.lower():
                 ezCon399SignalSampleByFreqBinL[0] = int(thisLine[1])
@@ -586,6 +681,7 @@ def ezConArgumentsCommandLine():
     global ezConAddAzDeg                    # float - correction factor, add to file's Azimuth   (Degrees)
     global ezConAddElDeg                    # float - correction factor, add to file's Elevation (Degrees)
 
+    global ezConUseSubRef                   # integer
     global ezConAntXInput                   # integer
     global ezConUseVlsr                     # integer
 
@@ -593,19 +689,26 @@ def ezConArgumentsCommandLine():
     global ezConRawFreqBinHideL             # integer list
 
     global ezConAntSamplesUseL              # integer list
-    global ezConAntSampleSnipL              # integer list
-    global ezConAntAvgSnipQtyL              # integer list
-    global ezConAntAvgSnipFracL             # float list
+    global ezConAntPluckL                   # integer list
+    global ezConAntAvgPluckQtyL             # integer list
+    global ezConAntAvgPluckFracL            # float list
     global ezConAntFreqBinSmooth            # float - RFI spur limiter: max muliplier over 4 neighboring freqBin
 
-    global ezConRefAvgSnipQtyL              # integer list
-    global ezConRefAvgSnipFracL             # float list
+    global ezConRefAvgPluckQtyL             # integer list
+    global ezConRefAvgPluckFracL            # float list
     global ezConRefMode                     # integer
 
     global ezConAntBaselineFreqBinsFracL    # float list
     global ezConAntRABaselineFreqBinsFracL  # float list
     global ezConAntXTFreqBinsFracL          # float list
     global ezConAntXTVTFreqBinsFracL        # float list
+
+    global ezConAntXTVTMaxPluckQtyL         # integer list
+    global ezConAntXTVTMaxPluckValL         # float list
+    global ezConAntXTVTAvgPluckQtyL         # integer list
+    global ezConAntXTVTAvgPluckValL         # float list
+    global ezConAntXTVTPluckL               # integer list
+
     global ezCon399SignalSampleByFreqBinL   # integer list
     global ezConHeatVMinMaxL                # float list
 
@@ -625,7 +728,6 @@ def ezConArgumentsCommandLine():
     global ezConGalCrossingGLonNear         # float
 
     global cmdDirectoryS                    # string            creation
-
 
     print()
     print('   ezConArgumentsCommandLine ===============')
@@ -684,6 +786,10 @@ def ezConArgumentsCommandLine():
             
 
             # integer arguments:
+            elif cmdLineArgLower == '-ezConUseSubRef'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConUseSubRef = int(cmdLineSplit[cmdLineSplitIndex])
+            
             elif cmdLineArgLower == '-ezConAntXInput'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezConAntXInput = int(cmdLineSplit[cmdLineSplitIndex])
@@ -712,9 +818,9 @@ def ezConArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezConRefMode = int(cmdLineSplit[cmdLineSplitIndex])
 
-            elif cmdLineArgLower == '-ezConAntSampleSnip'.lower():
+            elif cmdLineArgLower == '-ezConAntPluck'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConAntSampleSnipL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                ezConAntPluckL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
 
             # float arguments:
@@ -805,29 +911,29 @@ def ezConArgumentsCommandLine():
                 cmdLineSplitIndex += 1
                 ezConAntSamplesUseL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
-            elif cmdLineArgLower == '-ezConAntAvgSnipQtyL'.lower():
+            elif cmdLineArgLower == '-ezConAntAvgPluckQtyL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConAntAvgSnipQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                ezConAntAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
                 cmdLineSplitIndex += 1
-                ezConAntAvgSnipQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                ezConAntAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
-            elif cmdLineArgLower == '-ezConAntAvgSnipFracL'.lower():
+            elif cmdLineArgLower == '-ezConAntAvgPluckFracL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConAntAvgSnipFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                ezConAntAvgPluckFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
                 cmdLineSplitIndex += 1
-                ezConAntAvgSnipFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                ezConAntAvgPluckFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
 
-            elif cmdLineArgLower == '-ezConRefAvgSnipQtyL'.lower():
+            elif cmdLineArgLower == '-ezConRefAvgPluckQtyL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConRefAvgSnipQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                ezConRefAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
                 cmdLineSplitIndex += 1
-                ezConRefAvgSnipQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                ezConRefAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
-            elif cmdLineArgLower == '-ezConRefAvgSnipFracL'.lower():
+            elif cmdLineArgLower == '-ezConRefAvgPluckFracL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConRefAvgSnipFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                ezConRefAvgPluckFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
                 cmdLineSplitIndex += 1
-                ezConRefAvgSnipFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                ezConRefAvgPluckFracL.append(float(cmdLineSplit[cmdLineSplitIndex]))
 
             elif cmdLineArgLower == '-ezConAntBaselineFreqBinsFracL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -860,6 +966,34 @@ def ezConArgumentsCommandLine():
                 ezConAntXTVTFreqBinsFracL[0] = float(cmdLineSplit[cmdLineSplitIndex])
                 cmdLineSplitIndex += 1
                 ezConAntXTVTFreqBinsFracL[1] = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezConAntXTVTMaxPluckQtyL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConAntXTVTMaxPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezConAntXTVTMaxPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == '-ezConAntXTVTMaxPluckValL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConAntXTVTMaxPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezConAntXTVTMaxPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == '-ezConAntXTVTAvgPluckQtyL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConAntXTVTAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezConAntXTVTAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == '-ezConAntXTVTAvgPluckValL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConAntXTVTAvgPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezConAntXTVTAvgPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
+            elif cmdLineArgLower == '-ezConAntXTVTPluck'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConAntXTVTPluckL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
             elif cmdLineArgLower == '-ezCon399SignalSampleByFreqBinL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -936,6 +1070,7 @@ def ezConArguments():
     global ezConAddAzDeg                    # float - correction factor, add to file's Azimuth   (Degrees)
     global ezConAddElDeg                    # float - correction factor, add to file's Elevation (Degrees)
 
+    global ezConUseSubRef                   # integer
     global ezConAntXInput                   # integer
     global ezConUseVlsr                     # integer
 
@@ -943,19 +1078,26 @@ def ezConArguments():
     global ezConRawFreqBinHideL             # integer list
 
     global ezConAntSamplesUseL              # integer list
-    global ezConAntSampleSnipL              # integer list
-    global ezConAntAvgSnipQtyL              # integer list
-    global ezConAntAvgSnipFracL             # float list
+    global ezConAntPluckL                   # integer list
+    global ezConAntAvgPluckQtyL             # integer list
+    global ezConAntAvgPluckFracL            # float list
     global ezConAntFreqBinSmooth            # float - RFI spur limiter: max muliplier over 4 neighboring freqBin
 
-    global ezConRefAvgSnipQtyL              # integer list
-    global ezConRefAvgSnipFracL             # float list
+    global ezConRefAvgPluckQtyL             # integer list
+    global ezConRefAvgPluckFracL            # float list
     global ezConRefMode                     # integer
 
     global ezConAntBaselineFreqBinsFracL    # float list
     global ezConAntRABaselineFreqBinsFracL  # float list
     global ezConAntXTFreqBinsFracL          # float list
     global ezConAntXTVTFreqBinsFracL        # float list
+
+    global ezConAntXTVTMaxPluckQtyL         # integer list
+    global ezConAntXTVTMaxPluckValL         # float list
+    global ezConAntXTVTAvgPluckQtyL         # integer list
+    global ezConAntXTVTAvgPluckValL         # float list
+    global ezConAntXTVTPluckL               # integer list
+
     global ezCon399SignalSampleByFreqBinL   # integer list
     global ezCon399SignalSampleByFreqBin1d  # float list or numpy
 
@@ -987,10 +1129,10 @@ def ezConArguments():
         #ezRAObsName = 'LebanonKS'
         ezRAObsName = ''                    # silly name
 
+        ezConUseSubRef    =  0
         ezConAntXInput    = -1              # default = -1 for auto choice: AntB, or if 1 < refQty then AntRB
-
-        ezConUseVlsr      = 1
-        ezConRawDispIndex = 0
+        ezConUseVlsr      =  1
+        ezConRawDispIndex =  0
 
         ezConAzimuth   = -999               # float - silly value for simulate Azimuth (Degrees)
         ezConElevation = -999               # float - silly value for simulate Elevation (Degrees)
@@ -1001,13 +1143,13 @@ def ezConArguments():
         ezConRawFreqBinHideL  = []          # empty to disable
 
         ezConAntSamplesUseL   = []          # empty to disable
-        ezConAntSampleSnipL   = []          # empty to disable
-        ezConAntAvgSnipQtyL   = []          # empty to disable
-        ezConAntAvgSnipFracL  = []          # empty to disable
+        ezConAntPluckL        = []          # empty to disable
+        ezConAntAvgPluckQtyL  = []          # empty to disable
+        ezConAntAvgPluckFracL = []          # empty to disable
         ezConAntFreqBinSmooth = 999999.     # RFI spur limiter: max muliplier over 4 neighboring freqBin
 
-        ezConRefAvgSnipQtyL   = []          # empty to disable
-        ezConRefAvgSnipFracL  = []          # empty to disable
+        ezConRefAvgPluckQtyL  = []          # empty to disable
+        ezConRefAvgPluckFracL = []          # empty to disable
 
         # to average, specify low and high freqBin of total freqBin,
         # 60 low of 256 freqBin like (60 / 256 = 0.2344) or (150 / 1024 = 0.1465),
@@ -1023,6 +1165,12 @@ def ezConArguments():
 
         ezConAntXTVTFreqBinsFracL       = [   0.25,   0.75      ]
 
+        ezConAntXTVTMaxPluckQtyL = []       # empty to disable
+        ezConAntXTVTMaxPluckValL = []       # empty to disable
+        ezConAntXTVTAvgPluckQtyL = []       # empty to disable
+        ezConAntXTVTAvgPluckValL = []       # empty to disable
+        ezConAntXTVTPluckL       = []       # empty to disable
+
         ezCon399SignalSampleByFreqBinL = [10, 0]    # Ant, antenna sample 0
         ezCon399SignalSampleByFreqBin1d = []        # flag as empty
 
@@ -1031,7 +1179,8 @@ def ezConArguments():
         ezConDispGrid    = 0
         ezConDispFreqBin = 0
 
-        ezConAstroMath = 2              # 2 = astropy math = slow but authoritative
+        #ezConAstroMath = 2              # 2 = astropy math = slow but authoritative
+        ezConAstroMath = 1              # 1 = math from MIT Haystack SRT
 
         ezConRefMode = 10
 
@@ -1050,7 +1199,7 @@ def ezConArguments():
         ezConPlotRangeL = [0, 9999]     # save this range of plots to file
 
 
-    plotCountdown = 78                  # number of plots still to print
+    plotCountdown = 86                  # number of plots still to print
 
     # Program argument priority:
     #    Start with the argument value defaults inside the programs.
@@ -1081,6 +1230,7 @@ def ezConArguments():
         print()
         print()
         print(' ========== FATAL ERROR: ', ezConAntXInput, 'is an unrecognized value for ezConAntXInput')
+        print('                            Allowed values = -1, 0, 2, 4, 5, or 6')
         print()
         print()
         print()
@@ -1094,6 +1244,7 @@ def ezConArguments():
         print()
         print()
         print(' ========== FATAL ERROR: ', ezCon399SignalSampleByFreqBinL[0], 'is an unrecognized value for ezCon399SignalSampleByFreqBinL[0]')
+        print('                            Allowed values = 10, 12, 14, 16, or 18')
         print()
         print()
         print()
@@ -1122,13 +1273,15 @@ def ezConArguments():
         print('   ezConRefMode          =', ezConRefMode)
         print()
         print('   ezConAntSamplesUseL   =', ezConAntSamplesUseL)
-        print('   ezConAntSampleSnipL   =', ezConAntSampleSnipL)
-        print('   ezConAntAvgSnipQtyL   =', ezConAntAvgSnipQtyL)
-        print('   ezConAntAvgSnipFracL  =', ezConAntAvgSnipFracL)
+        print('   ezConAntPluckL        =', ezConAntPluckL)
+        print('   ezConAntAvgPluckQtyL  =', ezConAntAvgPluckQtyL)
+        print('   ezConAntAvgPluckFracL =', ezConAntAvgPluckFracL)
         print('   ezConAntFreqBinSmooth =', ezConAntFreqBinSmooth)
         print()
-        print('   ezConRefAvgSnipQtyL   =', ezConRefAvgSnipQtyL)
-        print('   ezConRefAvgSnipFracL  =', ezConRefAvgSnipFracL)
+        print('   ezConRefAvgPluckQtyL  =', ezConRefAvgPluckQtyL)
+        print('   ezConRefAvgPluckFracL =', ezConRefAvgPluckFracL)
+        print()
+        print('   ezConUseSubRef        =', ezConUseSubRef)
         print()
         print('   ezConAntBaselineFreqBinsFracL   =', ezConAntBaselineFreqBinsFracL)
         print('   ezConAntRABaselineFreqBinsFracL =', ezConAntRABaselineFreqBinsFracL)
@@ -1138,6 +1291,13 @@ def ezConArguments():
         print('   ezConAntXTFreqBinsFracL         =', ezConAntXTFreqBinsFracL)
         print('   ezConUseVlsr                    =', ezConUseVlsr)
         print('   ezConAntXTVTFreqBinsFracL       =', ezConAntXTVTFreqBinsFracL)
+        print()
+        print('   ezConAntXTVTMaxPluckQtyL        =', ezConAntXTVTMaxPluckQtyL)
+        print('   ezConAntXTVTMaxPluckValL        =', ezConAntXTVTMaxPluckValL)
+        print('   ezConAntXTVTAvgPluckQtyL        =', ezConAntXTVTAvgPluckQtyL)
+        print('   ezConAntXTVTAvgPluckValL        =', ezConAntXTVTAvgPluckValL)
+        print('   ezConAntXTVTPluckL              =', ezConAntXTVTPluckL)
+        print()
         print('   ezCon399SignalSampleByFreqBinL  =', ezCon399SignalSampleByFreqBinL)
         print()
         print('   ezConRawDispIndex     =', ezConRawDispIndex)
@@ -1265,6 +1425,8 @@ def readDataDir():
 
 
 
+                fileRawLen = 0          # reset with each new file
+                
                 # read line 1
                 ## from ezCol10z05p.py (Jul-13-2022a N0RQV)
                 #  01234567890
@@ -1474,14 +1636,18 @@ def readDataDir():
                                     elevation = np.array([dataElevation])
 
                             # increments when the data line was collected (ezConRawSamplesUseL)
+                            fileRawLen += 1
                             rawLen += 1
 
                         # increments whether or not the data line was collected (ezConRawSamplesUseL)
                         sampleCount += 1
 
                         # allow append to print line
-                        print(f'    number of samples read = {sampleCount:,}',
-                            f'    rawLen = {rawLen:,}             ', end='')
+                        #print(f'    number of samples read = {sampleCount:,}',
+                        print(f' samplesRead= {sampleCount:,}',
+                            f'  fileRawLen= {fileRawLen:,}',
+                            f'  rawLen= {rawLen:,}',
+                            f'  antLen ?= {rawLen - refQty:,}             ', end='')
 
                     # flow on to fetch next file line
 
@@ -1767,7 +1933,7 @@ def rawPlotPrep():
 
 
 
-def ezConRefAvgSnipQtyLDo():
+def ezConRefAvgPluckQtyLDo():
 
     #global azimuth                  # float array
     #global elevation                # float array
@@ -1779,16 +1945,15 @@ def ezConRefAvgSnipQtyLDo():
     #global refLen                   # integer
     #global refLenM1                 # integer
 
-    global ezConRefAvgSnipQtyL      # float list
+    global ezConRefAvgPluckQtyL      # float list
 
-
-    if not ezConRefAvgSnipQtyL:     # if empty, no snipping needed
+    if not ezConRefAvgPluckQtyL:     # if empty, no plucking needed
         return(1)
 
-    #print(f'   before ezConRefAvgSnipQtyL, refLen = ', {refLen:,}')
+    #print(f'   before ezConRefAvgPluckQtyL, refLen = ', {refLen:,}')
 
     print()
-    print('   ezConRefAvgSnipQtyLDo ===============')
+    print('   ezConRefAvgPluckQtyLDo ===============')
 
     print('   np.shape(ref)[0] =', np.shape(ref)[0])
     print('   np.shape(ref)[1] =', np.shape(ref)[1])
@@ -1805,44 +1970,44 @@ def ezConRefAvgSnipQtyLDo():
     print(f'   len(refAvgIdxByIncreasing) = {len(refAvgIdxByIncreasing):,}')
     print()
 
-    print('   ezConRefAvgSnipQtyL =', ezConRefAvgSnipQtyL)
+    print('   ezConRefAvgPluckQtyL =', ezConRefAvgPluckQtyL)
     print()
 
     # assume want to keep all refAvg samples
-    refAvgSnipNumKeepMask = np.ones_like(refAvg, dtype=bool)
+    refAvgPluckNumKeepMask = np.ones(antLen, dtype=bool)
 
     # mask off requested lowest-valued refAvg samples
-    for i in range(ezConRefAvgSnipQtyL[0]):                 # i increases up from 0
-        refAvgSnipNumKeepMask[refAvgIdxByIncreasing[i]] = False
+    for i in range(ezConRefAvgPluckQtyL[0]):                 # i increases up from 0
+        refAvgPluckNumKeepMask[refAvgIdxByIncreasing[i]] = False
 
     # mask off requested highest-valued refAvg samples
-    for i in reversed(range(ezConRefAvgSnipQtyL[1])):       # i decreases down to 0
-        refAvgSnipNumKeepMask[refAvgIdxByIncreasing[-1-i]] = False
+    for i in reversed(range(ezConRefAvgPluckQtyL[1])):       # i decreases down to 0
+        refAvgPluckNumKeepMask[refAvgIdxByIncreasing[-1-i]] = False
 
     # replace the Ref of not-kept REF samples
-    if not refAvgSnipNumKeepMask[0]:
+    if not refAvgPluckNumKeepMask[0]:
         # Ref index is 0
         # Matching ANT needs to use next future kept REF sample.
-        # Use Ref from lowest index of True in refAvgSnipNumKeepMask.
-        indexFirstKept = np.where(refAvgSnipNumKeepMask)[0][0]
+        # Use Ref from lowest index of True in refAvgPluckNumKeepMask.
+        indexFirstKept = np.where(refAvgPluckNumKeepMask)[0][0]
         print('   indexFirstKept =', indexFirstKept)
         ref[:, 0] = ref[:, indexFirstKept]
-    for i in range(1, len(refAvgSnipNumKeepMask)):          # i increases up from 1
+    for i in range(1, len(refAvgPluckNumKeepMask)):          # i increases up from 1
         # Ref index is greater than 0
-        if not refAvgSnipNumKeepMask[i]:                    # if Ref not to be kept
+        if not refAvgPluckNumKeepMask[i]:                    # if Ref not to be kept
             # replace the Ref with next older REF sample
             ref[:, i] = ref[:, i-1]
 
-    print('   refAvgSnipNumKeepMask =', refAvgSnipNumKeepMask)
-    print('   refAvgSnipNumKeepMask.sum() =', refAvgSnipNumKeepMask.sum())
-    print(f'   len(refAvgSnipNumKeepMask) = {len(refAvgSnipNumKeepMask):,}')
+    #print('   refAvgPluckNumKeepMask =', refAvgPluckNumKeepMask)
+    print('   refAvgPluckNumKeepMask.sum() =', refAvgPluckNumKeepMask.sum())
+    print(f'   len(refAvgPluckNumKeepMask) = {len(refAvgPluckNumKeepMask):,}')
 
-    #azimuth     = azimuth    [refAvgSnipNumKeepMask]
-    #elevation   = elevation  [refAvgSnipNumKeepMask]
-    #dataTimeUtc = dataTimeUtc[refAvgSnipNumKeepMask]
-    ##rawIndex    = rawIndex   [refAvgSnipNumKeepMask]
-    #ant         = ant     [:, refAvgSnipNumKeepMask]
-    #ref         = ref     [:, refAvgSnipNumKeepMask]
+    #azimuth     = azimuth    [refAvgPluckNumKeepMask]
+    #elevation   = elevation  [refAvgPluckNumKeepMask]
+    #dataTimeUtc = dataTimeUtc[refAvgPluckNumKeepMask]
+    ##rawIndex    = rawIndex   [refAvgPluckNumKeepMask]
+    #ant         = ant     [:, refAvgPluckNumKeepMask]
+    #ref         = ref     [:, refAvgPluckNumKeepMask]
     #antLen = ant.shape[1]
     #antLenM1 = antLen - 1
     refLen = ref.shape[1]
@@ -1852,8 +2017,7 @@ def ezConRefAvgSnipQtyLDo():
 
 
 
-def ezConRefAvgSnipFracLDo():
-
+def ezConRefAvgPluckFracLDo():
 
     global azimuth                  # float array
     global elevation                # float array
@@ -1867,21 +2031,19 @@ def ezConRefAvgSnipFracLDo():
     #global refLenM1                 # integer
     global xTickLocsAnt             # float array
 
-    global ezConRefAvgSnipFracL     # float list
+    global ezConRefAvgPluckFracL     # float list
 
-
-    if not ezConRefAvgSnipFracL:    # if empty, no snipping needed
+    if not ezConRefAvgPluckFracL:    # if empty, no plucking needed
         return(1)
 
-    #print(f'   before ezConRefAvgSnipFracLDo, antLen = ', {antLen:,}')
+    #print(f'   before ezConRefAvgPluckFracLDo, antLen = ', {antLen:,}')
 
     print()
-    print('   ezConRefAvgSnipFracLDo ===============')
+    print('   ezConRefAvgPluckFracLDo ===============')
 
     print('   np.shape(ref)[0] =', np.shape(ref)[0])
     print('   np.shape(ref)[1] =', np.shape(ref)[1])
 
-    # create refAvgSort spectrum of increasing refAvg values
     refAvg = np.mean(ref, axis=0)
     #print('   refAvg =', refAvg)
     print(f'   len(refAvg) = {len(refAvg):,}')
@@ -1893,48 +2055,48 @@ def ezConRefAvgSnipFracLDo():
     print(f'   len(refAvgIdxByIncreasing) = {len(refAvgIdxByIncreasing):,}')
     print()
 
-    print('   ezConRefAvgSnipFracL =', ezConRefAvgSnipFracL)
+    print('   ezConRefAvgPluckFracL =', ezConRefAvgPluckFracL)
     print()
 
     # snap down to next integer
     refLenM1 = ref.shape[1] - 1
-    refAvgSnipFracQty0 = int(refLenM1 * ezConRefAvgSnipFracL[0])
-    refAvgSnipFracQty1 = int(refLenM1 * ezConRefAvgSnipFracL[1])
+    refAvgPluckFracQty0 = int(refLenM1 * ezConRefAvgPluckFracL[0])
+    refAvgPluckFracQty1 = int(refLenM1 * ezConRefAvgPluckFracL[1])
 
     # assume want to keep all refAvg samples
-    refAvgSnipFracKeepMask = np.ones_like(refAvg, dtype=bool)
+    refAvgPluckFracKeepMask = np.ones(antLen, dtype=bool)
 
     # mask off requested lowest-valued refAvg samples
-    for i in range(refAvgSnipFracQty0):     # i starts with 0
-        refAvgSnipFracKeepMask[refAvgIdxByIncreasing[i]] = False
+    for i in range(refAvgPluckFracQty0):     # i starts with 0
+        refAvgPluckFracKeepMask[refAvgIdxByIncreasing[i]] = False
     # mask off requested highest-valued refAvg samples
-    for i in range(refAvgSnipFracQty1):     # i starts with 0
-        refAvgSnipFracKeepMask[refAvgIdxByIncreasing[-1-i]] = False
+    for i in range(refAvgPluckFracQty1):     # i starts with 0
+        refAvgPluckFracKeepMask[refAvgIdxByIncreasing[-1-i]] = False
 
     # replace the Ref of not-kept REF samples
-    if not refAvgSnipFracKeepMask[0]:
+    if not refAvgPluckFracKeepMask[0]:
         # Ref index is 0
         # Matching ANT needs to use next future kept REF sample.
-        # Use Ref from lowest index of True in refAvgSnipFracKeepMask.
-        indexFirstKept = np.where(refAvgSnipFracKeepMask)[0][0]
+        # Use Ref from lowest index of True in refAvgPluckFracKeepMask.
+        indexFirstKept = np.where(refAvgPluckFracKeepMask)[0][0]
         print('   indexFirstKept =', indexFirstKept)
         ref[:, 0] = ref[:, indexFirstKept]
-    for i in range(1, len(refAvgSnipFracKeepMask)):          # i increases up from 1
+    for i in range(1, len(refAvgPluckFracKeepMask)):          # i increases up from 1
         # Ref index is greater than 0
-        if not refAvgSnipFracKeepMask[i]:                    # if Ref not to be kept
+        if not refAvgPluckFracKeepMask[i]:                    # if Ref not to be kept
             # replace the Ref with next older REF sample
             ref[:, i] = ref[:, i-1]
 
-    print('   refAvgSnipFracKeepMask =', refAvgSnipFracKeepMask)
-    print('   refAvgSnipFracKeepMask.sum() =', refAvgSnipFracKeepMask.sum())
-    print(f'   len(refAvgSnipFracKeepMask) = {len(refAvgSnipFracKeepMask):,}')
+    print('   refAvgPluckFracKeepMask =', refAvgPluckFracKeepMask)
+    print('   refAvgPluckFracKeepMask.sum() =', refAvgPluckFracKeepMask.sum())
+    print(f'   len(refAvgPluckFracKeepMask) = {len(refAvgPluckFracKeepMask):,}')
 
-    #azimuth     = azimuth    [refAvgSnipFracKeepMask]
-    #elevation   = elevation  [refAvgSnipFracKeepMask]
-    #dataTimeUtc = dataTimeUtc[refAvgSnipFracKeepMask]
-    ##rawIndex    = rawIndex   [refAvgSnipFracKeepMask]
-    #ant         = ant     [:, refAvgSnipFracKeepMask]
-    #ref         = ref     [:, refAvgSnipFracKeepMask]
+    #azimuth     = azimuth    [refAvgPluckFracKeepMask]
+    #elevation   = elevation  [refAvgPluckFracKeepMask]
+    #dataTimeUtc = dataTimeUtc[refAvgPluckFracKeepMask]
+    ##rawIndex    = rawIndex   [refAvgPluckFracKeepMask]
+    #ant         = ant     [:, refAvgPluckFracKeepMask]
+    #ref         = ref     [:, refAvgPluckFracKeepMask]
     #antLen = ant.shape[1]
     #antLenM1 = antLen - 1
     refLen = ref.shape[1]
@@ -2421,7 +2583,7 @@ def createRef10lastRefMarkedInData():
     #global refLen                   # integer
     #global refLenM1                 # integer
 
-    global ezConRefAvgSnipFracL     # float array
+    global ezConRefAvgPluckFracL    # float array
     global maskRawAnt               # Boolean array     creation
     global maskRawRef               # Boolean array     creation
 
@@ -2435,7 +2597,7 @@ def createRef10lastRefMarkedInData():
     print(f' antLen = {antLen:,}')
     antLenM1 = antLen - 1                       # creation
 
-    #if ezConRefAvgKeepFracL:                    # if snipping requested
+    #if ezConRefAvgKeepFracL:                    # if plucking requested
     if 0:
         # remove those bad raw samples which would be REF samples, using ezConRefAvgKeepFracL
         
@@ -2643,8 +2805,8 @@ def createRef20refPulser():
     #def plotEzCon105ArawAvgMinMax():
     if 1:
         # Plot the REF detection progress so far.
-        # Plot rawAvg in connected green, rawAvgRecentMinA in blue, and rawAvgRecentMaxA in red.
-        # The green rawAvg should rattle up and down between the recent blue min and the recent red max.
+        # Plot rawAvg in connected green, rawAvgRecentMinA in blue, and rawAvgRecentMaxA in violet.
+        # The green rawAvg should rattle up and down between the recent blue min and the recent violet max.
         plotName = 'ezCon105ArawAvgMinMax.png'     #
         print()
         print('   plotting ' + plotName + ' ================================')
@@ -2664,7 +2826,7 @@ def createRef20refPulser():
             #    plt.plot(-rawAvgCM10RecentMinA, 'bo')
             #    plt.plot(-rawAvgCM10RecentMaxA, 'ro')
             plt.plot(rawAvgRecentMinA, 'bo')
-            plt.plot(rawAvgRecentMaxA, 'ro')
+            plt.plot(rawAvgRecentMaxA, 'o', c='violet')
 
             # Also plot each rawAvg sample as a fraction between the recent min and recent max.
             #rawAvgRecentMinAMin = rawAvgRecentMinA.min()
@@ -2694,8 +2856,8 @@ def createRef20refPulser():
     #def plotEzCon201CrawAvgRecentFrac():
     if 1:
         # Plot the REF detection progress so far.
-        # Plot horizontal line at rawAvgRecentFracTrig in red, and rawAvgAvgRecentFrac in connected green.
-        # The green rawAvgAvgRecentFrac should rattle up and down above and below red rawAvgRecentFracTrig.
+        # Plot horizontal line at rawAvgRecentFracTrig in violet, and rawAvgAvgRecentFrac in connected green.
+        # The green rawAvgAvgRecentFrac should rattle up and down above and below violet rawAvgRecentFracTrig.
         plotName = 'ezCon201CrawAvgRecentFrac.png'
         print()
         print('   plotting ' + plotName + ' ================================')
@@ -2707,8 +2869,8 @@ def createRef20refPulser():
         if ezConPlotRangeL[0] <= 201 and 201 <= ezConPlotRangeL[1]:
             plt.clf()
 
-            # horizontal line at rawAvgRecentFracTrig in red
-            plt.plot([0, rawLenM1], [rawAvgRecentFracTrig, rawAvgRecentFracTrig], 'r-')
+            # horizontal line at rawAvgRecentFracTrig in violet
+            plt.plot([0, rawLenM1], [rawAvgRecentFracTrig, rawAvgRecentFracTrig], '-', c='violet')
 
             # rawAvgAvgRecentFrac in connected green
             plt.plot(rawAvgRecentFrac, 'go-')
@@ -2760,10 +2922,10 @@ def createRef20refPulser():
             #temp[sampleRef] = np.nan                    # mark True  sampleRef as np.nan, which will not plot
             #plt.plot(temp, 'bo')
 
-            # plot a red dot on sampleRef which are 1
+            # plot a violet dot on sampleRef which are 1
             temp = sampleRef + 0.
             temp[np.logical_not(sampleRef)] = np.nan    # mark False sampleRef as np.nan, which will not plot
-            plt.plot(temp, 'ro')
+            plt.plot(temp, 'o', c='violet')
 
             plt.title(titleS)
             plt.grid(ezConDispGrid)
@@ -2772,7 +2934,7 @@ def createRef20refPulser():
             plt.xlim(0, rawLenM1)
             plt.xticks(xTickLocsRaw, xTickLabelsRaw, rotation=45, ha='right', rotation_mode='anchor')
 
-            plt.ylabel('Possible REF in Red\n\nSampleRef = ' + str(sampleRefSum) \
+            plt.ylabel('Possible REF in Violet\n\nSampleRef = ' + str(sampleRefSum) \
                 + ' = ' + str(int(100. * sampleRefAvg)) + ' %')
             #    + '\n\n rawLen = ' + str(rawLen))
             #plt.ylim(-90, 90)
@@ -2943,10 +3105,10 @@ def createRef20refPulser():
             temp[np.logical_not(maskRawAnt)] = np.nan   # mark False maskRawAnt as np.nan, which will not plot
             plt.plot(temp, 'bo')
 
-            # plot a red dot on raw where maskRef is True
+            # plot a violet dot on raw where maskRef is True
             temp = rawAvg + 0.
             temp[np.logical_not(maskRawRef)] = np.nan   # mark False maskRawRef as np.nan, which will not plot
-            plt.plot(temp, 'ro')
+            plt.plot(temp, 'o', c='violet')
 
             plt.title(titleS)
             plt.grid(ezConDispGrid)
@@ -3075,7 +3237,7 @@ def createRef():
 
 
 
-def ezConAntAvgSnipQtyLDo():
+def ezConAntAvgPluckQtyLDo():
 
     global azimuth                  # float array
     global elevation                # float array
@@ -3089,21 +3251,19 @@ def ezConAntAvgSnipQtyLDo():
     #global refLenM1                 # integer
     global xTickLocsAnt             # float array
 
-    global ezConAntAvgSnipQtyL      # float list
+    global ezConAntAvgPluckQtyL      # float list
 
-
-    if not ezConAntAvgSnipQtyL:     # if empty, no snipping needed
+    if not ezConAntAvgPluckQtyL:     # if empty, no plucking needed
         return(1)
 
-    #print(f'   before ezConAntAvgSnipQtyL, antLen = ', {antLen:,}')
+    #print(f'   before ezConAntAvgPluckQtyL, antLen = ', {antLen:,}')
 
     print()
-    print('   ezConAntAvgSnipQtyLDo ===============')
+    print('   ezConAntAvgPluckQtyLDo ===============')
 
     print('   np.shape(ant)[0] =', np.shape(ant)[0])
     print('   np.shape(ant)[1] =', np.shape(ant)[1])
 
-    # create antAvgSort spectrum of increasing antAvg values
     antAvg = np.mean(ant, axis=0)
     #print('   antAvg =', antAvg)
     print(f'   len(antAvg) = {len(antAvg):,}')
@@ -3115,30 +3275,29 @@ def ezConAntAvgSnipQtyLDo():
     print(f'   len(antAvgIdxByIncreasing) = {len(antAvgIdxByIncreasing):,}')
     print()
 
-    print('   ezConAntAvgSnipQtyL =', ezConAntAvgSnipQtyL)
+    print('   ezConAntAvgPluckQtyL =', ezConAntAvgPluckQtyL)
     print()
 
     # assume want to keep all antAvg samples
-    antAvgSnipNumKeepMask = np.ones_like(antAvg, dtype=bool)
-
+    antAvgPluckNumKeepMask = np.ones(antLen, dtype=bool)
     # mask off requested lowest-valued antAvg samples
-    for i in range(ezConAntAvgSnipQtyL[0]):     # i starts with 0
-        antAvgSnipNumKeepMask[antAvgIdxByIncreasing[i]] = False
+    for i in range(ezConAntAvgPluckQtyL[0]):     # i starts with 0
+        antAvgPluckNumKeepMask[antAvgIdxByIncreasing[i]] = False
     # mask off requested highest-valued antAvg samples
-    for i in range(ezConAntAvgSnipQtyL[1]):     # i starts with 0
-        antAvgSnipNumKeepMask[antAvgIdxByIncreasing[-1-i]] = False
+    for i in range(ezConAntAvgPluckQtyL[1]):     # i starts with 0
+        antAvgPluckNumKeepMask[antAvgIdxByIncreasing[-1-i]] = False
 
-    print('   antAvgSnipNumKeepMask =', antAvgSnipNumKeepMask)
-    print('   antAvgSnipNumKeepMask.sum() =', antAvgSnipNumKeepMask.sum())
-    print(f'   len(antAvgSnipNumKeepMask) = {len(antAvgSnipNumKeepMask):,}')
+    #print('   antAvgPluckNumKeepMask =', antAvgPluckNumKeepMask)
+    print(f'   antAvgPluckNumKeepMask.sum() =', antAvgPluckNumKeepMask.sum())
+    print(f'   len(antAvgPluckNumKeepMask) = {len(antAvgPluckNumKeepMask):,}')
 
-    # thin most data arrays to keep only antAvgSnipNumKeepMask samples
-    azimuth     = azimuth    [antAvgSnipNumKeepMask]
-    elevation   = elevation  [antAvgSnipNumKeepMask]
-    dataTimeUtc = dataTimeUtc[antAvgSnipNumKeepMask]
-    #rawIndex    = rawIndex   [antAvgSnipNumKeepMask]
-    ant         = ant     [:, antAvgSnipNumKeepMask]
-    ref         = ref     [:, antAvgSnipNumKeepMask]
+    # thin most data arrays to keep only antAvgPluckNumKeepMask samples
+    azimuth     = azimuth    [antAvgPluckNumKeepMask]
+    elevation   = elevation  [antAvgPluckNumKeepMask]
+    dataTimeUtc = dataTimeUtc[antAvgPluckNumKeepMask]
+    #rawIndex    = rawIndex   [antAvgPluckNumKeepMask]
+    ant         = ant     [:, antAvgPluckNumKeepMask]
+    ref         = ref     [:, antAvgPluckNumKeepMask]
     antLen = ant.shape[1]
     antLenM1 = antLen - 1
     refLen = ref.shape[1]
@@ -3149,7 +3308,7 @@ def ezConAntAvgSnipQtyLDo():
 
 
 
-def ezConAntAvgSnipFracLDo():
+def ezConAntAvgPluckFracLDo():
 
     global azimuth                  # float array
     global elevation                # float array
@@ -3163,21 +3322,19 @@ def ezConAntAvgSnipFracLDo():
     #global refLenM1                 # integer
     global xTickLocsAnt             # float array
 
-    global ezConAntAvgSnipFracL     # float list
+    global ezConAntAvgPluckFracL     # float list
 
-
-    if not ezConAntAvgSnipFracL:    # if empty, no snipping needed
+    if not ezConAntAvgPluckFracL:    # if empty, no plucking needed
         return(1)
 
-    #print(f'   before ezConAntAvgSnipFracLDo, antLen = ', {antLen:,}')
+    #print(f'   before ezConAntAvgPluckFracLDo, antLen = ', {antLen:,}')
 
     print()
-    print('   ezConAntAvgSnipFracLDo ===============')
+    print('   ezConAntAvgPluckFracLDo ===============')
 
     print('   np.shape(ant)[0] =', np.shape(ant)[0])
     print('   np.shape(ant)[1] =', np.shape(ant)[1])
 
-    # create antAvgSort spectrum of increasing antAvg values
     antAvg = np.mean(ant, axis=0)
     #print('   antAvg =', antAvg)
     print(f'   len(antAvg) = {len(antAvg):,}')
@@ -3189,34 +3346,34 @@ def ezConAntAvgSnipFracLDo():
     print(f'   len(antAvgIdxByIncreasing) = {len(antAvgIdxByIncreasing):,}')
     print()
 
-    print('   ezConAntAvgSnipFracL =', ezConAntAvgSnipFracL)
+    print('   ezConAntAvgPluckFracL =', ezConAntAvgPluckFracL)
     print()
 
     # snap down to next integer
-    antAvgSnipFracQty0 = int(antLenM1 * ezConAntAvgSnipFracL[0])
-    antAvgSnipFracQty1 = int(antLenM1 * ezConAntAvgSnipFracL[1])
+    antAvgPluckFracQty0 = int(antLenM1 * ezConAntAvgPluckFracL[0])
+    antAvgPluckFracQty1 = int(antLenM1 * ezConAntAvgPluckFracL[1])
 
     # assume want to keep all antAvg samples
-    antAvgSnipFracKeepMask = np.ones_like(antAvg, dtype=bool)
+    antAvgPluckFracKeepMask = np.ones(antLen, dtype=bool)
 
     # mask off requested lowest-valued antAvg samples
-    for i in range(antAvgSnipFracQty0):     # i starts with 0
-        antAvgSnipFracKeepMask[antAvgIdxByIncreasing[i]] = False
+    for i in range(antAvgPluckFracQty0):     # i starts with 0
+        antAvgPluckFracKeepMask[antAvgIdxByIncreasing[i]] = False
     # mask off requested highest-valued antAvg samples
-    for i in range(antAvgSnipFracQty1):     # i starts with 0
-        antAvgSnipFracKeepMask[antAvgIdxByIncreasing[-1-i]] = False
+    for i in range(antAvgPluckFracQty1):     # i starts with 0
+        antAvgPluckFracKeepMask[antAvgIdxByIncreasing[-1-i]] = False
 
-    print('   antAvgSnipFracKeepMask =', antAvgSnipFracKeepMask)
-    print('   antAvgSnipFracKeepMask.sum() =', antAvgSnipFracKeepMask.sum())
-    print(f'   len(antAvgSnipFracKeepMask) = {len(antAvgSnipFracKeepMask):,}')
+    #print('   antAvgPluckFracKeepMask =', antAvgPluckFracKeepMask)
+    print(f'   antAvgPluckFracKeepMask.sum() =', antAvgPluckFracKeepMask.sum())
+    print(f'   len(antAvgPluckFracKeepMask) = {len(antAvgPluckFracKeepMask):,}')
 
-    # thin most data arrays to keep only antAvgSnipFracKeepMask samples
-    azimuth     = azimuth    [antAvgSnipFracKeepMask]
-    elevation   = elevation  [antAvgSnipFracKeepMask]
-    dataTimeUtc = dataTimeUtc[antAvgSnipFracKeepMask]
-    #rawIndex    = rawIndex   [antAvgSnipFracKeepMask]
-    ant         = ant     [:, antAvgSnipFracKeepMask]
-    ref         = ref     [:, antAvgSnipFracKeepMask]
+    # thin most data arrays to keep only antAvgPluckFracKeepMask samples
+    azimuth     = azimuth    [antAvgPluckFracKeepMask]
+    elevation   = elevation  [antAvgPluckFracKeepMask]
+    dataTimeUtc = dataTimeUtc[antAvgPluckFracKeepMask]
+    #rawIndex    = rawIndex   [antAvgPluckFracKeepMask]
+    ant         = ant     [:, antAvgPluckFracKeepMask]
+    ref         = ref     [:, antAvgPluckFracKeepMask]
     antLen = ant.shape[1]
     antLenM1 = antLen - 1
     refLen = ref.shape[1]
@@ -3298,6 +3455,7 @@ def ezConAntFreqBinSmoothDo():
 
 
 def ezConAntSamplesUseLDo():
+
     global azimuth                  # float array
     global elevation                # float array
     global dataTimeUtc              # 'astropy.time.core.Time' object array
@@ -3313,7 +3471,7 @@ def ezConAntSamplesUseLDo():
     global xTickLocsAnt             # float array
 
     global ezConAntSamplesUseL      # integer list
-    global ezConAntSampleSnipL      # integer list
+    global ezConAntPluckL           # integer list
 
     #print(f'   before ezConAntSamplesUseLDo, antLen = ', {antLen:,}')
     
@@ -3322,33 +3480,22 @@ def ezConAntSamplesUseLDo():
 
     print('                         np.shape(ant)[1] =', np.shape(ant)[1])
 
-    if ezConAntSamplesUseL:
-        # ezConAntSamplesUseL allows more than one pair of list elements
-        useSamplesAntStart = ezConAntSamplesUseL[0]
-        useSamplesAntStop  = ezConAntSamplesUseL[1]
-        useSamplesAntIndex = 2                         # point to next start/stop pair, if any
-        useSamplesAntMask = np.zeros([antLen], dtype = bool)
-        for n in range(min(ezConAntSamplesUseL[-1] + 1, antLen)):
-            # need to update useSamplesAntStop and useSamplesAntStart ?
-            if useSamplesAntStop < n:
-                useSamplesAntStart = ezConAntSamplesUseL[useSamplesAntIndex]
-                useSamplesAntStop  = ezConAntSamplesUseL[useSamplesAntIndex + 1]
-                useSamplesAntIndex += 2        # point to next Start/Stop pair, if any
+    # ezConAntSamplesUseL allows more than one pair of list elements
+    useSamplesAntStart = ezConAntSamplesUseL[0]
+    useSamplesAntStop  = ezConAntSamplesUseL[1]
+    useSamplesAntIndex = 2                         # point to next start/stop pair, if any
+    # assume do  not  want to keep all Ant samples
+    useSamplesAntMask = np.zeros([antLen], dtype = bool)
+    for n in range(min(ezConAntSamplesUseL[-1] + 1, antLen)):
+        # need to update useSamplesAntStop and useSamplesAntStart ?
+        if useSamplesAntStop < n:
+            useSamplesAntStart = ezConAntSamplesUseL[useSamplesAntIndex]
+            useSamplesAntStop  = ezConAntSamplesUseL[useSamplesAntIndex + 1]
+            useSamplesAntIndex += 2        # point to next Start/Stop pair, if any
 
-            # is n inside a ANT want-to-use section ?
-            if useSamplesAntStart <= n and n <= useSamplesAntStop:
-                useSamplesAntMask[n] = True
-    else:
-        useSamplesAntMask = np.ones([antLen], dtype = bool)
-
-    #if ezConAntSampleSnipL:
-    if 0:
-        # This loop processes the requests in given order.
-        # Each snip changes the index of the higher indexes (all higher samples move left).
-        # Like a chain anchored at the left, and removing one link: total chain is shorter and the right side of the chain moves left by one link.
-        # This why it is easier to request ezConAntSampleSnipL values in decreasing order !
-        for n in ezConAntSampleSnipL:
-            useSamplesAntMask[n] = False
+        # is n inside a ANT want-to-use section ?
+        if useSamplesAntStart <= n and n <= useSamplesAntStop:
+            useSamplesAntMask[n] = True
 
     #print('                         useSamplesAntMask =', useSamplesAntMask)
     print('                         useSamplesAntMask.sum() =', (useSamplesAntMask + 0).sum())
@@ -3372,7 +3519,8 @@ def ezConAntSamplesUseLDo():
 
 
 
-def ezConAntSampleSnipLDo():
+def ezConAntPluckLDo():
+
     global azimuth                  # float array
     global elevation                # float array
     global dataTimeUtc              # 'astropy.time.core.Time' object array
@@ -3388,54 +3536,55 @@ def ezConAntSampleSnipLDo():
     global xTickLocsAnt             # float array
 
     global ezConAntSamplesUseL      # integer list
-    global ezConAntSampleSnipL      # integer list
+    global ezConAntPluckL           # integer list
 
-    #print(f'   before ezConAntSampleSnipLDo, antLen = ', {antLen:,}')
-    
     print()
-    print('   ezConAntSampleSnipLDo ===============')
+    print('   ezConAntPluckLDo ===============')
 
+    #print('   ant =', ant)
+    print('                         np.shape(ant)[0] =', np.shape(ant)[0])
     print('                         np.shape(ant)[1] =', np.shape(ant)[1])
+    print()
 
-    #if ezConAntSamplesUseL:
-    if 0:
-        # ezConAntSamplesUseL allows more than one pair of list elements
-        useSamplesAntStart = ezConAntSamplesUseL[0]
-        useSamplesAntStop  = ezConAntSamplesUseL[1]
-        useSamplesAntIndex = 2                         # point to next start/stop pair, if any
-        useSamplesAntMask = np.zeros([antLen], dtype = bool)
-        for n in range(min(ezConAntSamplesUseL[-1] + 1, antLen)):
-            # need to update useSamplesAntStop and useSamplesAntStart ?
-            if useSamplesAntStop < n:
-                useSamplesAntStart = ezConAntSamplesUseL[useSamplesAntIndex]
-                useSamplesAntStop  = ezConAntSamplesUseL[useSamplesAntIndex + 1]
-                useSamplesAntIndex += 2        # point to next Start/Stop pair, if any
+    # assume want to keep all Ant samples
+    antPluckKeepMask = np.ones(antLen, dtype=bool)
 
-            # is n inside a ANT want-to-use section ?
-            if useSamplesAntStart <= n and n <= useSamplesAntStop:
-                useSamplesAntMask[n] = True
-    else:
-        useSamplesAntMask = np.ones([antLen], dtype = bool)
+    print('   ezConAntPluckL =', ezConAntPluckL)
+    print()
 
-    if ezConAntSampleSnipL:
-        # This loop processes the requests in given order.
-        # Each snip changes the index of the higher indexes (all higher samples move left).
-        # Like a chain anchored at the left, and removing one link: total chain is shorter and the right side of the chain moves left by one link.
-        # This why it is easier to request ezConAntSampleSnipL values in decreasing order !
-        for n in ezConAntSampleSnipL:
-            useSamplesAntMask[n] = False
+    # This ezConAntPluckLDo() starts with the current indices of AntXT.
+    # This loop processes the requests in given order.
+    # Each pluck changes the index of the higher indexes (all higher samples move left).
+    # Like a chain anchored at the left, and removing one link, the total chain is shortened and the right side of the chain moves left by one link.
+    # This why it is easier to request ezConAntPluckL values in decreasing order !
+    for i in range(len(ezConAntPluckL)):
+        ezConAntPluckThis = ezConAntPluckL[i]
+        if antLen <= ezConAntPluckThis:
+            print()
+            print()
+            print()
+            print(f' ========== FATAL ERROR: ezConAntPluckL[{i}] is too large a number.')
+            print(f'                         ezConAntPluckL =', ezConAntPluckL)
+            print(f'                         current length of Ant <= ezConAntPluckL[{i}]')
+            print(f'                         {antLen} <= {ezConAntPluckThis}')
+            print()
+            print()
+            print()
+            exit()
+        else:
+            antPluckKeepMask[ezConAntPluckThis] = False
+    
+    #print('                         antPluckKeepMask =', antPluckKeepMask)
+    print('                         antPluckKeepMask.sum() =', (antPluckKeepMask + 0).sum())
+    print('                         len(antPluckKeepMask) =', len(antPluckKeepMask))
 
-    #print('                         useSamplesAntMask =', useSamplesAntMask)
-    print('                         useSamplesAntMask.sum() =', (useSamplesAntMask + 0).sum())
-    print('                         len(useSamplesAntMask) =', len(useSamplesAntMask))
-
-    # thin most data arrays to only antAvgKeepMask samples
-    azimuth     = azimuth    [useSamplesAntMask]
-    elevation   = elevation  [useSamplesAntMask]
-    dataTimeUtc = dataTimeUtc[useSamplesAntMask]
-    #rawIndex    = rawIndex   [useSamplesAntMask]
-    ant         = ant     [:, useSamplesAntMask]
-    ref         = ref     [:, useSamplesAntMask]
+    # thin most data arrays to only antPluckKeepMask samples
+    azimuth     = azimuth    [antPluckKeepMask]
+    elevation   = elevation  [antPluckKeepMask]
+    dataTimeUtc = dataTimeUtc[antPluckKeepMask]
+    #rawIndex    = rawIndex   [antPluckKeepMask]
+    ant         = ant     [:, antPluckKeepMask]
+    ref         = ref     [:, antPluckKeepMask]
     antLen = ant.shape[1]
     antLenM1 = antLen - 1
     refLen = ref.shape[1]
@@ -3444,6 +3593,238 @@ def ezConAntSampleSnipLDo():
     print(f'                         refLen = {refLen:,}')
     xTickLabelsHeatAntL = []        # probably just changed antLen, force new xTickLabelsHeatAntL
     xTickLocsAnt        = []        # probably just changed antLen, force new xTickLocsAnt
+
+
+
+def ezConAntXTVTMaxPluckDo():
+
+    global ezConOut                 # float and int 2d array
+    global antXTV                   # float 2d array
+    global antXTVT                  # float 2d array
+    global antLen                   # integer
+    global antLenM1                 # integer
+    global xTickLocsAnt             # float array
+
+    global ezConAntXTVTMaxPluckQtyL         # integer list
+    global ezConAntXTVTMaxPluckValL         # float list
+
+    if not ezConAntXTVTMaxPluckQtyL and not ezConAntXTVTMaxPluckValL:    # if both empty, no plucking needed
+        return(1)
+
+    #print(f'   before ezConAntXTVTMaxPluckQtyL, antLen = ', {antLen:,}')
+
+    print()
+    print('   ezConAntXTVTMaxPluckDo ===============')
+
+    print('   np.shape(antXTVT)[0] =', np.shape(antXTVT)[0])
+    print('   np.shape(antXTVT)[1] =', np.shape(antXTVT)[1])
+
+    antXTVTMax = np.amax(antXTVT, axis=0)
+    #print('   antXTVTMax =', antXTVTMax)
+    print(f'   len(antXTVTMax) = {len(antXTVTMax):,}')
+    print()
+
+    # assume want to keep all antXTVTMax samples
+    antXTVTMaxPluckQtyKeepMask = np.ones(antLen, dtype=bool)
+
+    if ezConAntXTVTMaxPluckQtyL:
+        # get indexes of increasing antXTVTMax
+        antXTVTMaxIdxByIncreasing = antXTVTMax.argsort()
+        #print('   antXTVTMaxIdxByIncreasing =', antXTVTMaxIdxByIncreasing)
+        print(f'   len(antXTVTMaxIdxByIncreasing) = {len(antXTVTMaxIdxByIncreasing):,}')
+        print()
+
+        print('   ezConAntXTVTMaxPluckQtyL =', ezConAntXTVTMaxPluckQtyL)
+        print()
+
+        # mask off requested lowest-valued antXTVTMax samples
+        for i in range(ezConAntXTVTMaxPluckQtyL[0]):     # i starts with 0
+            antXTVTMaxPluckQtyKeepMask[antXTVTMaxIdxByIncreasing[i]] = False
+        # mask off requested highest-valued antXTVTMax samples
+        for i in range(ezConAntXTVTMaxPluckQtyL[1]):     # i starts with 0
+            antXTVTMaxPluckQtyKeepMask[antXTVTMaxIdxByIncreasing[-1-i]] = False
+
+    if ezConAntXTVTMaxPluckValL:
+        print('   ezConAntXTVTMaxPluckValL =', ezConAntXTVTMaxPluckValL)
+        print()
+
+        # mask off antXTVTMax samples with values equal or less than requested low
+        antXTVTMaxPluckQtyKeepMask[antXTVTMax <= ezConAntXTVTMaxPluckValL[0]] = False
+        # mask off antXTVTMax samples with values equal or greater than requested high
+        antXTVTMaxPluckQtyKeepMask[ezConAntXTVTMaxPluckValL[1] <= antXTVTMax] = False
+
+    #print('   antXTVTMaxPluckQtyKeepMask =', antXTVTMaxPluckQtyKeepMask)
+    print(f'   antXTVTMaxPluckQtyKeepMask.sum() =', antXTVTMaxPluckQtyKeepMask.sum())
+    print(f'   len(antXTVTMaxPluckQtyKeepMask) = {len(antXTVTMaxPluckQtyKeepMask):,}')
+
+    # thin most data arrays to keep only antXTVTMaxPluckQtyKeepMask samples
+    #azimuth     = azimuth    [antXTVTMaxPluckQtyKeepMask]
+    #elevation   = elevation  [antXTVTMaxPluckQtyKeepMask]
+    #dataTimeUtc = dataTimeUtc[antXTVTMaxPluckQtyKeepMask]
+    #rawIndex    = rawIndex   [antXTVTMaxPluckQtyKeepMask]
+    # thin ezConOut[n, :]
+    ezConOut    = ezConOut    [antXTVTMaxPluckQtyKeepMask, :]
+    antXTV      = antXTV      [:, antXTVTMaxPluckQtyKeepMask]    # keep antXTV for Galaxy crossing plots
+    antXTVT     = antXTVT     [:, antXTVTMaxPluckQtyKeepMask]
+    antLen = antXTVT.shape[1]
+    antLenM1 = antLen - 1
+    #refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'   antLen = {antLen:,}')
+    #print(f'   refLen = {refLen:,}')
+    xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
+
+
+
+def ezConAntXTVTAvgPluckDo():
+
+    global ezConOut                 # float and int 2d array
+    global antXTV                   # float 2d array
+    global antXTVT                  # float 2d array
+    global antLen                   # integer
+    global antLenM1                 # integer
+    global xTickLocsAnt             # float array
+
+    global ezConAntXTVTAvgPluckQtyL         # integer list
+    global ezConAntXTVTAvgPluckValL         # float list
+
+    if not ezConAntXTVTAvgPluckQtyL and not ezConAntXTVTAvgPluckValL:    # if both empty, no plucking needed
+        return(1)
+
+    #print(f'   before ezConAntXTVTAvgPluckQtyL, antLen = ', {antLen:,}')
+
+    print()
+    print('   ezConAntXTVTAvgPluckDo ===============')
+
+    print('   np.shape(antXTVT)[0] =', np.shape(antXTVT)[0])
+    print('   np.shape(antXTVT)[1] =', np.shape(antXTVT)[1])
+
+    antXTVTAvg = np.mean(antXTVT, axis=0)
+    #print('   antXTVTAvg =', antXTVTAvg)
+    print(f'   len(antXTVTAvg) = {len(antXTVTAvg):,}')
+    print()
+
+    # assume want to keep all antXTVTAvg samples
+    antXTVTAvgPluckQtyKeepMask = np.ones(antLen, dtype=bool)
+
+    if ezConAntXTVTAvgPluckQtyL:
+        # get indexes of increasing antXTVTAvg
+        antXTVTAvgIdxByIncreasing = antXTVTAvg.argsort()
+        #print('   antXTVTAvgIdxByIncreasing =', antXTVTAvgIdxByIncreasing)
+        print(f'   len(antXTVTAvgIdxByIncreasing) = {len(antXTVTAvgIdxByIncreasing):,}')
+        print()
+
+        print('   ezConAntXTVTAvgPluckQtyL =', ezConAntXTVTAvgPluckQtyL)
+        print()
+
+        # mask off requested lowest-valued antXTVTAvg samples
+        for i in range(ezConAntXTVTAvgPluckQtyL[0]):     # i starts with 0
+            antXTVTAvgPluckQtyKeepMask[antXTVTAvgIdxByIncreasing[i]] = False
+        # mask off requested highest-valued antXTVTAvg samples
+        for i in range(ezConAntXTVTAvgPluckQtyL[1]):     # i starts with 0
+            antXTVTAvgPluckQtyKeepMask[antXTVTAvgIdxByIncreasing[-1-i]] = False
+
+    if ezConAntXTVTAvgPluckValL:
+        print('   ezConAntXTVTAvgPluckValL =', ezConAntXTVTAvgPluckValL)
+        print()
+
+        # mask off antXTVTAvg samples with values equal or less than requested low
+        antXTVTAvgPluckQtyKeepMask[antXTVTAvg <= ezConAntXTVTAvgPluckValL[0]] = False
+        # mask off antXTVTAvg samples with values equal or greater than requested high
+        antXTVTAvgPluckQtyKeepMask[ezConAntXTVTAvgPluckValL[1] <= antXTVTAvg] = False
+
+    #print('   antXTVTAvgPluckQtyKeepMask =', antXTVTAvgPluckQtyKeepMask)
+    print(f'   antXTVTAvgPluckQtyKeepMask.sum() =', antXTVTAvgPluckQtyKeepMask.sum())
+    print(f'   len(antXTVTAvgPluckQtyKeepMask) = {len(antXTVTAvgPluckQtyKeepMask):,}')
+
+    # thin most data arrays to keep only antXTVTAvgPluckQtyKeepMask samples
+    #azimuth     = azimuth    [antXTVTAvgPluckQtyKeepMask]
+    #elevation   = elevation  [antXTVTAvgPluckQtyKeepMask]
+    #dataTimeUtc = dataTimeUtc[antXTVTAvgPluckQtyKeepMask]
+    #rawIndex    = rawIndex   [antXTVTAvgPluckQtyKeepMask]
+    # thin ezConOut[n, :]
+    ezConOut    = ezConOut    [antXTVTAvgPluckQtyKeepMask, :]
+    antXTV      = antXTV      [:, antXTVTAvgPluckQtyKeepMask]    # keep antXTV for Galaxy crossing plots
+    antXTVT     = antXTVT     [:, antXTVTAvgPluckQtyKeepMask]
+    antLen = antXTVT.shape[1]
+    antLenM1 = antLen - 1
+    #refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'   antLen = {antLen:,}')
+    #print(f'   refLen = {refLen:,}')
+    xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
+
+
+
+def ezConAntXTVTPluckDo():
+
+    global ezConOut                 # float and int 2d array
+    global antXTV                   # float 2d array
+    global antXTVT                  # float 2d array
+    global antLen                   # integer
+    global antLenM1                 # integer
+    global xTickLocsAnt             # float array
+
+    global ezConAntXTVTPluckL       # integer list
+
+    #print(f'   before ezConAntXTVTPluckDo, antLen = ', {antLen:,}')
+
+    print()
+    print('   ezConAntXTVTPluckDo ===============')
+
+    #print('   antXTVT =', antXTVT)
+    print('                         np.shape(antXTVT)[0] =', np.shape(antXTVT)[0])
+    print('                         np.shape(antXTVT)[1] =', np.shape(antXTVT)[1])
+    print()
+
+    # assume want to keep all AntXTVT samples
+    antXTVTPluckKeepMask = np.ones(antLen, dtype=bool)
+
+    print('   ezConAntXTVTPluckL =', ezConAntXTVTPluckL)
+    print()
+
+    # This ezConAntXTVTPluckLDo() starts with the current indices of AntXT.
+    # This loop processes the requests in given order.
+    # Each pluck changes the index of the higher indexes (all higher samples move left).
+    # Like a chain anchored at the left, and removing one link, the total chain is shortened and the right side of the chain moves left by one link.
+    # This why it is easier to request ezConAntXTVTPluckL values in decreasing order !
+    for i in range(len(ezConAntXTVTPluckL)):
+        ezConAntXTVTPluckThis = ezConAntXTVTPluckL[i]
+        if antLen <= ezConAntXTVTPluckThis:
+            print()
+            print()
+            print()
+            print(f' ========== FATAL ERROR: ezConAntXTVTPluckL[{i}] is too large a number.')
+            print(f'                         ezConAntXTVTPluckL =', ezConAntXTVTPluckL)
+            print(f'                         current length of Ant <= ezConAntXTVTPluckL[{i}]')
+            print(f'                         {antLen} <= {ezConAntXTVTPluckThis}')
+            print()
+            print()
+            print()
+            exit()
+        else:
+            antXTVTPluckKeepMask[ezConAntXTVTPluckThis] = False
+
+    #print('                         antXTVTPluckKeepMask =', antXTVTPluckKeepMask)
+    print(f'                         len(antXTVTPluckKeepMask) = {len(antXTVTPluckKeepMask):,}')
+    print(f'                         antXTVTPluckKeepMask.sum() =', antXTVTPluckKeepMask.sum())
+
+    # thin most data arrays to keep only antXTVTPluckKeepMask samples
+    #azimuth     = azimuth    [antXTVTPluckKeepMask]
+    #elevation   = elevation  [antXTVTPluckKeepMask]
+    #dataTimeUtc = dataTimeUtc[antXTVTPluckKeepMask]
+    #rawIndex    = rawIndex   [antXTVTPluckKeepMask]
+    # thin ezConOut[n, :]
+    ezConOut    = ezConOut    [antXTVTPluckKeepMask, :]
+    antXTV      = antXTV      [:, antXTVTPluckKeepMask]    # keep antXTV for Galaxy crossing plots
+    antXTVT     = antXTVT     [:, antXTVTPluckKeepMask]
+    antLen = antXTVT.shape[1]
+    antLenM1 = antLen - 1
+    #refLen = ref.shape[1]
+    #refLenM1 = refLen - 1
+    print(f'   antLen = {antLen:,}')
+    #print(f'   refLen = {refLen:,}')
+    xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
 
 
 
@@ -4266,7 +4647,6 @@ def writeFileStudy():
     global fileWriteStudy           # file handle
     global antXNameL                # list of strings
 
-
     fileWriteStudy.write( \
         '\n============================================================================ ant\n\n\n\n\n')
     fileWriteStudy.write(studyTime(10, 'AntAvg'))
@@ -4523,6 +4903,7 @@ def studyTime(column, data1dName):
     # data1dName                                # string
 
     global ezConOut                             # float and int 2d array
+    global dataTimeUtc                          # 'astropy.time.core.Time' object array
 
     # '5 * str(column - 10)' below provides a (unique?) 5-character string.
     #  RefMax is .ezb file column 13, so later, in the large ezConStudyxxx.txt file,
@@ -4543,49 +4924,67 @@ def studyTime(column, data1dName):
     if not data1dSpanD100:
         data1dSpanD100 = 1e-14
 
+    if column == 18 or column == 19:
+        pluckArgumentS = 'ezConAntXTVTPluck'
+    else:
+        pluckArgumentS = 'ezConAntPluck'
+
     OutString += f'\n Sample numbers of 20 highest-values of {data1dName}:\n'
     data1dIdxbyValueHigh = np.array(data1d).argsort()[::-1][:20]
     for i in range(len(data1dIdxbyValueHigh)):
-        data1dThis = data1d[data1dIdxbyValueHigh[i]]
+        data1dIdxbyValueHighThis = data1dIdxbyValueHigh[i]
+        #data1dThis = data1d[data1dIdxbyValueHigh[i]]
+        data1dThis = data1d[data1dIdxbyValueHighThis]
         data1dThisPercent = (data1dThis - data1dMin) / data1dSpanD100
-        OutString += f' i = {i}      sample {data1dIdxbyValueHigh[i]}' \
-            + f'      {data1dName} = {data1dThis}       {data1dThisPercent} %'
+        # '2023-02-09 00:01:20.000'
+        #  012345678901234567890123
+        #             00:01
+        #             123456
+        timeThisS = dataTimeUtc[data1dIdxbyValueHighThis].iso[11:16]
+        #OutString += f' i = {i}      sample {data1dIdxbyValueHigh[i]}' \
+        #    + f'      {data1dName} = {data1dThis}       {data1dThisPercent} %'
+        OutString += f' i = {i}      sample {data1dIdxbyValueHighThis}' \
+            + f'   {timeThisS}   {data1dName} = {data1dThis}   {data1dThisPercent} %'
         if data1dThisPercent < 95:
             OutString += '  <=========== < 95%\n'
         else:
             OutString += '\n'
         if i == 4 or i == 9 or i == 14:
             OutString += '\n'
-    OutString += '                 Maybe try arguments like    -ezConAntSampleSnip '\
+    OutString += f'                 Maybe try arguments like    -{pluckArgumentS} '\
         + f'{data1dIdxbyValueHigh[0]}\n'
 
     OutString += f'\n Sample numbers of 20 lowest-values of {data1dName}:\n'
     data1dIdxbyValueLow = np.array(data1d).argsort()[:20]
     for i in range(len(data1dIdxbyValueLow)):
-        data1dThis = data1d[data1dIdxbyValueLow[i]]
+        data1dIdxbyValueLowThis = data1dIdxbyValueLow[i]
+        data1dThis = data1d[data1dIdxbyValueLowThis]
         data1dThisPercent = (data1dThis - data1dMin) / data1dSpanD100
-        OutString += f' i = {i}      sample {data1dIdxbyValueLow[i]}' \
-            + f'      {data1dName} = {data1dThis}       {data1dThisPercent} %'
+        timeThisS = dataTimeUtc[data1dIdxbyValueHighThis].iso[11:16]
+        OutString += f' i = {i}      sample {data1dIdxbyValueLowThis}' \
+            + f'   {timeThisS}   {data1dName} = {data1dThis}   {data1dThisPercent} %'
         if 5 < data1dThisPercent:
             OutString += '  <=========== > 5%\n'
         else:
             OutString += '\n'
         if i == 4 or i == 9 or i == 14:
             OutString += '\n'
-    OutString += '                 Maybe try arguments like    -ezConAntSampleSnip '\
+    OutString += f'                 Maybe try arguments like    -{pluckArgumentS} '\
         + f'{data1dIdxbyValueLow[0]}\n'
 
     OutString += f'\n Sample numbers of 20 largest change values of {data1dName}:\n'
     data1dIdxbyValueDeltaHighM1 = np.array(abs(data1d[1:] - data1d[:-1])).argsort()[::-1][:20]
     for i in range(len(data1dIdxbyValueDeltaHighM1)):
+        data1dIdxbyValueDeltaHighM1This = data1dIdxbyValueDeltaHighM1[i]
         data1dDeltaThis = \
-            data1d[data1dIdxbyValueDeltaHighM1[i] + 1] - data1d[data1dIdxbyValueDeltaHighM1[i]]
-        OutString += f' i = {i}      sample {data1dIdxbyValueDeltaHighM1[i] + 1}' \
-            + f'      {data1dName}Delta = {data1dDeltaThis}' \
-            + f'       {data1dDeltaThis / data1dSpanD100} %\n'
+            data1d[data1dIdxbyValueDeltaHighM1This + 1] - data1d[data1dIdxbyValueDeltaHighM1This]
+        timeThisS = dataTimeUtc[data1dIdxbyValueDeltaHighM1This + 1].iso[11:16]
+        OutString += f' i = {i}      sample {data1dIdxbyValueDeltaHighM1This + 1}' \
+            + f'   {timeThisS}   {data1dName}Delta = {data1dDeltaThis}' \
+            + f'   {data1dDeltaThis / data1dSpanD100} %\n'
         if i == 4 or i == 9 or i == 14:
             OutString += '\n'
-    OutString += '                 Maybe try arguments like    -ezConAntSampleSnip '\
+    OutString += f'                 Maybe try arguments like    -{pluckArgumentS} '\
         + f'{data1dIdxbyValueDeltaHighM1[0] + 1}\n\n\n\n'
         
     return(OutString)
@@ -4620,13 +5019,15 @@ def printGoodbye(startTime):
         print('   ezConRefMode          =', ezConRefMode)
         print()
         print('   ezConAntSamplesUseL   =', ezConAntSamplesUseL)
-        print('   ezConAntSampleSnipL   =', ezConAntSampleSnipL)
-        print('   ezConAntAvgSnipQtyL   =', ezConAntAvgSnipQtyL)
-        print('   ezConAntAvgSnipFracL  =', ezConAntAvgSnipFracL)
+        print('   ezConAntPluckL        =', ezConAntPluckL)
+        print('   ezConAntAvgPluckQtyL  =', ezConAntAvgPluckQtyL)
+        print('   ezConAntAvgPluckFracL =', ezConAntAvgPluckFracL)
         print('   ezConAntFreqBinSmooth =', ezConAntFreqBinSmooth)
         print()
-        print('   ezConRefAvgSnipQtyL   =', ezConRefAvgSnipQtyL)
-        print('   ezConRefAvgSnipFracL  =', ezConRefAvgSnipFracL)
+        print('   ezConRefAvgPluckQtyL  =', ezConRefAvgPluckQtyL)
+        print('   ezConRefAvgPluckFracL =', ezConRefAvgPluckFracL)
+        print()
+        print('   ezConUseSubRef        =', ezConUseSubRef)
         print()
         print('   ezConAntBaselineFreqBinsFracL   =', ezConAntBaselineFreqBinsFracL)
         print('   ezConAntRABaselineFreqBinsFracL =', ezConAntRABaselineFreqBinsFracL)
@@ -4636,6 +5037,13 @@ def printGoodbye(startTime):
         print('   ezConAntXTFreqBinsFracL         =', ezConAntXTFreqBinsFracL)
         print('   ezConUseVlsr                    =', ezConUseVlsr)
         print('   ezConAntXTVTFreqBinsFracL       =', ezConAntXTVTFreqBinsFracL)
+        print()
+        print('   ezConAntXTVTMaxPluckQtyL        =', ezConAntXTVTMaxPluckQtyL)
+        print('   ezConAntXTVTMaxPluckValL        =', ezConAntXTVTMaxPluckValL)
+        print('   ezConAntXTVTAvgPluckQtyL        =', ezConAntXTVTAvgPluckQtyL)
+        print('   ezConAntXTVTAvgPluckValL        =', ezConAntXTVTAvgPluckValL)
+        print('   ezConAntXTVTPluckL              =', ezConAntXTVTPluckL)
+        print()
         print('   ezCon399SignalSampleByFreqBinL  =', ezCon399SignalSampleByFreqBinL)
         print()
         print('   ezConAstroMath        =', ezConAstroMath)
@@ -4814,7 +5222,6 @@ def plotEzCon2dSamples(plotName, plotData2d, plotXLabel, plotXLast, plotYLabel, 
     global fileFreqBinQty                       # integer
     #global freqCenter                           # float
 
-
     # plot heat map of ant
     heatVMin = ezConHeatVMinMaxL[0]             # minimum 3d value (color), <=0 for autoscale
     heatVMax = ezConHeatVMinMaxL[1]             # maximum 3d value (color), <=0 for autoscale
@@ -4893,11 +5300,11 @@ def plotEzCon2dSamples(plotName, plotData2d, plotXLabel, plotXLast, plotYLabel, 
         plotData2dMaxY = np.argmax(plotData2d, axis=0)          # Y (=freqBin) for each sample's max
         plt.plot(plotData2dMaxY, 'go', markersize=2)
 
-        #    # big red dots on plot's max 1% values
+        #    # big violet dots on plot's max 1% values
         #    plotData2dSort = np.sort(plotData2d, axis=None)[::-1]   # flattened and sorted by decreasing value
         #    for n in range(1, int(0.01 * len(plotData2dSort))):
         #        plotData2dY, plotData2dX = np.where(plotData2d == plotData2dSort[n])
-        #        plt.plot(plotData2dX, plotData2dY, 'ro', markersize=10)
+        #        plt.plot(plotData2dX, plotData2dY, 'o', c='violet', markersize=10)
 
         # big yellow dot on plot's max
         plotData2dMaxMaxY, plotData2dMaxMaxX = np.where(plotData2d == plotData2d.max())
@@ -5129,10 +5536,14 @@ def plotEzCon047antB():
     global antB                                 # float 2d array        creation
     global antLenM1                             # integer
     global freqCenter                           # float
+    global ezConUseSubRef                       # integer
 
     plotName = 'ezCon047antB.png'
 
-    antB = ant / antBaseline                    # creation
+    if ezConUseSubRef:
+        antB = ant - antBaseline                    # creation
+    else:
+        antB = ant / antBaseline                    # creation
 
     plotCountdown -= 1
 
@@ -5185,14 +5596,18 @@ def plotEzCon061antRA():
     global antRA                                # float 2d array        creation
     global antLenM1                             # integer
     global freqCenter                           # float
+    global ezConUseSubRef                       # integer
 
     plotName = 'ezCon061antRA.png'
 
     # create antRA
-    # before division, if any ref is zero, then add tiny number to all ref
-    if not ref.all():
-        ref += 1e-14
-    antRA = np.true_divide(ant, ref)            # creation
+    if ezConUseSubRef:
+        antRA = np.subtract(ant, ref)               # creation
+    else:
+        # before division, if any ref is zero, then add tiny number to all ref
+        if not ref.all():
+            ref += 1e-14
+        antRA = np.true_divide(ant, ref)            # creation
 
     plotCountdown -= 1
 
@@ -5207,7 +5622,7 @@ def plotEzCon061antRA():
 
 
 def plotEzCon067antRB():
-    # creates antRABaseline, antRB
+    # creates antRB
 
     global fileNameLast                         # string
     global plotCountdown                        # integer
@@ -5218,10 +5633,14 @@ def plotEzCon067antRB():
     global antRB                                # float 2d array        creation
     global antLenM1                             # integer
     global freqCenter                           # float
+    global ezConUseSubRef                       # integer
 
     plotName = 'ezCon067antRB.png'
 
-    antRB = antRA / antRABaseline               # creation
+    if ezConUseSubRef:
+        antRB = antRA - antRABaseline               # creation
+    else:
+        antRB = antRA / antRABaseline               # creation
 
     plotCountdown -= 1
 
@@ -5336,21 +5755,12 @@ def plotEzCon081antXT():
 
 
 
-def plotEzCon082antXTV():
+def createAntXTV():                             # creates antXTV and antXTVAvg
 
-    global fileNameLast                         # string
-    global plotCountdown                        # integer
-    global ezConPlotRangeL                      # integer list
-
-    global antXNameL                            # list of strings
     global antXT                                # float 2d array
     global antXTV                               # float 2d array        creation
     global antLen                               # integer
-    global antLenM1                             # integer
     global freqCenter                           # float
-
-    #plotName = 'ezCon082antXTV.png'
-    plotName = 'ezCon082' + antXNameL[0] + 'TV.png'
 
     # create antXTV
     antXTV = np.empty_like(antXT)   # antXTV is like antXT but corrected by Vlsr
@@ -5420,6 +5830,22 @@ def plotEzCon082antXTV():
 
         antXTV[:, n] = antXTVThis
 
+
+
+def plotEzCon082antXTV():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezConPlotRangeL                      # integer list
+
+    global antXNameL                            # list of strings
+    global antXTV                               # float 2d array        creation
+    global antLenM1                             # integer
+    global freqCenter                           # float
+
+    #plotName = 'ezCon082antXTV.png'
+    plotName = 'ezCon082' + antXNameL[0] + 'TV.png'
+
     plotCountdown -= 1
 
     if 82 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 82:
@@ -5433,21 +5859,11 @@ def plotEzCon082antXTV():
 
 
 
-def plotEzCon087antXTVT():
+def createAntXTVT():                            # creates antXTVT
 
-    global fileNameLast                         # string
-    global plotCountdown                        # integer
-    global ezConPlotRangeL                      # integer list
-
-    global antXNameL                            # list of strings
     global antXTV                               # float 2d array
     global antXTVT                              # float 2d array        creation
     global antLen                               # integer
-    global antLenM1                             # integer
-    global freqCenter                           # float
-
-    #plotName = 'ezCon087antXTVT.png'
-    plotName = 'ezCon087' + antXNameL[0] + 'TVT.png'
 
     # Each antXTV[:, n] is a spectrum, normally from Doppler -1.2 to +1.2 MHz.
     # The low and high frequency extremes, they rise up, and they mislead.
@@ -5493,6 +5909,22 @@ def plotEzCon087antXTVT():
             = antXTV[ezConAntXTVFreqBin0:ezConAntXTVFreqBin1P1, n] / antXTVTThisDivisor
         antXTVT[:, n] = antXTVTThis
 
+
+
+def plotEzCon087antXTVT():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezConPlotRangeL                      # integer list
+
+    global antXNameL                            # list of strings
+    global antXTVT                              # float 2d array        creation
+    global antLenM1                             # integer
+    global freqCenter                           # float
+
+    #plotName = 'ezCon087antXTVT.png'
+    plotName = 'ezCon087' + antXNameL[0] + 'TVT.png'
+
     plotCountdown -= 1
 
     if 87 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 87:
@@ -5503,6 +5935,68 @@ def plotEzCon087antXTVT():
 
     #plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVT', 0)
     plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, antXNameL[1]+f'TVT:  Doppler MHz from {freqCenter:.3f} MHz', 0)
+
+
+
+def plotEzCon088antXTVTByFreqBinAllFall():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antXNameL                # list of strings
+    global antXTVT                  # float 2d array
+
+    global byFreqBinX               # float array
+    global ezConDispGrid            # integer
+    global dopplerSpanD2            # float
+
+    #plotName = 'ezCon088antXTVTByFreqBinAllFall.png'
+    plotName = 'ezCon088' + antXNameL[0] + 'TVTByFreqBinAllFall.png'
+
+    plotCountdown -= 1
+
+    if ezConPlotRangeL[0] <= 88 and 88 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+        plt.clf()
+
+        antXTVTDLen = 100       # quantity of spectra after downsampling
+        colorPenSL = ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'grey']
+
+        # true downsampling, using the slicing notation of start:stop:step
+        #antXTVTD = antXTVT[:, ::downsamplingStep]
+
+        # downsampling by averaging
+        downsamplingStep = antLen // antXTVTDLen
+        antXTVTD = np.empty_like(antXTVT[:, :antXTVTDLen])
+        for n in range(antXTVTDLen):
+            downsamplingIndex = n * downsamplingStep
+            antXTVTD[:, n] = np.mean(antXTVT[:, downsamplingIndex:downsamplingIndex+downsamplingStep], axis=1)
+
+        for n in range(len(antXTVTD[0, :])):
+            plt.plot(byFreqBinX, [y - n * 0.01 for y in antXTVTD[:, n]], colorPenSL[n % 9], linewidth=0.5)
+
+        plt.title(titleS)
+        plt.grid(ezConDispGrid)
+
+        plt.xlabel('Doppler (MHz)')
+        plt.xlim(-dopplerSpanD2, dopplerSpanD2)
+
+        #get current axes
+        ax = plt.gca()
+        # set the ticks to an empty list:
+        ax.get_yaxis().set_ticks([])
+        # hide just the axis text keeping the grid lines:
+        ax.yaxis.set_ticklabels([])
+
+        #plt.ylabel(antXNameL[1]+'TVT Spectra (time increasing up)')
+        plt.ylabel(antXNameL[1]+'TVT Spectra, Downsampled by Averaging\nTime Increasing Down, downsamplingStep=' + str(downsamplingStep))
+
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -5530,6 +6024,68 @@ def plotEzCon097antXTVTMax2d():
 
     #plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, 'AntXTVTMax', 1)
     plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, antXNameL[1]+f'TVTMax:  Doppler MHz from {freqCenter:.3f} MHz', 1)
+
+
+
+def plotEzCon098antXTVTMaxByFreqBinAllFall():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antXNameL                # list of strings
+    global antXTVT                  # float 2d array
+
+    global byFreqBinX               # float array
+    global ezConDispGrid            # integer
+    global dopplerSpanD2            # float
+
+    #plotName = 'ezCon098antXTVTMaxByFreqBinAllFall.png'
+    plotName = 'ezCon098' + antXNameL[0] + 'TVTMaxByFreqBinAllFall.png'
+
+    plotCountdown -= 1
+
+    if ezConPlotRangeL[0] <= 98 and 98 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+        plt.clf()
+
+        antXTVTMaxDLen = 100       # quantity of spectra after downsampling
+        colorPenSL = ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'grey']
+
+        # true downsampling, using the slicing notation of start:stop:step
+        #antXTVTD = antXTVT[:, ::downsamplingStep]
+
+        # downsampling by maxing
+        downsamplingStep = antLen // antXTVTMaxDLen
+        antXTVTMaxD = np.empty_like(antXTVT[:, :antXTVTMaxDLen])
+        for n in range(antXTVTMaxDLen):
+            downsamplingIndex = n * downsamplingStep
+            antXTVTMaxD[:, n] = np.amax(antXTVT[:, downsamplingIndex:downsamplingIndex+downsamplingStep], axis=1)
+
+        for n in range(len(antXTVTMaxD[0, :])):
+            plt.plot(byFreqBinX, [y - n * 0.01 for y in antXTVTMaxD[:, n]], colorPenSL[n % 9], linewidth=0.5)
+
+        plt.title(titleS)
+        plt.grid(ezConDispGrid)
+
+        plt.xlabel('Doppler (MHz)')
+        plt.xlim(-dopplerSpanD2, dopplerSpanD2)
+
+        #get current axes
+        ax = plt.gca()
+        # set the ticks to an empty list:
+        ax.get_yaxis().set_ticks([])
+        # hide just the axis text keeping the grid lines:
+        ax.yaxis.set_ticklabels([])
+
+        #plt.ylabel(antXNameL[1]+'TVTMax Spectra (time increasing up)')
+        plt.ylabel(antXNameL[1]+'TVTMax Spectra, Downsampled by Maxing\nTime Increasing Down, downsamplingStep=' + str(downsamplingStep))
+
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -5780,7 +6336,7 @@ def plotEzCon112refAvg():
     print('                         refAvgAvg =', np.mean(ezConOut[:, 12]))
     print('                         refAvgMin =', ezConOut[:, 12].min())
 
-    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 12], [], 'red',
+    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 12], [], 'violet',
         'Reference Spectrum Average')
 
 
@@ -5807,7 +6363,7 @@ def plotEzCon114antBAvg():
     print('                         antBAvgAvg =', np.mean(ezConOut[:, 14]))
     print('                         antBAvgMin =', ezConOut[:, 14].min())
 
-    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 14], [], 'green',
+    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 14], [], 'red',
         'AntB Spectrum Average')
 
 
@@ -5862,7 +6418,7 @@ def plotEzCon118antXTVTAvg():
     print('                         antXTVTAvgAvg =', np.mean(ezConOut[:, 18]))
     print('                         antXTVTAvgMin =', ezConOut[:, 18].min())
 
-    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 18], [], 'violet',
+    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 18], [], 'green',
         antXNameL[1]+'TVT Spectrum Average')
 
 
@@ -5916,7 +6472,7 @@ def plotEzCon113refMax():
     print('                         refMaxAvg =', np.mean(ezConOut[:, 13]))
     print('                         refMaxMin =', ezConOut[:, 13].min())
 
-    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 13], [], 'red',
+    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 13], [], 'violet',
         'Reference Spectrum Maximum')
 
 
@@ -5943,7 +6499,7 @@ def plotEzCon115antBMax():
     print('                         antBMaxAvg =', np.mean(ezConOut[:, 15]))
     print('                         antBMaxMin =', ezConOut[:, 15].min())
 
-    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 15], [], 'green',
+    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 15], [], 'red',
         'AntB Spectrum Maximum')
 
 
@@ -5998,7 +6554,7 @@ def plotEzCon119antXTVTMax():
     print('                         antXTVTMaxAvg =', np.mean(ezConOut[:, 19]))
     print('                         antXTVTMaxMin =', ezConOut[:, 19].min())
 
-    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 19], [], 'violet',
+    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 19], [], 'green',
         antXNameL[1]+'TVT Spectrum Maximum')
 
 
@@ -6097,12 +6653,13 @@ def plotEzCon191sigProg():
         for x in gLatDegVertLineX:
             plt.axvline(x = x, linewidth=0.5, color='black')
             
-    plt.plot(gLatDegY, c='blue')
+    #plt.plot(gLatDegY, c='blue')
+    plt.plot(gLatDegY, c='red')
 
 
-    # If Ant samples are snip filtered (ignored), this unsnipped antRawAvg will no longer align vertically on this plot.
+    # If Ant samples are pluck filtered (ignored), this unplucked antRawAvg will no longer align vertically on this plot.
     # No good solution, because comparing antRawLen samples to a now shorter antLen.
-    # But usually hard to see, because only snipping a few samples compared to a large number of antLen.
+    # But usually hard to see, because only plucking a few samples compared to a large number of antLen.
 
     # using antRawAvg, calculate a gain to fit it within -100 to +100 of its average
     antRawAvgMax = antRawAvg.max()
@@ -6117,7 +6674,8 @@ def plotEzCon191sigProg():
         antRawAvgGain = 93. / (antRawAvgMax  - antRawAvgAvg)
     else:
         antRawAvgGain = 93. / (antRawAvgAvg - antRawAvgMin)
-    plt.plot(antRawAvgGain * (antRawAvg - antRawAvgAvg) + 3200., c='blue')
+    #plt.plot(antRawAvgGain * (antRawAvg - antRawAvgAvg) + 3200., c='blue')
+    plt.plot(antRawAvgGain * (antRawAvg - antRawAvgAvg) + 200., c='blue')
     # free antRawAvg memory
     antRawAvg = []
     antRawAvg = None
@@ -6138,7 +6696,8 @@ def plotEzCon191sigProg():
         antAvgGain = 93. / (antAvgMax  - antAvgAvg)
     else:
         antAvgGain = 93. / (antAvgAvg - antAvgMin)
-    plt.plot(antAvgGain * (ezConOut[:, 10] - antAvgAvg) + 3000., c='blue')
+    #plt.plot(antAvgGain * (ezConOut[:, 10] - antAvgAvg) + 3000., c='blue')
+    plt.plot(antAvgGain * (ezConOut[:, 10] - antAvgAvg) + 400., c='blue')
 
 
     # using antMax, calculate a gain to fit it within -100 to +100 of its average
@@ -6155,7 +6714,8 @@ def plotEzCon191sigProg():
         antMaxGain = 93. / (antMaxMax  - antMaxAvg)
     else:
         antMaxGain = 93. / (antMaxAvg - antMaxMin)
-    plt.plot(antMaxGain * (ezConOut[:, 11] - antMaxAvg) + 2800., c='blue')
+    #plt.plot(antMaxGain * (ezConOut[:, 11] - antMaxAvg) + 2800., c='blue')
+    plt.plot(antMaxGain * (ezConOut[:, 11] - antMaxAvg) + 600., c='blue')
 
 
     # using antBaseline, calculate a gain to fit it within -100 to +100 of its average
@@ -6172,7 +6732,8 @@ def plotEzCon191sigProg():
         antBaselineGain = 93. / (antBaselineMax  - antBaselineAvg)
     else:
         antBaselineGain = 93. / (antBaselineAvg - antBaselineMin)
-    plt.plot(antBaselineGain * (antBaseline - antBaselineAvg) + 2600., c='green')
+    #plt.plot(antBaselineGain * (antBaseline - antBaselineAvg) + 2600., c='red')
+    plt.plot(antBaselineGain * (antBaseline - antBaselineAvg) + 800., c='red')
     # free antBaseline memory
     antBaseline = []
     antBaseline = None
@@ -6193,7 +6754,8 @@ def plotEzCon191sigProg():
         antBAvgGain = 93. / (antBAvgMax  - antBAvgAvg)
     else:
         antBAvgGain = 93. / (antBAvgAvg - antBAvgMin)
-    plt.plot(antBAvgGain * (ezConOut[:, 14] - antBAvgAvg) + 2400., c='green')
+    #plt.plot(antBAvgGain * (ezConOut[:, 14] - antBAvgAvg) + 2400., c='red')
+    plt.plot(antBAvgGain * (ezConOut[:, 14] - antBAvgAvg) + 1000., c='red')
 
 
     # using antBMax, calculate a gain to fit it within -100 to +100 of its average
@@ -6210,7 +6772,8 @@ def plotEzCon191sigProg():
         antBMaxGain = 93. / (antBMaxMax  - antBMaxAvg)
     else:
         antBMaxGain = 93. / (antBMaxAvg - antBMaxMin)
-    plt.plot(antBMaxGain * (ezConOut[:, 15] - antBMaxAvg) + 2200., c='green')
+    #plt.plot(antBMaxGain * (ezConOut[:, 15] - antBMaxAvg) + 2200., c='red')
+    plt.plot(antBMaxGain * (ezConOut[:, 15] - antBMaxAvg) + 1200., c='red')
 
 
     # using refRawAvg, calculate a gain to fit it within -100 to +100 of its average
@@ -6227,7 +6790,8 @@ def plotEzCon191sigProg():
         refRawAvgGain = 93. / (refRawAvgMax  - refRawAvgAvg)
     else:
         refRawAvgGain = 93. / (refRawAvgAvg - refRawAvgMin)
-    plt.plot(refRawAvgGain * (refRawAvg - refRawAvgAvg) + 2000., c='red')
+    #plt.plot(refRawAvgGain * (refRawAvg - refRawAvgAvg) + 2000., c='violet')
+    plt.plot(refRawAvgGain * (refRawAvg - refRawAvgAvg) + 1400., c='violet')
     # free refRawAvg memory
     refRawAvg = []
     refRawAvg = None
@@ -6248,7 +6812,8 @@ def plotEzCon191sigProg():
         refAvgGain = 93. / (refAvgMax  - refAvgAvg)
     else:
         refAvgGain = 93. / (refAvgAvg - refAvgMin)
-    plt.plot(refAvgGain * (ezConOut[:, 12] - refAvgAvg) + 1800., c='red')
+    #plt.plot(refAvgGain * (ezConOut[:, 12] - refAvgAvg) + 1800., c='violet')
+    plt.plot(refAvgGain * (ezConOut[:, 12] - refAvgAvg) + 1600., c='violet')
 
 
     # using refMax, calculate a gain to fit it within -100 to +100 of its average
@@ -6265,7 +6830,8 @@ def plotEzCon191sigProg():
         refMaxGain = 93. / (refMaxMax  - refMaxAvg)
     else:
         refMaxGain = 93. / (refMaxAvg - refMaxMin)
-    plt.plot(refMaxGain * (ezConOut[:, 13] - refMaxAvg) + 1600., c='red')
+    #plt.plot(refMaxGain * (ezConOut[:, 13] - refMaxAvg) + 1600., c='violet')
+    plt.plot(refMaxGain * (ezConOut[:, 13] - refMaxAvg) + 1800., c='violet')
 
 
     # using antRAAvg, calculate a gain to fit it within -100 to +100 of its average
@@ -6281,7 +6847,8 @@ def plotEzCon191sigProg():
         antRAAvgGain = 93. / (antRAAvgMax  - antRAAvgAvg)
     else:
         antRAAvgGain = 93. / (antRAAvgAvg - antRAAvgMin)
-    plt.plot(antRAAvgGain * (antRAAvg - antRAAvgAvg) + 1400., c='orange')
+    #plt.plot(antRAAvgGain * (antRAAvg - antRAAvgAvg) + 1400., c='orange')
+    plt.plot(antRAAvgGain * (antRAAvg - antRAAvgAvg) + 2000., c='orange')
     # free antRAAvg memory
     antRAAvg = []
     antRAAvg = None
@@ -6302,7 +6869,8 @@ def plotEzCon191sigProg():
         antRABaselineGain = 93. / (antRABaselineMax  - antRABaselineAvg)
     else:
         antRABaselineGain = 93. / (antRABaselineAvg - antRABaselineMin)
-    plt.plot(antRABaselineGain * (antRABaseline - antRABaselineAvg) + 1200., c='orange')
+    #plt.plot(antRABaselineGain * (antRABaseline - antRABaselineAvg) + 1200., c='orange')
+    plt.plot(antRABaselineGain * (antRABaseline - antRABaselineAvg) + 2200., c='orange')
     # free antRABaseline memory
     antRABaseline = []
     antRABaseline = None
@@ -6323,7 +6891,8 @@ def plotEzCon191sigProg():
         antRBAvgGain = 93. / (antRBAvgMax  - antRBAvgAvg)
     else:
         antRBAvgGain = 93. / (antRBAvgAvg - antRBAvgMin)
-    plt.plot(antRBAvgGain * (ezConOut[:, 16] - antRBAvgAvg) + 1000., c='orange')
+    #plt.plot(antRBAvgGain * (ezConOut[:, 16] - antRBAvgAvg) + 1000., c='orange')
+    plt.plot(antRBAvgGain * (ezConOut[:, 16] - antRBAvgAvg) + 2400., c='orange')
 
 
     # using antRBMax, calculate a gain to fit it within -100 to +100 of its average
@@ -6340,7 +6909,8 @@ def plotEzCon191sigProg():
         antRBMaxGain = 93. / (antRBMaxMax  - antRBMaxAvg)
     else:
         antRBMaxGain = 93. / (antRBMaxAvg - antRBMaxMin)
-    plt.plot(antRBMaxGain * (ezConOut[:, 17] - antRBMaxAvg) + 800., c='orange')
+    #plt.plot(antRBMaxGain * (ezConOut[:, 17] - antRBMaxAvg) + 800., c='orange')
+    plt.plot(antRBMaxGain * (ezConOut[:, 17] - antRBMaxAvg) + 2600., c='orange')
 
 
     # using antXTVAvg, calculate a gain to fit it within -100 to +100 of its average
@@ -6357,7 +6927,8 @@ def plotEzCon191sigProg():
         antXTVAvgGain = 93. / (antXTVAvgMax  - antXTVAvgAvg)
     else:
         antXTVAvgGain = 93. / (antXTVAvgAvg - antXTVAvgMin)
-    plt.plot(antXTVAvgGain * (antXTVAvg - antXTVAvgAvg) + 600., c='violet')
+    #plt.plot(antXTVAvgGain * (antXTVAvg - antXTVAvgAvg) + 600., c='green')
+    plt.plot(antXTVAvgGain * (antXTVAvg - antXTVAvgAvg) + 2800., c='green')
     # free antXTVAvg memory
     antXTVAvg = []
     antXTVAvg = None
@@ -6378,7 +6949,8 @@ def plotEzCon191sigProg():
         antXTVTAvgGain = 93. / (antXTVTAvgMax  - antXTVTAvgAvg)
     else:
         antXTVTAvgGain = 93. / (antXTVTAvgAvg - antXTVTAvgMin)
-    plt.plot(antXTVTAvgGain * (ezConOut[:, 18] - antXTVTAvgAvg) + 400., c='violet')
+    #plt.plot(antXTVTAvgGain * (ezConOut[:, 18] - antXTVTAvgAvg) + 400., c='green')
+    plt.plot(antXTVTAvgGain * (ezConOut[:, 18] - antXTVTAvgAvg) + 3000., c='green')
 
 
     # using antXTVTMax, calculate a gain to fit it within -100 to +100 of its average
@@ -6395,7 +6967,8 @@ def plotEzCon191sigProg():
         antXTVTMaxGain = 93. / (antXTVTMaxMax  - antXTVTMaxAvg)
     else:
         antXTVTMaxGain = 93. / (antXTVTMaxAvg - antXTVTMaxMin)
-    plt.plot(antXTVTMaxGain * (ezConOut[:, 19] - antXTVTMaxAvg) + 200., c='violet')
+    #plt.plot(antXTVTMaxGain * (ezConOut[:, 19] - antXTVTMaxAvg) + 200., c='green')
+    plt.plot(antXTVTMaxGain * (ezConOut[:, 19] - antXTVTMaxAvg) + 3200., c='green')
 
 
     plt.title(titleS)
@@ -6442,11 +7015,15 @@ def plotEzCon191sigProg():
 
     plt.ylabel('Signal Computation Progression\nfrom AntRaw to '+antXNameL[1]+'TVTMax')
     plt.ylim(-150, 3350)
+    #     3200.,     3000., 2800.,    2600.,    2400.,  2200.,     2000.,    1800., 1600.,
+    #     1400.,   1200.,      1000.,   800.,       600.,     400.,      200.,         0.],
     plt.yticks([ \
-         3200.,     3000., 2800.,    2600.,    2400.,  2200.,     2000.,    1800., 1600.,
-         1400.,   1200.,      1000.,   800.,       600.,     400.,      200.,         0.],
+        200.,      400.,  600.,     800.,     1000.,  1200.,     1400.,    1600., 1800.,
+        2000.,   2200.,      2400.,   2600.,      2800.,             3000.,
+        3200.,                 0.],
         ['AntRaw', 'Ant', 'AntMax', 'AntBas', 'AntB', 'AntBMax', 'RefRaw', 'Ref', 'RefMax',
-        'AntRA', 'AntRABas', 'AntRB', 'AntRBMax', antXNameL[1]+'TV', antXNameL[1]+'TVT', antXNameL[1]+'TVTMax', 'GLat'])
+        'AntRA', 'AntRABas', 'AntRB', 'AntRBMax', antXNameL[1]+'TV', antXNameL[1]+'TVT',
+        antXNameL[1]+'TVTMax', 'GLat'])
     #    'AntRA', 'AntRABas', 'AntRB', 'AntRBMax', 'AntXTV', 'AntXTVT', 'AntXTVTMax', 'GLatDeg'])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
@@ -6802,15 +7379,15 @@ def plotEzCon201GrawAntRef():
         #print('             rawAvgAnt =', rawAvgAnt)
         # rawAvgAnt = [ nan  0.95682753  nan  ...  nan  0.94020758  nan ]
         if 0:
-            # ref red dots unconnected and ant blue dots unconnected
-            # plot just ref data as red dots
-            plt.plot(rawAvgRef, 'ro')
+            # ref violet dots unconnected and ant blue dots unconnected
+            # plot just ref data as violet dots
+            plt.plot(rawAvgRef, 'o', c='violet')
 
             # plot just ant data as blue dots
             plt.plot(rawAvgAnt, 'bo')
 
         else:
-            # ref red dots connected and ant blue dots connected
+            # ref violet dots connected and ant blue dots connected
             # create rawAvgRefNoGap like rawAvgRef, but without np.nan values
             rawAvgRefNoGap = rawAvgRef + 0
             if np.isnan(rawAvgRefNoGap[0]):
@@ -6820,8 +7397,9 @@ def plotEzCon201GrawAntRef():
                 if np.isnan(rawAvgRefNoGap[i]):
                     # copy from past by 1
                     rawAvgRefNoGap[i] = rawAvgRefNoGap[i-1]
-            # plot rawAvgRefNoGap as connected red dots
-            plt.plot(rawAvgRefNoGap, 'ro-')
+            # plot rawAvgRefNoGap as connected violet dots
+            #plt.plot(rawAvgRefNoGap, 'vo-')
+            plt.plot(rawAvgRefNoGap, 'o-', c='violet')
 
             # create rawAvgAntNoGap like rawAvgAnt, but without np.nan values
             rawAvgAntNoGap = rawAvgAnt + 0
@@ -6842,7 +7420,7 @@ def plotEzCon201GrawAntRef():
         plt.xlim(0, rawLenM1)
         plt.xticks(xTickLocsRaw, xTickLabelsRaw, rotation=45, ha='right', rotation_mode='anchor')
 
-        plt.ylabel('Last Raw Spectrum Average   (Ant = blue, Ref = red)'
+        plt.ylabel('Last Raw Spectrum Average   (Ant = blue, Ref = violet)'
             + '\n\n ezConRawSamplesUseL = ' + str(ezConRawSamplesUseL))
 
         if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
@@ -6997,7 +7575,7 @@ def plotEzCon201JtimeUtcMjdDBetweenRefRaw():
             print()
             print()
 
-            plt.plot([0, 1], [0, 0], 'ro-')
+            plt.plot([0, 1], [0, 0], 'o-', c='violet')
 
             plt.xlim(0, 1)
             plt.ylim(0, 1)
@@ -7018,8 +7596,7 @@ def plotEzCon201JtimeUtcMjdDBetweenRefRaw():
             timeUtcMjdDBetweenRawRefSpan \
                 = int((timeUtcMjdDBetweenRawRef.max() - timeUtcMjdDBetweenRawRef.min()) + 0.5)
 
-            plt.plot(timeUtcMjdDBetweenRawRef, 'ro-')
-
+            plt.plot(timeUtcMjdDBetweenRawRef, 'o-', c='violet')
             plt.xlim(0, refQty - 2)
 
             plt.ylabel('Seconds Between ' + str(refQty) + ' RefRaw Samples' \
@@ -7150,7 +7727,7 @@ def plotEzCon222refRawAvg():
     print('                         refRawAvgAvg =', np.mean(refRawAvg))
     print('                         refRawAvgMin =', refRawAvg.min())
 
-    plotEzCon1dSamplesAnt(plotName, refRawAvg, [], 'red',
+    plotEzCon1dSamplesAnt(plotName, refRawAvg, [], 'violet',
         'RefRaw Antenna Spectrum Average')
 
 
@@ -7181,7 +7758,7 @@ def plotEzCon227refAvg():
     print('                         refAvgAvg =', np.mean(refAvg))
     print('                         refAvgMin =', refAvg.min())
 
-    plotEzCon1dSamplesAnt(plotName, refAvg, [], 'red',
+    plotEzCon1dSamplesAnt(plotName, refAvg, [], 'violet',
         'Ref Antenna Spectrum Average')
 
 
@@ -7211,7 +7788,7 @@ def plotEzCon237refMax():
     print('                         refMaxAvg =', np.mean(refMax))
     print('                         refMaxMin =', refMax.min())
 
-    plotEzCon1dSamplesAnt(plotName, refMax, [], 'red',
+    plotEzCon1dSamplesAnt(plotName, refMax, [], 'violet',
         'Ref Reference Spectrum Maximum')
 
 
@@ -7253,7 +7830,7 @@ def plotEzCon241antBaseline():
     print('                         antBasAvg =', np.mean(antBaseline))
     print('                         antBasMin =', antBaseline.min())
 
-    plotEzCon1dSamplesAnt(plotName, antBaseline, [], 'green',
+    plotEzCon1dSamplesAnt(plotName, antBaseline, [], 'red',
         'Ant Baseline')
 
 
@@ -7286,7 +7863,7 @@ def plotEzCon247antBAvg():
     print('                         antBAvgAvg =', np.mean(antBAvg))
     print('                         antBAvgMin =', antBAvgMin)
 
-    plotEzCon1dSamplesAnt(plotName, antBAvg, [], 'green',
+    plotEzCon1dSamplesAnt(plotName, antBAvg, [], 'red',
         'AntB Antenna Spectrum Average')
 
 
@@ -7316,7 +7893,7 @@ def plotEzCon257antBMax():
     print('                         antBMaxAvg =', np.mean(antBMax))
     print('                         antBMaxMin =', antBMax.min())
 
-    plotEzCon1dSamplesAnt(plotName, antBMax, [], 'green',
+    plotEzCon1dSamplesAnt(plotName, antBMax, [], 'red',
         'AntB Spectrum Maximum')
 
 
@@ -7481,7 +8058,7 @@ def plotEzCon281antXTAvg():
     print('                         antXTAvgAvg =', np.mean(antXTAvg))
     print('                         antXTAvgMin =', antXTAvg.min())
 
-    plotEzCon1dSamplesAnt(plotName, antXTAvg, [], 'violet',
+    plotEzCon1dSamplesAnt(plotName, antXTAvg, [], 'green',
         antXNameL[1]+'T Antenna Spectrum Average')
 
 
@@ -7514,7 +8091,7 @@ def plotEzCon282antXTVAvg():
     print('                         antXTVAvgAvg =', np.mean(antXTVAvg))
     print('                         antXTVAvgMin =', antXTVAvg.min())
 
-    plotEzCon1dSamplesAnt(plotName, antXTVAvg, [], 'violet',
+    plotEzCon1dSamplesAnt(plotName, antXTVAvg, [], 'green',
         antXNameL[1]+'TV Antenna Spectrum Average')
 
 
@@ -7547,7 +8124,7 @@ def plotEzCon287antXTVTAvg():
     print('                         antXTVTAvgAvg =', np.mean(ezConOut[:, 18]))
     print('                         antXTVTAvgMin =', ezConOut[:, 18].min())
 
-    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 18], [], 'violet',
+    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 18], [], 'green',
         antXNameL[1]+'TVT Antenna Spectrum Average')
 
 
@@ -7578,7 +8155,7 @@ def plotEzCon297antXTVTMax():
     print('                         antXTVTMaxAvg =', np.mean(ezConOut[:, 19]))
     print('                         antXTVTMaxMin =', ezConOut[:, 19].min())
 
-    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 19], [], 'violet',
+    plotEzCon1dSamplesAnt(plotName, ezConOut[:, 19], [], 'green',
         antXNameL[1]+'TVT Spectrum Maximum')
 
 
@@ -7838,7 +8415,7 @@ def plotEzCon322refRawByFreqBinAvg():
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-        plotEzCon1dByFreqBin(plotName, np.mean(ref, axis=1), 'red',
+        plotEzCon1dByFreqBin(plotName, np.mean(ref, axis=1), 'violet',
             'RefRaw Average Spectrum')
 
 
@@ -7924,7 +8501,7 @@ def plotEzCon327refByFreqBinAvg():
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-        plotEzCon1dByFreqBin(plotName, refByFreqBinSumAvg, 'red',
+        plotEzCon1dByFreqBin(plotName, refByFreqBinSumAvg, 'violet',
             'Ref Average Spectrum')
 
 
@@ -7945,7 +8522,7 @@ def plotEzCon337refByFreqBinMax():
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-        plotEzCon1dByFreqBin(plotName, np.amax(ref, axis=1), 'red',
+        plotEzCon1dByFreqBin(plotName, np.amax(ref, axis=1), 'violet',
             'Ref Maximum Spectrum')
 
 
@@ -7966,7 +8543,7 @@ def plotEzCon347antBByFreqBinAvg():
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-        plotEzCon1dByFreqBin(plotName, np.mean(antB, axis=1), 'green',
+        plotEzCon1dByFreqBin(plotName, np.mean(antB, axis=1), 'red',
             'AntB Average Spectrum')
 
 
@@ -7987,7 +8564,7 @@ def plotEzCon357antBByFreqBinMax():
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-        plotEzCon1dByFreqBin(plotName, np.amax(antB, axis=1), 'green',
+        plotEzCon1dByFreqBin(plotName, np.amax(antB, axis=1), 'red',
             'AntB Maximum Spectrum')
 
 
@@ -8073,58 +8650,12 @@ def plotEzCon381antXTByFreqBinAvg():
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-        plotEzCon1dByFreqBin(plotName, np.mean(antXT, axis=1), 'violet',
+        plotEzCon1dByFreqBin(plotName, np.mean(antXT, axis=1), 'green',
             antXNameL[1]+'T Average Spectrum')
 
 
 
-def plotEzCon382antXTVByFreqBinAvg():
-
-    global ezConPlotRangeL          # integer list
-    global fileNameLast             # string
-    global plotCountdown            # integer
-    global antXNameL                # list of strings
-    global antXTV                   # float 2d array
-
-    #plotName = 'ezCon382antXTVByFreqBinAvg.png'
-    plotName = 'ezCon382' + antXNameL[0] + 'TVByFreqBinAvg.png'
-
-    plotCountdown -= 1
-
-    if ezConPlotRangeL[0] <= 382 and 382 <= ezConPlotRangeL[1]:
-
-        print()
-        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-
-        plotEzCon1dByFreqBin(plotName, np.mean(antXTV, axis=1), 'violet',
-            antXNameL[1]+'TV Average Spectrum')
-
-
-
-def plotEzCon387antXTVTByFreqBinAvg():
-
-    global ezConPlotRangeL          # integer list
-    global fileNameLast             # string
-    global plotCountdown            # integer
-    global antXNameL                # list of strings
-    global antXTVT                  # float 2d array
-
-    #plotName = 'ezCon387antXTVTByFreqBinAvg.png'
-    plotName = 'ezCon387' + antXNameL[0] + 'TVTByFreqBinAvg.png'
-
-    plotCountdown -= 1
-
-    if ezConPlotRangeL[0] <= 387 and 387 <= ezConPlotRangeL[1]:
-
-        print()
-        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
-
-        plotEzCon1dByFreqBin(plotName, np.mean(antXTVT, axis=1), 'violet',
-            antXNameL[1]+'TVT Average Spectrum')
-
-
-
-def plotEzCon388antXTByFreqBinAvgRfi():
+def plotEzCon382antXTByFreqBinAvgRfi():
 
     global fileNameLast             # string
     global plotCountdown            # integer
@@ -8137,8 +8668,8 @@ def plotEzCon388antXTByFreqBinAvgRfi():
     #global antLen                   # integer
     global ezConPlotRangeL          # integer list
 
-    #plotName = 'ezCon388antXTByFreqBinAvgRfi.png'
-    plotName = 'ezCon388' + antXNameL[0] + 'TByFreqBinAvgRfi.png'
+    #plotName = 'ezCon382antXTByFreqBinAvgRfi.png'
+    plotName = 'ezCon382' + antXNameL[0] + 'TByFreqBinAvgRfi.png'
     # for RFI filtering, to help create ezDefaults.txt ezConHideFreqBin arguments, 
     # print freqBin indexes of 5 highest-values of antXTByFreqBinSum
 
@@ -8197,7 +8728,7 @@ def plotEzCon388antXTByFreqBinAvgRfi():
 
     plotCountdown -= 1
 
-    if ezConPlotRangeL[0] <= 388 and 388 <= ezConPlotRangeL[1]:
+    if ezConPlotRangeL[0] <= 382 and 382 <= ezConPlotRangeL[1]:
 
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
@@ -8205,7 +8736,7 @@ def plotEzCon388antXTByFreqBinAvgRfi():
         plt.clf()
 
         # calculate average by Freq Bin and plot by Doppler
-        plt.plot(antXTByFreqBinSumAvg, range(fileFreqBinQty), 'violet')
+        plt.plot(antXTByFreqBinSumAvg, range(fileFreqBinQty), 'green')
 
         plt.title(titleS)
         plt.grid(1)
@@ -8216,7 +8747,8 @@ def plotEzCon388antXTByFreqBinAvgRfi():
             antXTByFreqBinSumAvgMax + 2 * antXTByFreqBinSumAvgSpanD100)
 
         plt.ylabel('Frequency Bin')
-        plt.ylim(0, fileFreqBinQty)
+        #plt.ylim(0, fileFreqBinQty)
+        plt.ylim(fileFreqBinQty, 0)
 
         if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
             os.remove(plotName)
@@ -8224,7 +8756,30 @@ def plotEzCon388antXTByFreqBinAvgRfi():
 
 
 
-def plotEzCon397antXTVTByFreqBinMax():
+def plotEzCon383antXTVByFreqBinAvg():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antXNameL                # list of strings
+    global antXTV                   # float 2d array
+
+    #plotName = 'ezCon383antXTVByFreqBinAvg.png'
+    plotName = 'ezCon383' + antXNameL[0] + 'TVByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
+    if ezConPlotRangeL[0] <= 383 and 383 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+        plotEzCon1dByFreqBin(plotName, np.mean(antXTV, axis=1), 'green',
+            antXNameL[1]+'TV Average Spectrum')
+
+
+
+def plotEzCon387antXTVTByFreqBinAvg():
 
     global ezConPlotRangeL          # integer list
     global fileNameLast             # string
@@ -8232,8 +8787,113 @@ def plotEzCon397antXTVTByFreqBinMax():
     global antXNameL                # list of strings
     global antXTVT                  # float 2d array
 
-    #plotName = 'ezCon397antXTVTByFreqBinMax.png'
-    plotName = 'ezCon397' + antXNameL[0] + 'TVTByFreqBinMax.png'
+    #plotName = 'ezCon387antXTVTByFreqBinAvg.png'
+    plotName = 'ezCon387' + antXNameL[0] + 'TVTByFreqBinAvg.png'
+
+    plotCountdown -= 1
+
+    if ezConPlotRangeL[0] <= 387 and 387 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+        plotEzCon1dByFreqBin(plotName, np.mean(antXTVT, axis=1), 'green',
+            antXNameL[1]+'TVT Average Spectrum')
+
+
+
+def plotEzCon388antXTVTByFreqBinAll():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antXNameL                # list of strings
+    global antXTVT                  # float 2d array
+
+    global byFreqBinX               # float array
+    global ezConDispGrid            # integer
+    global dopplerSpanD2            # float
+
+    #plotName = 'ezCon388antXTVTByFreqBinAll.png'
+    plotName = 'ezCon388' + antXNameL[0] + 'TVTByFreqBinAll.png'
+
+    plotCountdown -= 1
+
+    if ezConPlotRangeL[0] <= 388 and 388 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+        plt.clf()
+
+        antXTVTDLen = 100       # quantity of spectra after downsampling
+        colorPenSL = ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'grey']
+
+        # no downsampling
+        #for n in range(antLen):
+        #    plt.plot(byFreqBinX, antXTVT[:, n], colorPenSL[n % 9], linewidth=0.5)
+
+        # true downsampling, using the slicing notation of start:stop:step
+        #antXTVTD = antXTVT[:, ::downsamplingStep]
+
+        # downsampling by averaging
+        downsamplingStep = antLen // antXTVTDLen
+        antXTVTD = np.empty_like(antXTVT[:, :antXTVTDLen])
+        for n in range(antXTVTDLen):
+            downsamplingIndex = n * downsamplingStep
+            antXTVTD[:, n] = np.mean(antXTVT[:, downsamplingIndex:downsamplingIndex+downsamplingStep], axis=1)
+
+        for n in range(len(antXTVTD[0, :])):
+            plt.plot(byFreqBinX, antXTVTD[:, n], colorPenSL[n % 9], linewidth=0.5)
+
+        plt.title(titleS)
+        plt.grid(ezConDispGrid)
+
+        plt.xlabel('Doppler (MHz)')
+        plt.xlim(-dopplerSpanD2, dopplerSpanD2)
+
+        plt.ylabel(antXNameL[1]+'TVT Spectra')
+        plt.ylabel(antXNameL[1]+'TVT Spectra, Downsampled by Averaging')
+
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
+
+
+
+def plotEzCon392antXTVByFreqBinMax():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antXNameL                # list of strings
+    global antXTV                   # float 2d array
+
+    #plotName = 'ezCon392antXTVByFreqBinMax.png'
+    plotName = 'ezCon392' + antXNameL[0] + 'TVByFreqBinMax.png'
+
+    plotCountdown -= 1
+
+    if ezConPlotRangeL[0] <= 392 and 392 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+        plotEzCon1dByFreqBin(plotName, np.amax(antXTV, axis=1), 'green',
+            antXNameL[1]+'TV Maximum Spectrum')
+
+
+
+def plotEzCon397antXTVTMaxByFreqBin():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antXNameL                # list of strings
+    global antXTVT                  # float 2d array
+
+    #plotName = 'ezCon397antXTVTMaxByFreqBin.png'
+    plotName = 'ezCon397' + antXNameL[0] + 'TVTMaxByFreqBin.png'
 
     plotCountdown -= 1
 
@@ -8242,8 +8902,66 @@ def plotEzCon397antXTVTByFreqBinMax():
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
 
-        plotEzCon1dByFreqBin(plotName, np.amax(antXTVT, axis=1), 'violet',
+        plotEzCon1dByFreqBin(plotName, np.amax(antXTVT, axis=1), 'green',
             antXNameL[1]+'TVT Maximum Spectrum')
+
+
+
+def plotEzCon398antXTVTMaxByFreqBinAll():
+
+    global ezConPlotRangeL          # integer list
+    global fileNameLast             # string
+    global plotCountdown            # integer
+    global antXNameL                # list of strings
+    global antXTVT                  # float 2d array
+
+    global byFreqBinX               # float array
+    global ezConDispGrid            # integer
+    global dopplerSpanD2            # float
+
+    #plotName = 'ezCon398antXTVTMaxByFreqBinAll.png'
+    plotName = 'ezCon398' + antXNameL[0] + 'TVTMaxByFreqBinAll.png'
+
+    plotCountdown -= 1
+
+    if ezConPlotRangeL[0] <= 398 and 398 <= ezConPlotRangeL[1]:
+
+        print()
+        print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+        plt.clf()
+
+        antXTVTMaxDLen = 100       # quantity of spectra after downsampling
+        colorPenSL = ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'violet', 'grey']
+
+        # no downsampling
+        #for n in range(antLen):
+        #    plt.plot(byFreqBinX, antXTVT[:, n], colorPenSL[n % 9], linewidth=0.5)
+
+        # true downsampling, using the slicing notation of start:stop:step
+        #antXTVTD = antXTVT[:, ::downsamplingStep]
+
+        # downsampling by maxing
+        downsamplingStep = antLen // antXTVTMaxDLen
+        antXTVTMaxD = np.empty_like(antXTVT[:, :antXTVTMaxDLen])
+        for n in range(antXTVTMaxDLen):
+            downsamplingIndex = n * downsamplingStep
+            antXTVTMaxD[:, n] = np.amax(antXTVT[:, downsamplingIndex:downsamplingIndex+downsamplingStep], axis=1)
+
+        for n in range(len(antXTVTMaxD[0, :])):
+            plt.plot(byFreqBinX, antXTVTMaxD[:, n], colorPenSL[n % 9], linewidth=0.5)
+
+        plt.title(titleS)
+        plt.grid(ezConDispGrid)
+
+        plt.xlabel('Doppler (MHz)')
+        plt.xlim(-dopplerSpanD2, dopplerSpanD2)
+
+        plt.ylabel(antXNameL[1]+'TVTMax Spectra, Downsampled by Maxing')
+
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -8261,29 +8979,29 @@ def plotEzCon399SignalSampleByFreqBin():
     if 399 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 399:
         return(1)
 
-    ezCon399SampleS = str(ezCon399SignalSampleByFreqBinL[1])
     ezCon399SignalSampleByFreqBinL[1] = min(ezCon399SignalSampleByFreqBinL[1], antLen)
+    ezCon399SampleS = str(ezCon399SignalSampleByFreqBinL[1])
 
     if ezCon399SignalSampleByFreqBinL[0] == 10:
-        plotName = 'ezCon399AntByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
+        plotName = 'ezCon399AntByFreqBin' + ezCon399SampleS + '.png'
         plotColorS = 'blue'
         plotYLabel = 'Ant Spectrum, Sample ' + ezCon399SampleS
     elif ezCon399SignalSampleByFreqBinL[0] == 12:
-        plotName = 'ezCon399RefByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
-        plotColorS = 'red'
+        plotName = 'ezCon399RefByFreqBin' + ezCon399SampleS + '.png'
+        plotColorS = 'violet'
         plotYLabel = 'Ref Spectrum, Sample ' + ezCon399SampleS
     elif ezCon399SignalSampleByFreqBinL[0] == 14:
-        plotName = 'ezCon399AntBByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
-        plotColorS = 'green'
+        plotName = 'ezCon399AntBByFreqBin' + ezCon399SampleS + '.png'
+        plotColorS = 'red'
         plotYLabel = 'AntB Spectrum, Sample ' + ezCon399SampleS
     elif ezCon399SignalSampleByFreqBinL[0] == 16:
-        plotName = 'ezCon399AntRBByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
+        plotName = 'ezCon399AntRBByFreqBin' + ezCon399SampleS + '.png'
         plotColorS = 'orange'
         plotYLabel = 'AntRB Spectrum, Sample ' + ezCon399SampleS
     else:
         # ezCon399SignalSampleByFreqBinL[0] == 18
-        plotName = 'ezCon399' + antXNameL[1] + 'TVTByFreqBin' + str(ezCon399SignalSampleByFreqBinL[1]) + '.png'
-        plotColorS = 'violet'
+        plotName = 'ezCon399' + antXNameL[1] + 'TVTByFreqBin' + ezCon399SampleS + '.png'
+        plotColorS = 'green'
         plotYLabel = antXNameL[1] + 'TVT Spectrum, Sample ' + ezCon399SampleS
 
     print()
@@ -8390,7 +9108,7 @@ def plotEzCon510velGLon():
 
 
 
-def plotEzCon511velGLonCount():
+def plotEzCon519velGLonCount():
 
     global fileNameLast             # string
     global plotCountdown            # integer
@@ -8402,12 +9120,12 @@ def plotEzCon511velGLonCount():
     global fileFreqBinQty           # integer
     global ezConPlotRangeL          # integer list
 
-    plotName = 'ezCon511velGLonCount.png'
+    plotName = 'ezCon519velGLonCount.png'
 
     plotCountdown -= 1
 
     # if anything in velGLonP180 to plot
-    if ezConPlotRangeL[0] <= 511 and 511 <= ezConPlotRangeL[1] and velGLonP180CountSum:
+    if ezConPlotRangeL[0] <= 519 and 519 <= ezConPlotRangeL[1] and velGLonP180CountSum:
 
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
@@ -8440,7 +9158,7 @@ def plotEzCon511velGLonCount():
 
 
         # print out velGLonCount status
-        fileWriteGLonName = 'ezCon511velGLonCount.txt'
+        fileWriteGLonName = 'ezCon519velGLonCount.txt'
         fileWriteGLon = open(fileWriteGLonName, 'w')
         if not (fileWriteGLon.mode == 'w'):
             print()
@@ -8568,7 +9286,7 @@ def plotEzCon520velGLonPolar():
 
 
 
-def plotEzCon521velGLonPolarCount():
+def plotEzCon529velGLonPolarCount():
 
     global fileNameLast             # string
     global plotCountdown            # integer
@@ -8580,12 +9298,12 @@ def plotEzCon521velGLonPolarCount():
     global fileFreqBinQty           # integer
     global ezConPlotRangeL          # integer list
 
-    plotName = 'ezCon521velGLonPolarCount.png'     # Velocity by Galactic Longitude with pcolormesh
+    plotName = 'ezCon529velGLonPolarCount.png'     # Velocity by Galactic Longitude with pcolormesh
 
     plotCountdown -= 1
 
     # if anything in velGLonP180 to plot
-    if ezConPlotRangeL[0] <= 521 and 521 <= ezConPlotRangeL[1] and velGLonP180CountSum:
+    if ezConPlotRangeL[0] <= 529 and 529 <= ezConPlotRangeL[1] and velGLonP180CountSum:
 
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
@@ -8881,7 +9599,7 @@ def plotEzCon541velGLonEdges():
 
 
 
-def plotEzCon560antXTVTMaxIdxGLon():
+def plotEzCon800antXTVTMaxIdxGLon():
 
     global fileNameLast             # string
     global plotCountdown            # integer
@@ -8890,11 +9608,11 @@ def plotEzCon560antXTVTMaxIdxGLon():
     global titleS                   # string
     global ezConPlotRangeL          # integer list
 
-    plotName = 'ezCon560' + antXNameL[0] + 'TVTMaxIdxGLon.png'
+    plotName = 'ezCon800' + antXNameL[0] + 'TVTMaxIdxGLon.png'
 
     plotCountdown -= 1
 
-    if ezConPlotRangeL[0] <= 560 and 560 <= ezConPlotRangeL[1]:
+    if ezConPlotRangeL[0] <= 800 and 800 <= ezConPlotRangeL[1]:
 
         print()
         print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
@@ -8910,15 +9628,15 @@ def plotEzCon560antXTVTMaxIdxGLon():
 
         # ezConOut[:, 4] is gLon is RtoL from -180 thru 180
         #pts = plt.scatter(ezConOut[:, 4], velMaxIndex-120,
-        #    s=1, marker='|', c='violet', cmap=plt.get_cmap('gnuplot'))
+        #    s=1, marker='|', c='green', cmap=plt.get_cmap('gnuplot'))
         #pts = plt.scatter(ezConOut[:, 4]+360., velMaxIndex-120,
-        #    s=1, marker='|', c='red', cmap=plt.get_cmap('gnuplot'))
-        #pts = plt.scatter(ezConOut[:, 4], antXTVTMaxIndex,
         #    s=1, marker='|', c='violet', cmap=plt.get_cmap('gnuplot'))
+        #pts = plt.scatter(ezConOut[:, 4], antXTVTMaxIndex,
+        #    s=1, marker='|', c='green', cmap=plt.get_cmap('gnuplot'))
         #pts = plt.scatter(ezConOut[:, 4]+360., antXTVTMaxIndex,
-        #    s=1, marker='|', c='red', cmap=plt.get_cmap('gnuplot'))
+        #    s=1, marker='|', c='violet', cmap=plt.get_cmap('gnuplot'))
         pts = plt.scatter(ezConOut[:, 4], antXTVTMaxIndex,
-            s=1, marker='|', c='violet')
+            s=1, marker='|', c='green')
         pts = plt.scatter(ezConOut[:, 4]+360., antXTVTMaxIndex,
             s=1, marker='|', c='red')
 
@@ -9050,13 +9768,18 @@ def main():
     
     global ezConRawSamplesUseL      # integer list
     global ezConAntSamplesUseL      # integer list
-    global ezConAntSampleSnipL      # integer list
+    global ezConAntPluckL           # integer list
     global ezConRawFreqBinHideL     # integer list
     global ezConAntFreqBinSmooth    # float - RFI spur limiter: max muliplier over 4 neighboring freqBin
 
+    global ezConAntXTVTMaxPluckQtyL         # integer list
+    global ezConAntXTVTMaxPluckValL         # float list
+    global ezConAntXTVTAvgPluckQtyL         # integer list
+    global ezConAntXTVTAvgPluckValL         # float list
+    global ezConAntXTVTPluckL               # integer list
+
     global xTickLabelsHeatAntL      # string list
     global xTickLocsAnt             # float array
-
 
     startTime = time.time()
     xTickLocsAnt = []               # force new xTickLocsAnt
@@ -9265,14 +9988,14 @@ def main():
     # Full sized signal histories (used in heatmaps) are large, so delete them promptly.
 
     # if any raw filtering, plot rawRaw before the filtering
-    #if ezConRawSamplesUseL or ezConRawSampleSnipL or ezConRawAvgTrimFracL or ezConRawFreqBinHideL \
+    #if ezConRawSamplesUseL or ezConRawSamplePluckL or ezConRawAvgTrimFracL or ezConRawFreqBinHideL \
     #    or ezConRawFreqBinSmooth:
     if ezConRawFreqBinHideL:
             plotEzCon000rawRaw()                # rawRaw heatmap
             plotEzCon200rawRawAvg()
             plotEzCon300rawRawByFreqBinAvg()
 
-    #if ezConRawSamplesUseL or ezConRawSampleSnipL:
+    #if ezConRawSamplesUseL or ezConRawSamplePluckL:
     #    ezConRawSamplesUseLDo()
 
     #if ezConRawAvgTrimFracL:
@@ -9307,22 +10030,22 @@ def main():
     ####### ant
 
     # if any ant filtering, plot antRaw before the filtering
-    #if ezConAntSamplesUseL or ezConAntSampleSnipL or ezConAntAvgSnipFracL or ezConAntFreqBinHideL \
+    #if ezConAntSamplesUseL or ezConAntPluckL or ezConAntAvgPluckFracL or ezConAntFreqBinHideL \
     #    or ezConAntFreqBinSmooth:
-    if ezConAntSamplesUseL or ezConAntSampleSnipL or ezConAntFreqBinSmooth or ezConAntAvgSnipQtyL or ezConAntAvgSnipFracL:
+    if ezConAntSamplesUseL or ezConAntPluckL or ezConAntFreqBinSmooth or ezConAntAvgPluckQtyL or ezConAntAvgPluckFracL:
             plotEzCon002antRaw()
             plotEzCon202antRawAvg()
             plotEzCon302antRawByFreqBinAvg()
 
-    #if ezConAntSamplesUseL or ezConAntSampleSnipL:
+    #if ezConAntSamplesUseL or ezConAntPluckL:
     if ezConAntSamplesUseL:
         ezConAntSamplesUseLDo()
 
-    if ezConAntAvgSnipQtyL:
-        ezConAntAvgSnipQtyLDo()
+    if ezConAntAvgPluckQtyL:
+        ezConAntAvgPluckQtyLDo()
 
-    if ezConAntAvgSnipFracL:
-        ezConAntAvgSnipFracLDo()
+    if ezConAntAvgPluckFracL:
+        ezConAntAvgPluckFracLDo()
 
     #if ezConAntFreqBinHideL: ???????????????????????
     #    ezConAntFreqBinHideLDo()
@@ -9330,8 +10053,8 @@ def main():
     if ezConAntFreqBinSmooth < 999998.:
         ezConAntFreqBinSmoothDo()
 
-    if ezConAntSampleSnipL:
-        ezConAntSampleSnipLDo()
+    if ezConAntPluckL:
+        ezConAntPluckLDo()
 
     plotEzCon007ant()
     plotEzCon207antAvg()                # creates antAvg
@@ -9347,8 +10070,8 @@ def main():
     refRawAvg = np.mean(ref, axis=0)            # creation,  needed for plotEzCon191sigProg()
 
     # if any ref filtering, plot refRaw before the filtering
-    #if ezConRefAvgSnipQtyL or ezConRefAvgSnipFracL or ezConRefFreqBinHideL or ezConRefFreqBinSmooth:
-    if ezConRefAvgSnipQtyL or ezConRefAvgSnipFracL:
+    #if ezConRefAvgPluckQtyL or ezConRefAvgPluckFracL or ezConRefFreqBinHideL or ezConRefFreqBinSmooth:
+    if ezConRefAvgPluckQtyL or ezConRefAvgPluckFracL:
             plotEzCon022refRaw()
             plotEzCon222refRawAvg()
             plotEzCon322refRawByFreqBinAvg()
@@ -9359,11 +10082,11 @@ def main():
     #if ezConRefFreqBinSmooth:
     #    ezConRefFreqBinSmoothDo()
 
-    if ezConRefAvgSnipQtyL:
-        ezConRefAvgSnipQtyLDo()
+    if ezConRefAvgPluckQtyL:
+        ezConRefAvgPluckQtyLDo()
 
-    if ezConRefAvgSnipFracL:
-        ezConRefAvgSnipFracLDo()
+    if ezConRefAvgPluckFracL:
+        ezConRefAvgPluckFracLDo()
 
     plotEzCon027ref()
     plotEzCon227refAvg()                # creates refAvg
@@ -9491,7 +10214,7 @@ def main():
     plotEzCon281antXTAvg()              # creates antXTAvg
     plotEzCon381antXTByFreqBinAvg()
 
-    plotEzCon388antXTByFreqBinAvgRfi()
+    plotEzCon382antXTByFreqBinAvgRfi()
 
     # now need VLSR, so create partial ezConOut in .ezb format
     # ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  Spare1  Spare2  Spare3
@@ -9504,26 +10227,48 @@ def main():
                                         # deletes antAvg, antMax, refAvg, refMax,
                                         #   antBAvg, antBMax, antRBAvg, antRBMax
 
-    
+
     ####### antXTV
 
-    plotEzCon082antXTV()                # creates antXTV
-    plotEzCon282antXTVAvg()             # creates antXTVAvg
-    plotEzCon382antXTVByFreqBinAvg()
+    #plotEzCon082antXTV()                # creates antXTV
+    #plotEzCon282antXTVAvg()             # creates antXTVAvg
+    #plotEzCon383antXTVByFreqBinAvg()
+    #plotEzCon392antXTVByFreqBinMax()
+    createAntXTV()                      # creates antXTV
 
 
     ####### antXTVT
 
-    plotEzCon087antXTVT()               # creates antXTVT, keeps antXTV for Galaxy crossing plots
+    #plotEzCon087antXTVT()               # creates antXTVT, keeps antXTV for Galaxy crossing plots
+    #plotEzCon287antXTVTAvg()            # creates antXTVTAvg into ezConOut[:, 18]
+    createAntXTVT()                     # creates antXTVT, keeps antXTV for Galaxy crossing plots
+    if ezConAntXTVTMaxPluckQtyL or ezConAntXTVTMaxPluckValL :
+        ezConAntXTVTMaxPluckDo()        # thin ezConOut[:, :], antXTV, antXTVT, antLen, and antLenM1
+    if ezConAntXTVTAvgPluckQtyL or ezConAntXTVTAvgPluckValL :
+        ezConAntXTVTAvgPluckDo()        # thin ezConOut[:, :], antXTV, antXTVT, antLen, and antLenM1
+    if ezConAntXTVTPluckL:
+        ezConAntXTVTPluckDo()           # thin ezConOut[:, :], antXTV, antXTVT, antLen, and antLenM1
+
+    # antXTV and antXTVT now filtered
+    plotEzCon082antXTV()
+    plotEzCon282antXTVAvg()             # creates antXTVAvg
+    plotEzCon383antXTVByFreqBinAvg()
+    plotEzCon392antXTVByFreqBinMax()
+
+    plotEzCon087antXTVT()
+    plotEzCon088antXTVTByFreqBinAllFall()
     plotEzCon287antXTVTAvg()            # creates antXTVTAvg into ezConOut[:, 18]
     plotEzCon387antXTVTByFreqBinAvg()
-    plotEzCon397antXTVTByFreqBinMax()
-    plotEzCon560antXTVTMaxIdxGLon()
+    plotEzCon388antXTVTByFreqBinAll()
+    plotEzCon397antXTVTMaxByFreqBin()
+    plotEzCon398antXTVTMaxByFreqBinAll()
+    plotEzCon800antXTVTMaxIdxGLon()
 
     plotEzCon097antXTVTMax2d()
+    plotEzCon098antXTVTMaxByFreqBinAllFall()
     plotEzCon297antXTVTMax()            # creates antXTVTMax into ezConOut[:, 19]
     # free antXTVT memory
-    if not len(ezCon399SignalSampleByFreqBin1d):        # if empty
+    if not len(ezCon399SignalSampleByFreqBin1d):        # if not empty
         ezCon399SignalSampleByFreqBin1d = antXTVT[:, ezCon399SignalSampleByFreqBinL[1]]
     antXTVT = []
     antXTVT = None
@@ -9577,10 +10322,10 @@ def main():
     writeFileGLon()
 
     plotEzCon510velGLon()
-    plotEzCon511velGLonCount()          # creates ezCon511velGLonCount.txt
+    plotEzCon519velGLonCount()          # creates ezCon519velGLonCount.txt
 
     plotEzCon520velGLonPolar()
-    plotEzCon521velGLonPolarCount()
+    plotEzCon529velGLonPolarCount()
 
     plotEzCon530galDecGLon()
 

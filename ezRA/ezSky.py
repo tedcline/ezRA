@@ -1,4 +1,4 @@
-programName = 'ezSky230824a.py'
+programName = 'ezSky240108b.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
@@ -6,7 +6,7 @@ programRevision = programName
 #   and optionally create .png plot files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,6 +26,38 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       MollweideL x and y scales not linear, so xticks and yticks wrong
 
+# ezSky240108b.py, ezSky450 Grote Reber grid
+# ezSky240108a.py, dusting
+# ezSky240105a.py, dusting
+# ezSky231231a.py, ezSky600 dots
+# ezSky231228e.py, ezSky450 Grote Reber
+# ezSky231228d.py, ezSky450 Grote Reber, left needing warping
+# ezSky231228c.py, ezSky450 Grote Reber, warps ?!
+# ezSky231228b.py, ezSky450 Grote Reber, sorta warped !
+# ezSky231228a.py, ezSky450 Grote Reber
+# ezSky231227d.py, ezSky450 Grote Reber
+# ezSky231227a.py, ezSky450 Grote Reber
+# ezSky231226c.py, ezSky450 Grote Reber
+# ezSky231226b.py, ezSky450 Grote Reber
+# ezSky231226a.py, ezSky450 Grote Reber
+# ezSky231224a.py, ezSky450 Grote Reber
+# ezSky231222a.py, ezSky450 Grote Reber
+# ezSky231211a.py, comments
+# ezSky231209d.py, ezSky450 Grote Reber
+# ezSky231209c.py, ezSky450 Grote Reber
+# ezSky231209b.py, ezSky450 Grote Reber
+#   ezSky200 thin horizontal lines to matching colors
+# ezSky231209a.py, print ezSkyInput in printGoodbye()
+#   ezSky200 AntXTVT violet needs green for better contrast
+#   ezSky200 AntB           needs next best red contrast
+#       AntXTVT violet   becomes newgreen
+#       Ref     red      becomes violet
+#       AntB    green    becomes red
+#               newgreen becomes green
+# ezSky231206a.py, ezSky450 Grote Reber
+# ezSky231205b.py, ezSky450 Grote Reber
+# ezSky231203a.py, red for AntXTVT, violet for Ref
+# ezSky231124a.py, red horizontal average lines on ezSky200
 # ezSky230827a.py, removed '''
 # ezSky230824a.py, print ezSkyPlotRangeL in printGoodbye()
 # ezSky230803a.py, plotEzSky1dSamplesAnt and plt.scatter now with s=1
@@ -600,7 +632,7 @@ def ezSkyArguments():
 
     ezSkyPlotRangeL = [0, 9999]             # save this range of plots to file
 
-    plotCountdown = 24                      # number of possible plots still to print + 1
+    plotCountdown = 25                      # number of possible plots still to print + 1
 
     # process arguments from ezDefaults.txt file in the same directory as this ezCon program
     ezSkyArgumentsFile(os.path.dirname(__file__) + os.path.sep + 'ezDefaults.txt')
@@ -926,10 +958,14 @@ def plotPrep():
     titleS = '  ' + fileNameLast.split(os.path.sep)[-1] + '           ' + ezRAObsName \
         + '          (' + programName + ')'
 
-    ezbColumnColor = ['green', 'green', 'green', 'green', 'green', 'green', 'green',
-        'black', 'black', 'violet',
-        'blue', 'blue', 'red', 'red', 'green', 'green', 'orange', 'orange', 'violet', 'violet']
-
+    #ezbColumnColor = ['green', 'green', 'green', 'green', 'green', 'green', 'green',
+    #    'black', 'black', 'violet',
+    #    'blue', 'blue', 'red', 'red', 'green', 'green', 'orange', 'orange', 'violet', 'violet']
+    ezbColumnColor = [ \
+        'green', 'green', 'green',  'green',  'green', 'green', 'green',  'black',  'black', 'violet',
+        'blue',  'blue',  'violet', 'violet', 'red',   'red',   'orange', 'orange', 'green', 'green']
+    #    0,       1,       2,        3,        4,       5,       6,        7,        8,       9
+    
 
 
 def plotEzSky1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColorS, plotYLabel):
@@ -1455,12 +1491,14 @@ def plotEzSky200RBVO():
     radecRaHalfDegScaled  = (720 - radecRaHalfDeg ) * imgaxesRatioX
     radecDecHalfDegScaled = (360 - radecDecHalfDeg) * imgaxesRatioY
 
-    # thin black horizontal line on each used scaled declination
+    # thin horizontal line on each used scaled declination
     radecDecHalfDegScaledLast = 9999      # silly value
     for y in radecDecHalfDegScaled:
         if radecDecHalfDegScaledLast != y:
             radecDecHalfDegScaledLast = y
-            plt.axhline(y=radecDecHalfDegScaledLast, linewidth=0.5, color='black')
+            plt.axhline(y=radecDecHalfDegScaledLast, linewidth=0.5, c=ezbColumnColor[ezSkyInput])
+    #       plt.axhline(y=radecDecHalfDegScaledLast, linewidth=0.5, color='red')
+    #       plt.axhline(y=radecDecHalfDegScaledLast, linewidth=0.5, color='black')
 
     # calculate signal gain
     radecPowerMax = radecPower.max()
@@ -2163,6 +2201,143 @@ def plotEzSky400RI():
         print()
         print()
 
+        #radecPower = None           # free memory
+        #del radecPower
+
+        #radecRaHalfDeg = None       # free memory
+        #del radecRaHalfDeg
+
+        #radecDecHalfDeg = None      # free memory
+        #del radecDecHalfDeg
+
+        return(2)
+
+    if radecDecHalfDegMin == radecDecHalfDegMax:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print('============= WARNING: Can not create the ' + plotName + ' plot.')
+        print('              All this data has only one Declination value.')
+        print()
+        print('              radecDecHalfDegMin == radecDecHalfDegMax')
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+
+        #radecPower = None           # free memory
+        #del radecPower
+
+        #radecRaHalfDeg = None       # free memory
+        #del radecRaHalfDeg
+
+        #radecDecHalfDeg = None      # free memory
+        #del radecDecHalfDeg
+
+        return(3)
+
+    xi = np.arange(0.,  721., 1.)         # in   0 to 360 degrees in half-degrees
+    yi = np.arange(-180.,  181., 1.)        # in -90 to +90 degrees in half-degrees
+    xi, yi = np.meshgrid(xi, yi)
+
+    zi = griddata((radecRaHalfDeg, radecDecHalfDeg-180.), radecPower, (xi, yi), method='linear')
+
+    ###zi = gaussian_filter(zi, 9.)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
+    #plt.plot(radecRaHalfDeg, radecDecHalfDeg-180., 'black')
+    ax.scatter(radecRaHalfDeg, radecDecHalfDeg-180., marker='.', s=0.5,
+        color='black', linewidths=0)
+
+    plt.title(titleS)
+    ###plt.grid(ezSkyDispGrid)
+
+    #plt.xlim(720, 0)        # inverts x axis
+    plt.xlim(600, 480)      # inverts x axis
+    plt.xticks([ 0.,    60., 120., 180., 240., 300., 360., 420., 480., 540., 600., 660., 720.],
+               [' 0  ', '2', '4',  '6',  '8',  '10', '12', '14', '16', '18', '20', '22', '24'])
+
+    plt.ylabel(f'{ezSkyInputS[2:]} Interpolated in RaDec Coordinates')
+    plt.ylim(-180, 180)
+    plt.yticks( \
+        [-180., -150., -120., -90.,  -60.,  -30.,  0.,  30.,  60.,  90.,  120., 150., 180.],
+        ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    #plt.close(fig)
+
+
+
+def plotEzSky450RIR():
+    # radio Sky Radec map of Interpolated Power, Grote Reber 1944
+    # 2 hemispheres, centered on RaDec of (20,0) and (6?,0)
+    # http://www.bigear.org/CSMO/HTML/CS13/cs13p14.htm
+    # has figure that says 1.9 meters (158 MHz)
+
+    global radecPower               # float   1d array
+    global radecRaHalfDeg           # integer 1d array
+    global radecDecHalfDeg          # integer 1d array
+    global ezSkyInputS              # string
+
+    global ezSkyPlotRangeL          # integer list
+    global plotCountdown            # integer
+    global fileNameLast             # string
+    global titleS                   # string
+    #global ezSkyDispGrid           # integer
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 450 or 450 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky450RIR_' + ezSkyInputS + '.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plt.clf()
+
+    radecRaHalfDegMin = radecRaHalfDeg.min()
+    print('                         radecRaHalfDegMin =', radecRaHalfDegMin)
+    radecRaHalfDegMax = radecRaHalfDeg.max()
+    print('                         radecRaHalfDegMax =', radecRaHalfDegMax)
+
+    radecDecHalfDegMin = radecDecHalfDeg.min()
+    print('                         radecDecHalfDegMin =', radecDecHalfDegMin)
+    radecDecHalfDegMax = radecDecHalfDeg.max()
+    print('                         radecDecHalfDegMax =', radecDecHalfDegMax)
+
+    if radecRaHalfDegMin == radecRaHalfDegMax:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print('============= WARNING: Can not create the ' + plotName + ' plot.')
+        print('              All this data has only one Right Ascension value.')
+        print()
+        print('              radecRaHalfDegMin == radecRaHalfDegMax')
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+
         radecPower = None           # free memory
         del radecPower
 
@@ -2205,35 +2380,477 @@ def plotEzSky400RI():
 
         return(3)
 
-    xi = np.arange(0.,  721., 1.)         # in   0 to 360 degrees in half-degrees
-    yi = np.arange(-180.,  181., 1.)        # in -90 to +90 degrees in half-degrees
-    xi, yi = np.meshgrid(xi, yi)
-
-    zi = griddata((radecRaHalfDeg, radecDecHalfDeg-180.), radecPower, (xi, yi), method='linear')
-
-    ###zi = gaussian_filter(zi, 9.)
-
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
-    #plt.plot(radecRaHalfDeg, radecDecHalfDeg-180., 'black')
-    ax.scatter(radecRaHalfDeg, radecDecHalfDeg-180., marker='.', s=0.5,
-        color='black', linewidths=0)
+    xiHalfDeg = np.arange(0.,  781., 1.)        # 0 to +390 degrees in half-degrees
+    #xiHalfDeg = np.arange(0.,  721., 1.)        # 0 to +390 degrees in half-degrees
+    yiHalfDeg = np.arange(-180.,  181., 1.)     # in -90 to +90 degrees in half-degrees
+    xiHalfDeg, yiHalfDeg = np.meshgrid(xiHalfDeg, yiHalfDeg)
+
+    #print('=========== np.shape(xiHalfDeg) =', np.shape(xiHalfDeg))     # says (361, 721)
+    #print('=========== np.shape(yiHalfDeg) =', np.shape(yiHalfDeg))     # says (361, 721)
+
+
+
+    if 0:               # 1 to display original space grid
+        ax.scatter(xiHalfDeg, yiHalfDeg, marker='.', s=0.5,
+            color='black', linewidths=0)
+
+
+
+    if 1:               # 1 for no fill
+        zi = griddata((radecRaHalfDeg, radecDecHalfDeg-180), radecPower, (xiHalfDeg, yiHalfDeg),
+            method='linear')
+    else:
+        # add 5 minimum points, along both bottom and top, to help griddata interpolate all space
+        radecPowerMin = radecPower.min()
+        #radecRaHalfDegFiller  = np.array([          180,           180,           600,           600])
+        #radecDecHalfDegFiller = np.array([            0,           360,             0,           360])
+        #radecPowerFiller      = np.array([radecPowerMin, radecPowerMin, radecPowerMin, radecPowerMin])
+        radecRaHalfDegFiller  = np.array([0, 180, 390, 600, 780,   0, 180, 390, 600, 780])
+        radecDecHalfDegFiller = np.array([0,   0,   0,   0,   0, 360, 360, 360, 360, 360])  # bot and top
+        radecPowerFiller      = np.full_like(radecRaHalfDegFiller, radecPowerMin)
+        #zi = griddata((np.concatenate([radecRaHalfDeg, radecRaHalfDegFiller]),
+        #    np.concatenate([radecDecHalfDegFiller, radecDecHalfDegFiller])-180),
+        #    np.concatenate([radecPowerFiller, radecPowerFiller]),
+        #    (xiHalfDeg, yiHalfDeg), method='linear')
+        zi = griddata((np.append(radecRaHalfDeg, radecRaHalfDegFiller, axis=0),
+            np.append(radecDecHalfDeg, radecDecHalfDegFiller, axis=0)-180),
+            np.append(radecPower, radecPowerFiller, axis=0),
+            (xiHalfDeg, yiHalfDeg), method='linear')
+    zi[:, 720:781] = zi[:, 0:61]        # Reber left hemisphere went past RA=24, repeating to RA=2
+
+
+
+    if 0:           # 1 to mask the zi data into hemispheres - useful ??
+        # calculate mask450, where true inside plotted hemispheres
+        #mask450 = np.ones_like(zi, dtype=bool)      # True means do not plot
+        mask450 = np.zeros_like(xiHalfDeg, dtype=bool)      # False means do not plot
+        #print(mask450)
+        #exit()
+
+        # mask unused middle strip
+        mask450[:, 360:420] = True       # True does not plot
+
+        radiusMax2 = 180. * 180.        # 32,400
+        #print('=========== radiusMax2 =', radiusMax2)
+        # calculate mask450 for right hemisphere
+        x0Right = 180   # right hemisphere is centered on 6*15*2=180 half-degrees
+        #if 0:
+        #for x in range(0, 361):         # RA = 0 thru 12
+        for x in range(181):            # RA = 0 thru 6
+            x0RightDelta = (x - x0Right)
+            x0RightDelta2 = x0RightDelta * x0RightDelta
+            for y in range(181):        # positive half-degrees
+                y2 = y * y
+                #print('=========== x0RightDelta2 + y2', x0RightDelta2 + y2)
+                if radiusMax2 <= (x0RightDelta2 + y2):
+                    # right hemisphere,
+                    #   right edge at         0 half-degrees
+                    #   left  edge at 0+360=360 half-degrees
+                    mask450[180+y,x]     = True
+                    mask450[180-y,x]     = True
+                    mask450[180+y,360-x] = True
+                    mask450[180-y,360-x] = True
+                    
+                    # left hemisphere,
+                    #   right edge at 14*15*2=420 half-degrees
+                    #   left  edge at 420+360=780 half-degrees
+                    mask450[180-y,x+420] = True
+                    mask450[180+y,x+420] = True
+                    mask450[180+y,780-x] = True
+                    mask450[180-y,780-x] = True
+                else:
+                    break   # on this x, no more True to be found                    
+
+        #print('=========== mask450 =', mask450)
+        #print('=========== sum(mask450) =', sum(mask450))
+
+        #    x0Left  = 600
+        #    for x in range(721):
+        #        x0RightDelta = (x - x0Right)
+        #        x0RightDelta2 = x0RightDelta * x0RightDelta
+        #        x0LeftDelta = (x - x0Left)
+        #        x0LeftDelta2 = x0LeftDelta * x0LeftDelta
+        #        for y in range(361):
+        #            y2 = y * y
+        #            if hemisphereMax2 < (x0LeftDelta2 + y2) or \
+        #                hemisphereMax2 < (x0RightDelta2 + y2):
+        #                    mask450[x,y] = true
+
+        # a mask needs to be boolean
+        zi[mask450]   = np.nan      # True does not plot
+        #zi[:,360:420] = np.nan      # True does not plot
+
+
+
+    if 1:       # 1 for warping space into 2 hemispheres
+        # https://adsabs.harvard.edu/pdf/1944ApJ...100..279R
+        # https://chandra.harvard.edu/graphics/chronicle/cyga/radiosky_good.gif
+        #   centered on RA=6 and RA=18
+        # shows Grote Reber's 1944 Nicolosi globular projection of Interpolated Power plot.
+        # https://en.wikipedia.org/wiki/Nicolosi_globular_projection
+        # has complex math projection formulas.
+
+        # Nicolosi globular projection warping definition:
+        #   https://en.wikipedia.org/wiki/Nicolosi_globular_projection
+        # and
+        #   Page 234 of
+        #   An album of map projections
+        #   Professional Paper 1453
+        #   By: John P. Snyder and Philip M. Voxland
+        #   https://doi.org/10.3133/pp1453
+        #   https://pubs.usgs.gov/publication/pp1453
+        #       That last link adds talk of b and the "plus or minus sign in equation 203"
+        # also https://observablehq.com/@toja/nicolosi-globular-projection
+        
+        # But all that math did not work well, so I now try the math from "achille hui",
+        # https://math.stackexchange.com/questions/1672580/formula-for-nicolosi-globular-projection
+        
+        print("                         Compare to Grote Reber's 1944 paper:")
+        print('                           https://adsabs.harvard.edu/pdf/1944ApJ...100..279R')
+        print('                           https://chandra.harvard.edu/graphics/chronicle/cyga/radiosky_good.gif')
+        print('                         Jansky and Reber history:')
+        print('                           http://www.bigear.org/CSMO/HTML/CS12/cs12p08.htm')
+        print('                           http://www.bigear.org/CSMO/HTML/CS13/cs13p14.htm')
+
+        # create full sky RaDec coordinates, RA=0 thru 24 thru 2,
+        #   RA=12 to 14 not used
+
+        # R is the radius of the globe to be projected.
+
+        # calculate each warp mapping (xiWarpedHalfDeg,yiWarpedHalfDeg) for
+        #   one quarter of one hemisphere, bottom right at center = 0,0
+        #R = 100.
+        pi = np.pi
+        piD2 = pi / 2.
+        #R = piD2
+        #R = 0.2
+        #R = 0.78525
+        #R = 1.
+        #piD90  = np.pi / 90.
+        #piD180 = np.pi / 180.
+        piD360 = pi / 360.
+        #piRD2 = R * piD2
+        #b = 0
+        #if 0:
+        #for yHalfDeg in range(0, 181):          # 0 thru 180 half-degrees
+        showSize = 180
+        #for yHalfDeg in range(1, 20):
+        #for yHalfDeg in range(1, 120):
+        for yHalfDeg in range(1, showSize):
+            #print('=========== yHalfDeg =', yHalfDeg)
+
+            # precalculations       
+            yHalfDegP180 = yHalfDeg + 180       # Plus  180
+            yHalfDegM180 = yHalfDeg - 180       # Minus 180 ?????????????????????????????????????
+            yHalfDegF180 = 180 - yHalfDeg       # From  180
+
+            # for special cases, the full formulae fail, handle below
+            if yHalfDeg == 0 or yHalfDeg == 180:
+                pass
+            else:
+                yRad = yHalfDeg * piD360     # = (yHalfDeg / 2) * (pi / 180)
+                v = yRad / piD2
+                c = np.cos(yRad)
+                c2 = c * c
+                s = np.sin(yRad)
+                q = (1. - v * v) / (2. * (s - v))
+                q2 = q * q
+
+            #for xHalfDeg in range(0, 180):          # 0 thru 179 half-degrees
+            for xHalfDeg in range(1, showSize):
+                #print('=========== xHalfDeg =', xHalfDeg, ' yHalfDeg =', yHalfDeg)
+
+                # handle special cases, where the full formulae fail
+                if xHalfDeg == 0:           # meridian
+                    #xiWarpedHalfDeg = 0.
+                    #yiWarpedHalfDeg = yHalfDeg
+                    xiWarpedHalfDeg = -1.   # flag no warp needed
+                elif xHalfDeg == 180:       # left edge, use simpler formulae
+                    xiWarpedRad = c
+                    yiWarpedRad = s
+                    xiWarpedHalfDeg = piD2 * xiWarpedRad / piD360
+                    yiWarpedHalfDeg = piD2 * yiWarpedRad / piD360
+                elif yHalfDeg == 0:         # equator
+                    #xiWarpedHalfDeg = xHalfDeg
+                    #yiWarpedHalfDeg = 0.
+                    xiWarpedHalfDeg = -1.   # flag no warp needed
+                elif yHalfDeg == 180:       # north pole
+                    xiWarpedHalfDeg = 0.
+                    yiWarpedHalfDeg = 180.
+                else:
+                    xRad = xHalfDeg * piD360     # = (xHalfDeg / 2) * (pi / 180)
+                    u = xRad / piD2
+                    p = (1 - u * u) / (2 * u)
+                    p2 = p * p
+                    A = 2 * p2 * q * (q - s) / (p2 + q2)
+                    B = 4 * p2 * q2 * c2 / (p2 + q2)
+                    delta = -A + np.sqrt(A * A + B)
+                    xiWarpedRad = delta / (2 * p)
+                    yiWarpedRad = s - delta / (2 * q)
+                    xiWarpedHalfDeg = piD2 * xiWarpedRad / piD360
+                    yiWarpedHalfDeg = piD2 * yiWarpedRad / piD360
+
+                #print('                 xiWarpedHalfDeg =', xiWarpedHalfDeg,
+                #    ' yiWarpedHalfDeg =', yiWarpedHalfDeg)
+                #    ' b =', b)
+
+                if 0 <= xiWarpedHalfDeg:
+                    # warp needed
+
+                    # Now have xiWarpedHalfDeg and yiWarpedHalfDeg
+                    #   = warped from xiHalfDeg and yiHalfDeg.
+                    # Warp eight sky points to that Nicolosi_globular_projection
+
+                    # warp to Grote Reber's 1944 right hemisphere,
+                    #   RA=0 thru 12, centered on RA=6 (180 half-degrees)
+
+                    # precalculations
+                    xHalfDegP180 = xHalfDeg + 180       # Plus 180
+                    xHalfDegF180 = 180 - xHalfDeg       # From 180
+                    
+                    # warp top left sky bearing
+                    xiHalfDeg[yHalfDegP180, xHalfDegP180] = 180. + xiWarpedHalfDeg
+                    yiHalfDeg[yHalfDegP180, xHalfDegP180] = yiWarpedHalfDeg
+
+                    # warp bottom left sky bearing
+                    xiHalfDeg[yHalfDegF180, xHalfDegP180] = 180. + xiWarpedHalfDeg
+                    yiHalfDeg[yHalfDegF180, xHalfDegP180] = -yiWarpedHalfDeg
+
+                    # warp top right sky bearing
+                    xiHalfDeg[yHalfDegP180, xHalfDegF180] = 180. - xiWarpedHalfDeg
+                    yiHalfDeg[yHalfDegP180, xHalfDegF180] = yiWarpedHalfDeg
+
+                    # warp bottom right sky bearing
+                    xiHalfDeg[yHalfDegF180, xHalfDegF180] = 180. - xiWarpedHalfDeg
+                    yiHalfDeg[yHalfDegF180, xHalfDegF180] = -yiWarpedHalfDeg
+
+                    # warp to Grote Reber's 1944 left hemisphere,
+                    #   RA=14 thru 2, centered on RA=20 (600 half-degrees)
+
+                    # precalculations
+                    xHalfDegP600 = xHalfDeg + 600       # Plus 600
+                    xHalfDegF600 = 600 - xHalfDeg       # From 600
+
+                    # warp top left sky bearing
+                    xiHalfDeg[yHalfDegP180, xHalfDegP600] = 600. + xiWarpedHalfDeg
+                    yiHalfDeg[yHalfDegP180, xHalfDegP600] = yiWarpedHalfDeg
+
+                    # warp bottom left sky bearing
+                    xiHalfDeg[yHalfDegF180, xHalfDegP600] = 600. + xiWarpedHalfDeg
+                    yiHalfDeg[yHalfDegF180, xHalfDegP600] = -yiWarpedHalfDeg
+
+                    # warp top right sky bearing
+                    xiHalfDeg[yHalfDegP180, xHalfDegF600] = 600. - xiWarpedHalfDeg
+                    yiHalfDeg[yHalfDegP180, xHalfDegF600] = yiWarpedHalfDeg
+
+                    # warp bottom right sky bearing
+                    xiHalfDeg[yHalfDegF180, xHalfDegF600] = 600. - xiWarpedHalfDeg
+                    yiHalfDeg[yHalfDegF180, xHalfDegF600] = -yiWarpedHalfDeg
+
+    #print()
+    #print('=========== len(radecRaHalfDeg) =', len(radecRaHalfDeg))
+    #print('=========== len(radecDecHalfDeg) =', len(radecDecHalfDeg))
+    #print('=========== len(radecPower) =', len(radecPower))
+
+    # interpolate radecPower values onto warped (xiHalfDeg, yiHalfDeg) meshgrid
+    #radecPower = np.ones_like(radecPower)
+    #zi = griddata((galacticGLonHalfDeg, galacticGLatHalfDeg), galacticPower, (xi, yi), method='nearest')
+    #zi = griddata((radecRaHalfDeg, radecDecHalfDeg-180), radecPower, (xiHalfDeg, yiHalfDeg),
+    #    method='linear')
+    #zi = griddata((radecRaHalfDeg[2000:4000], radecDecHalfDeg[2000:4000]-180),
+    #    radecPower[2000:4000], (xiHalfDeg, yiHalfDeg), method='linear')
+    #zi = griddata((radecRaHalfDeg, radecDecHalfDeg-180), radecPower, (xiHalfDeg, yiHalfDeg),
+    #    method='nearest')
+    #print('=== np.shape(zi) =', np.shape(zi))   # says (721, 361), 721*361 = 260281
+
+    #zi = gaussian_filter(zi, 9.)
+
+
+
+    if 1:           # 1 to mask the warped space into hemispheres
+        # calculate mask450, where true inside plotted hemispheres
+        #mask450 = np.ones_like(zi, dtype=bool)      # True means do not plot
+        mask450 = np.zeros_like(xiHalfDeg, dtype=bool)      # False means do not plot
+        #print(mask450)
+        #exit()
+
+        radiusMax2 = 180. * 180.        # 32,400
+        #print('=========== radiusMax2 =', radiusMax2)
+        # calculate mask450 for right hemisphere
+        x0Right = 180   # right hemisphere is centered on 6*15*2=180 half-degrees
+        #if 0:
+        #for x in range(0, 361):         # RA = 0 thru 12
+        for x in range(182):            # RA = 0 thru 6
+            for y in range(182):        # positive half-degrees
+                xWarped = xiHalfDeg[y, x]
+                x0RightWarpedDelta = (xWarped - x0Right)
+                x0RightWarpedDelta2 = x0RightWarpedDelta * x0RightWarpedDelta
+                yWarped = yiHalfDeg[y, x]
+                yWarped2 = yWarped * yWarped
+                #print('=========== x0RightDelta2 + y2', x0RightDelta2 + y2)
+                if radiusMax2 <= (x0RightWarpedDelta2 + yWarped2):
+                    # right hemisphere,
+                    #   right edge at         0 half-degrees
+                    #   left  edge at 0+360=360 half-degrees
+                    mask450[ y,    x] = True
+                    mask450[-y,    x] = True
+                    mask450[ y,360-x] = True
+                    mask450[-y,360-x] = True
+                    
+                    # left hemisphere,
+                    #   right edge at 14*15*2=420 half-degrees
+                    #   left  edge at 420+360=780 half-degrees
+                    mask450[ y,420+x] = True
+                    mask450[-y,420+x] = True
+                    mask450[ y,780-x] = True
+                    mask450[-y,780-x] = True
+                else:
+                    break   # on this x, no more True to be found                    
+        # remove whisker at top of hemispheres
+        mask450[ 360,:] = True          # True does not plot
+
+        #print('=========== mask450 =', mask450)
+        #print('=========== sum(mask450) =', sum(mask450))
+
+        #    x0Left  = 600
+        #    for x in range(721):
+        #        x0RightDelta = (x - x0Right)
+        #        x0RightDelta2 = x0RightDelta * x0RightDelta
+        #        x0LeftDelta = (x - x0Left)
+        #        x0LeftDelta2 = x0LeftDelta * x0LeftDelta
+        #        for y in range(361):
+        #            y2 = y * y
+        #            if hemisphereMax2 < (x0LeftDelta2 + y2) or \
+        #                hemisphereMax2 < (x0RightDelta2 + y2):
+        #                    mask450[x,y] = true
+
+        # plot both equators
+        #mask450[180, :] = False         # False does plot
+        # mask unused middle strip
+        mask450[:,360:420] = True       # True does not plot
+
+        # a mask needs to be boolean
+        zi[mask450]   = np.nan          # True does not plot    ????????????????????????????????????????????????
+        #zi[:,360:420] = np.nan          # True does not plot
+
+
+
+    if 0:
+        # border
+        ziMin = zi.min()
+        #print(np.shape(zi))     # says (361, 721)
+        zi[:,   0] = ziMin
+        zi[:, 720] = ziMin
+
+
+
+    # plot contour lines and contour fills
+    #plt.contour(xiHalfDeg, yiHalfDeg, zi, 20, linewidths=0.2, colors='black')
+    plt.contourf(xiHalfDeg, yiHalfDeg, zi, 100, cmap=plt.get_cmap('gnuplot'))
+    #ax.scatter(radecRaHalfDeg, radecDecHalfDeg-180., marker='.', s=0.5,
+    #    color='black', linewidths=0)
+
+    #plt.contour(yiHalfDeg, xiHalfDeg, np.ones_like(zi), 20, linewidths=0.2, colors='black')
+    #plt.contourf(yiHalfDeg, xiHalfDeg, np.ones_like(zi), 100, cmap=plt.get_cmap('gnuplot'))
+    #plt.contour(yiHalfDeg, xiHalfDeg, zi, 20, linewidths=0.2, colors='black')
+    #plt.contourf(yiHalfDeg, xiHalfDeg, zi, 100, cmap=plt.get_cmap('gnuplot'))
+    #plt.plot(xiHalfDeg, yiHalfDeg)
+    #plt.plot(radecPower)
+    #plt.plot(radecRaHalfDeg)
+    #plt.plot(radecDecHalfDeg)
+
+
+
+    if 0:
+        imgaxes = fig.add_axes(ax.get_position(), label='image', xticks=[], yticks=[])
+        #print(ax.get_position())
+
+        imgaxes.set_xlim(0, ezSkyBackground1XMax)
+        imgaxes.set_ylim(0, ezSkyBackground1YMax)
+
+        plt.gca().invert_yaxis()
+
+        # comment next line to remove background
+        #img = imgaxes.imshow(backImg, aspect='auto')
+        img = imgaxes.imshow(zi, aspect='auto')
+
+
+
+    zi = None     # free memory
+    del zi
+
+    ylabelText = f'{ezSkyInputS[2:]} Interpolated in Mollweide Galactic Coordinates'
+
+    #plt.contourf(xiHalfDeg, yiHalfDeg, zi, 100, cmap=plt.get_cmap('gnuplot'))
+
+    if 0:
+        #plt.plot(radecRaHalfDeg, radecDecHalfDeg-180., 'black')
+        ax.scatter(radecRaHalfDeg, radecDecHalfDeg-180., marker='.', s=0.5,
+            color='black', linewidths=0)
+
+    if 0:
+        ax.scatter(xiHalfDeg, yiHalfDeg, marker='.', s=0.5,
+            color='black', linewidths=0)
+
+    if 0:
+        ax.scatter(xiHalfDeg[180:180+showSize,180:180+showSize],
+            yiHalfDeg[180:180+showSize,180:180+showSize], marker='.', s=0.5,
+            color='black', linewidths=0)
+                
+    if 1:
+        # horizontal grids
+        for y in range(20, 341, 20):
+            ax.scatter(xiHalfDeg[y,1:360], yiHalfDeg[y,1:360], marker='.', s=0.5,
+                color='black', linewidths=0)
+            ax.scatter(xiHalfDeg[y,421:780], yiHalfDeg[y,421:780], marker='.', s=0.5,
+                color='black', linewidths=0)
+
+        # outer circles, meridians
+        for x in [1, 359, 421, 779, 180, 600]:
+            ax.scatter(xiHalfDeg[0:360,x], yiHalfDeg[0:360,x], marker='.', s=0.5,
+                color='black', linewidths=0)
+
+        # vertical grids
+        for x in range(30, 360, 30):
+            ax.scatter(xiHalfDeg[20:340,x], yiHalfDeg[20:340,x], marker='.', s=0.5,
+                color='black', linewidths=0)
+            ax.scatter(xiHalfDeg[20:340,x+420], yiHalfDeg[20:340,x+420], marker='.', s=0.5,
+                color='black', linewidths=0)
+
+    if 0:
+        fig.text(180., 300.95, 'Latitude', \
+            horizontalalignment='left', verticalalignment='top', fontsize=10)
+
+    ax.set_xticks([])   # disable
+    ax.set_yticks([])   # disable
+    #plt.subplots_adjust(left=1.8, right=1.8)
+    #plt.subplots_adjust(right=0.8)
+    #plt.margins(50.5)
+    #plt.tight_layout()
+
+    #plt.axis('scaled')      # x and y scales the same
+    plt.axis('equal')      # x and y scales the same
 
     plt.title(titleS)
     ###plt.grid(ezSkyDispGrid)
 
-    #plt.xlim(720, 0)        # inverts x axis
-    plt.xlim(600, 480)      # inverts x axis
-    plt.xticks([ 0.,    60., 120., 180., 240., 300., 360., 420., 480., 540., 600., 660., 720.],
-               [' 0  ', '2', '4',  '6',  '8',  '10', '12', '14', '16', '18', '20', '22', '24'])
+    #plt.xlim(780, 0)        # inverts x axis
+    plt.xlim(800, -20)        # inverts x axis, with left and right margins
+    #plt.xlim(600, 480)      # inverts x axis
+    #plt.xticks([ 0.,    60., 120., 180., 240., 300., 360., 420., 480., 540., 600., 660., 720.],
+    #           [' 0  ', '2', '4',  '6',  '8',  '10', '12', '14', '16', '18', '20', '22', '24'])
 
-    plt.ylabel(f'{ezSkyInputS[2:]} Interpolated in RaDec Coordinates')
+    #plt.ylabel(f'{ezSkyInputS[2:]} Interpolated\nin Grote Reber 1944 Projection')
+    plt.ylabel(f'{ezSkyInputS[2:]} Interpolated Like Grote Reber 1944')
     plt.ylim(-180, 180)
-    plt.yticks( \
-        [-180., -150., -120., -90.,  -60.,  -30.,  0.,  30.,  60.,  90.,  120., 150., 180.],
-        ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
+    if 0:
+        plt.ylim(-180, 180)
+        plt.yticks( \
+            [-180., -150., -120., -90.,  -60.,  -30.,  0.,  30.,  60.,  90.,  120., 150., 180.],
+            ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -3030,8 +3647,10 @@ def plotEzSky600azEl():
 
     #ax.set_axis_off()
 
+    #pts = plt.scatter(azDeg, elDeg,
+    #    s=1, marker='|', c=power, cmap=plt.get_cmap('gnuplot'))
     pts = plt.scatter(azDeg, elDeg,
-        s=1, marker='|', c=power, cmap=plt.get_cmap('gnuplot'))
+        s=10, marker='.', c=power, cmap=plt.get_cmap('gnuplot'))
 
     cbar = plt.colorbar(pts, orientation='horizontal', shrink=0.3, pad=0.06)
     cbar.ax.tick_params(labelsize=6)
@@ -3088,6 +3707,7 @@ def printGoodbye():
         print('   antLen =', antLen)
 
     print()
+    print(' ezSkyInput =', ezSkyInput)
     print(' ezSkyPlotRangeL =', ezSkyPlotRangeL)
 
     stopTime = time.time()
@@ -3125,7 +3745,6 @@ def main():
     global radecDecHalfDeg          # integer 1d array
     
     global xTickLocsAnt             # array
-
 
     startTime = time.time()
 
@@ -3186,7 +3805,8 @@ def main():
     plotEzSky301RBT()   # radio Sky Radec map with Background, power color Tall
     plotEzSky309RBTC()  # radio Sky Radec map with Background, Count Tall
 
-    plotEzSky400RI()
+    plotEzSky400RI()    # radio Sky Radec map Interpolated
+    plotEzSky450RIR()   # radio Sky Radec map Interpolated, Grote Reber 1944
 
     # free radec memory
     radecCount      = []

@@ -28,6 +28,11 @@ please see these introductory PDFs from the ezRA directory:
 * Quick overview of programs and documentation:<br>
 [ezRA_00_Introduction.pdf](https://github.com/tedcline/ezRA/blob/master/ezRA/doc/ezRA_00_Introduction.pdf)<br>
 
+Or perhaps start with these 2 introductory videos (from the longer list of videos below):
+
+* [ezRA - Simple Overview (13 minutes)](https://youtu.be/kHgwEbWKhzs)<br>
+* [ezRA - PZT Antenna Tests (31 minutes)](https://youtu.be/VZrd2-VFiPE)
+
 =============================================
 
 ## There are 6 major ezRA programs:
@@ -53,8 +58,9 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
 
 [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
 
-  * [ezRA - Simple Overview](https://youtu.be/kHgwEbWKhzs)<br>
-  * [ezRA - PZT Antenna Tests](https://youtu.be/VZrd2-VFiPE)
+  * [ezRA - Simple Overview  (13 minutes)](https://youtu.be/kHgwEbWKhzs)<br>
+  * [ezRA - PZT Antenna Tests  (31 minutes)](https://youtu.be/VZrd2-VFiPE)
+
 <br>
 
   * [Pablo 1 - ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)<br>
@@ -101,23 +107,13 @@ Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astr
 
 ## Status:
 
-  * ezCon's default "-ezConAstroMath  2" now calculates the   correct   VLSR values.
-
-Known bugs:
-
-  * ezCon's "-ezConAstroMath  1" did calculate wrong Right Ascension values.
-    <br>
-    Now fixed ?  Does it work for your earth location ?  10x faster !
-    <br>
-    ezCon's default still is the slower "-ezConAstroMath  2".
+  * ezCon's default is now the faster "-ezConAstroMath  1".
 
 Thanks to Todd Ullery, the  ezColX.py  was an experimental multiple process version of  ezCol.py , to improve dashboard responsiveness.
 <br>
-Problems ?  Graphic dashboard more responsive ?  Faster ?
-<br>
 The experiment has completed successfully, ezColX is now named ezCol, and the name ezColX is retired.
 
-These files need lots of cleanup, but should work or be helpful:
+These data converter programs need lots of cleanup, but should work or be helpful:
 
   * ezColBAA.py
   * ezColHay.py
@@ -128,6 +124,8 @@ Always need more documentation.
 
 --
 
+Did ezRA work for you ?
+
 Comments are encouraged !
 
 Help improve ezRA.
@@ -136,6 +134,6 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Sep-2-2023
+Jan-11-2024
 
 ---
