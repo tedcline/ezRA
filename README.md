@@ -127,7 +127,7 @@ Always need more documentation.
 Did ezRA work for you ?
 
 <p align="center">
-  <img src="/ezRA/doc/ezRA_users240111.png?raw=true" alt="ezRA_users240118"/>
+  <img src="/ezRA/doc/ezRA_users240118.png?raw=true" alt="ezRA_users240118"/>
 </p>
 
 Comments are encouraged !
