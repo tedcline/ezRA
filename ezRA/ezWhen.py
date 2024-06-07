@@ -1,4 +1,4 @@
-programName = 'ezWhen240118a.py'
+programName = 'ezWhen240308a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezWhen sky object visibility projection program,
@@ -23,6 +23,18 @@ programRevision = programName
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+# ezWhen240308a, "skyCoordinate" to "skyObject", -ezWhenSkyObjectL, dusted imports,
+#   'No sky objects found'
+# ezWhen240307b, moon and Sun pointings work ?
+# ezWhen240307a, found moon and Sun pointings are different
+# ezWhen240306a, moon and Sun galactic plot problems remain
+# ezWhen240304b, ezWhen was seriously broken, fixed ?
+# ezWhen240304a, ezWhen was seriously broken, fixed ?
+# ezWhen240303a, ezCon to ezWhen, get_body() gives GCRS pointing
+# ezWhen240301a,
+# ezWhen240229b,
+# ezWhen240223a, redefined GPx.xPx.x input order from GLonGLat to GLatGLon to match
+#   .ezb file alphabetical order
 # ezWhen240118a, ezWhen220 typo, sanity tests for ezRAObsLat, ezRAObsLon, ezRAObsAmsl
 # ezWhen240117b, -ezWhenPlotL
 # ezWhen240117a, Sun, Moon, legend colors, xlabels, ylabels
@@ -48,18 +60,9 @@ programRevision = programName
 # ezWhen231009b,
 # ezWhen231009a,
 
-import matplotlib.pyplot as plt
-#from matplotlib import cm
-
-#from astropy.time import Time
-
-## use astropy
-#from astropy import units as u
-#from astropy.coordinates import EarthLocation
-#from astropy.coordinates import SkyCoord
-
-import sys
 import os
+from astropy.time import Time
+import matplotlib.pyplot as plt
 
 
 def printUsage():
@@ -76,7 +79,7 @@ def printUsage():
     print()
     print('  Easy Radio Astronomy (ezRA) ezWhen sky object visibility projection program,')
     print('     to plot Sun, Moon, Galactic and/or RaDec coordinates onto AzEl coordinates')
-    print('     for each hour of one UTC day.')
+    print('     usually for each hour of current one UTC day.')
     print('     To answer, WHEN is that sky object visible ?')
     print()
     print('  Arguments may be in any mixed order.')
@@ -103,11 +106,11 @@ def printUsage():
     print('     Below uses "P" for Plus, and "M" for Minus.')
     print()
     print('     Galactic coordinates:')
-    print('         GPx.xPx.x       where x.x are GLongitude (degrees) and GLatitude (degrees) float numbers')
+    print('         GPx.xPx.x       where x.x are GLatitude (degrees) and GLongitude (degrees) float numbers')
     print('         GP0P0           Galactic center')
-    print('         GP123.4P56.7    GLon=+123.4 and GLat=+56.7')
-    print('         GM123.4M56.7    GLon=-123.4 and GLat=-56.7')
-    print('         GM123M56        GLon=-123   and GLat=-56')
+    print('         GP12.3P145.6    GLat=+12.3 and GLon=+145.6')
+    print('         GM12.3M145.6    GLat=-12.3 and GLon=-145.6')
+    print('         GM12M145        GLat=-12   and GLon=-145')
     print()
     print('     RaDec coordinates:')
     print('         Rx.xPx.x        where x.x are RightAscension (hours) and Declination (degrees) float numbers')
@@ -117,8 +120,13 @@ def printUsage():
     print('         R12.3M56.7      RA=12.3 and Dec=-56.7')
     print('         R12M56          RA=12   and Dec=-56')
     print()
+    print('     -ezWhenSkyObjectL   rest of the ezDefaults.txt line is a list of sky objects (without comments)')
+    print()
     print('     If not the current UTC day, enter the UTC day (Year, Month, Day):')
     print('         -YYMMDD')
+    print()
+    print('     If not each UTC hour, enter the UTC time (Year, Month, Day, HourUTC):')
+    print('         -YYMMDDHH')
     print()
     print('    -ezWhenPlotRangeL    0  100    (save only this range of ezWhen plots to file, to save time)')
     print()
@@ -128,7 +136,7 @@ def printUsage():
     print('         (any one word starting with -eX is ignored, handy for long command line editing)')
     print()
     print()
-    print('EXAMPLE:  py  ../ezRA/ezWhen.py  sun  Moon  R0P60  GP0P0  Gp80m10  -240117')
+    print('EXAMPLE:  py  ../ezRA/ezWhen.py  sun  Moon  R0P60  GP0P0  Gm10p80  -240117')
     print()
     print(' programRevision =', programRevision)
     print()
@@ -165,12 +173,13 @@ def printHello():
     print(' programRevision =', programRevision)
     print()
 
+    import sys
     commandString = '  '.join(sys.argv)
     print(' This Python command = ' + commandString)
 
 
 
-def ezConArgumentsFile(ezDefaultsFileNameInput):
+def ezWhenArgumentsFile(ezDefaultsFileNameInput):
     # process arguments from file
 
     global ezRAObsLat                       # float
@@ -178,9 +187,10 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezRAObsAmsl                      # float
     global ezRAObsName                      # string
     global ezWhenPlotRangeL                 # integer list
+    global skyObjectL                       # list of strings
 
     print()
-    print('   ezConArgumentsFile(' + ezDefaultsFileNameInput + ') ===============')
+    print('   ezWhenArgumentsFile(' + ezDefaultsFileNameInput + ') ===============')
 
     # https://www.zframez.com/tutorials/python-exception-handling.html
     try:
@@ -222,6 +232,11 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
                 ezWhenPlotRangeL[0] = int(thisLine[1])
                 ezWhenPlotRangeL[1] = int(thisLine[2])
 
+            elif thisLine0Lower == '-ezWhenSkyObjectL'.lower():
+                # must be a list of skyObjects (without comments), remember it in a string
+                #skyObjectL.append(thisLine[1:])
+                skyObjectL += thisLine[1:]
+
             elif thisLine0Lower[:5] == '-ezWhen'.lower():
                 print()
                 print()
@@ -248,11 +263,12 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
 
 
 
-def ezConArgumentsCommandLine():
+def ezWhenArgumentsCommandLine():
     # process arguments from command line
 
     global dayYYMMDD                        # string
-    global skyCoordinateSL                  # list of strings
+    global dayHH                            # string
+    global skyObjectL                       # list of strings
 
     global ezRAObsLat                       # float
     global ezRAObsLon                       # float
@@ -261,7 +277,7 @@ def ezConArgumentsCommandLine():
     global ezWhenPlotRangeL                 # integer list
 
     print()
-    print('   ezConArgumentsCommandLine ===============')
+    print('   ezWhenArgumentsCommandLine ===============')
 
     cmdLineSplit = commandString.split()
     cmdLineSplitLen = len(cmdLineSplit)
@@ -350,21 +366,29 @@ def ezConArgumentsCommandLine():
         # 01234567
         elif len(cmdLineArgLower) == 7 and cmdLineArgLower[0] == '-':
             dayYYMMDD = cmdLineArgLower[1:]
+            dayHH = ''
+
+        # -YYMMDDHH
+        # 0123456789
+        elif len(cmdLineArgLower) == 9 and cmdLineArgLower[0] == '-':
+            dayYYMMDD = cmdLineArgLower[1:7]
+            dayHH = cmdLineArgLower[7:9]
 
         else:
-            # must be a skyCoordinate, remember it in a string
-            skyCoordinateSL.append(cmdLineSplit[cmdLineSplitIndex])
+            # must be a skyObject, remember it in a string
+            skyObjectL.append(cmdLineSplit[cmdLineSplitIndex])
 
         cmdLineSplitIndex += 1
 
 
 
-def ezConArguments():
+def ezWhenArguments():
     # argument: (Computing) a value or address passed to a procedure or function at the time of call
 
     global dayYYMMDD                        # string
+    global dayHH                            # string
     global dateUTCValue                     # class 'astropy.time.core.Time'
-    global skyCoordinateSL                  # list of strings
+    global skyObjectL                       # list of strings
 
     global ezRAObsLat                       # float
     global ezRAObsLon                       # float
@@ -381,8 +405,9 @@ def ezConArguments():
 
     ezWhenPlotRangeL = [0, 9999]        # save this range of plots to file
 
-    dayYYMMDD       = ''
-    skyCoordinateSL = []
+    dayYYMMDD  = ''
+    dayHH      = ''
+    skyObjectL = []
 
     # Program argument priority:
     #    Start with the argument value defaults inside the programs.
@@ -395,36 +420,48 @@ def ezConArguments():
     # The top (and bottom ?) of the program printout should list the resultant argument values.
     # Eventually support -ezez argument preface, to allow ignoring.
 
-    # process arguments from ezDefaults.txt file in the same directory as this ezCon program
-    ezConArgumentsFile(os.path.dirname(__file__) + os.path.sep + 'ezDefaults.txt')
+    # process arguments from ezDefaults.txt file in the same directory as this ezWhen program
+    ezWhenArgumentsFile(os.path.dirname(__file__) + os.path.sep + 'ezDefaults.txt')
 
     # process arguments from ezDefaults.txt file in the current directory
-    ezConArgumentsFile('ezDefaults.txt')
+    ezWhenArgumentsFile('ezDefaults.txt')
 
     # process arguments from command line
-    ezConArgumentsCommandLine()
+    ezWhenArgumentsCommandLine()
 
     # sanity tests
 
-    # later, len(markerS) is 52
-    if 52 < len(skyCoordinateSL):
+    if not len(skyObjectL):
         print()
         print()
         print()
         print()
         print()
-        print(' ========== FATAL ERROR:  Too many skyCoordinates.  Limit is 52.')
+        print(' ========== FATAL ERROR:  No sky objects found.')
         print()
         print()
         print()
         print()
         exit()
 
-    from astropy.time import Time
+    # later, len(markerS) is 52
+    if 52 < len(skyObjectL):
+        print()
+        print()
+        print()
+        print()
+        print()
+        print(' ========== FATAL ERROR:  Too many skyObjects.  Limit is 52.')
+        print()
+        print()
+        print()
+        print()
+        exit()
 
     # set UTC day
     if not len(dayYYMMDD):
         datetimeNowUTC = Time.now()
+        #datetimeNowUTC = Time.now(tz=timezone.utc)
         dateUTCValueS = datetimeNowUTC.to_value('fits', subfmt='date')
         #print('     dateUTCValueS =', dateUTCValueS)                        # 2023-11-27
         #                                                               # 01234567890
@@ -433,7 +470,7 @@ def ezConArguments():
         # Time('2000-01-02')
         # dayYYMMDD
         #    0123456
-        datetimeNowUTC = Time('20' + dayYYMMDD[:2] + '-' + dayYYMMDD[2:4] + '-' + dayYYMMDD[4:6])
+        datetimeNowUTC = Time('20' + dayYYMMDD[:2] + '-' + dayYYMMDD[2:4] + '-' + dayYYMMDD[4:6], scale='utc')
 
     print('      dayYYMMDD =', dayYYMMDD)
     print('      UTC time =', datetimeNowUTC)                              # UTC time = 2023-11-27 02:44:49.691405
@@ -472,7 +509,7 @@ def ezConArguments():
 
 
 
-def plotPrep():
+def ezWhenPlotPrep():
     # creates azDegL, elDegL, markerSL, and colorSL
 
     global ezRAObsLat                       # float
@@ -482,27 +519,33 @@ def plotPrep():
 
     global ezWhenPlotRangeL                 # integer list
     global dayYYMMDD                        # string
+    global dayHH                            # string
     global programName                      # string
     global titleS                           # string
     global dateUTCValue                     # class 'astropy.time.core.Time'
-    global skyCoordinateSL                  # list of strings
+    global skyObjectL                       # list of strings
 
     global azDegL                           # list of floats
     global elDegL                           # list of floats
+    global raHL                             # list of floats
+    global decDegL                          # list of floats
+    global gLatDegL                         # list of floats
+    global gLonDegL                         # list of floats
     global markerSL                         # list of strings
     global colorSL                          # list of strings
     global legendSL                         # list of strings
+    global hourQty                          # integer
 
-    # use astropy
-    from astropy import units as u
-    #from astropy.coordinates import EarthLocation
-    #from astropy.coordinates import SkyCoord
-    from astropy.coordinates import SkyCoord, EarthLocation, AltAz, get_sun, get_body
-    from astropy.time import Time
+    print()
+    print('   ezWhenPlotPrep ===============')
 
     # recorded for each marker
     azDegL   = []       
     elDegL   = []
+    raHL     = []       
+    decDegL  = []
+    gLatDegL = []
+    gLonDegL = []
     markerSL = []
     colorSL  = []
 
@@ -517,29 +560,30 @@ def plotPrep():
     markerS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'    # length is 52
     #titleS = '  ' + fileNameLast.split(os.path.sep)[-1] + u'           ' + fileObsName \
     #    + '          (' + programName + ')'
-    #titleS = 'UTC day ' + dayYYMMDD + u'           ' + ezRAObsName \
-    #    + '          (' + programName + ')'
     titleS = 'UTC day ' + dayYYMMDD + '           ' + ezRAObsName \
         + '          (' + programName + ')'
 
     # telescope Earth location
+    from astropy import units as u
+    from astropy.coordinates import AltAz, EarthLocation, get_body, SkyCoord
     locBase = EarthLocation(lat = ezRAObsLat*u.deg, lon = ezRAObsLon*u.deg, height = ezRAObsAmsl*u.m)
 
-    # For each SkyCoordinate find pointingTelescopeThis
-    for skyCoordinateIndex in range(len(skyCoordinateSL)):
-        #print('skyCoordinateIndex =', skyCoordinateIndex)
-        skyCoordinateSThis = skyCoordinateSL[skyCoordinateIndex].lower()
+    # For each skyObject find pointingTelescopeThis
+    for skyObjectIndex in range(len(skyObjectL)):
+        #print('skyObjectL =', skyObjectL)
+        #print('skyObjectIndex =', skyObjectIndex)
+        skyObjectSThis = skyObjectL[skyObjectIndex].lower()
 
-        # GPxPx for GLon (degrees) and GLat (degrees) float numbers
+        # GPxPx for GLat (degrees) and GLon (degrees) float numbers
         # 012345
-        if 5 <= len(skyCoordinateSThis) and skyCoordinateSThis[0] == 'g':
-            # parse GLat, starts at gLatIndexSign with p or m
-            if 'p' in skyCoordinateSThis[3:]:
-                gLatIndexSign = 3 + skyCoordinateSThis[3:].index('p')
-                gLatDegThis = float(skyCoordinateSThis[gLatIndexSign + 1:])
-            elif 'm' in skyCoordinateSThis[3:]:
-                gLatIndexSign = 3 + skyCoordinateSThis[3:].index('m')
-                gLatDegThis = -float(skyCoordinateSThis[gLatIndexSign + 1:])
+        if 5 <= len(skyObjectSThis) and skyObjectSThis[0] == 'g':
+            # parse GLon, starts at gLonIndexSign with p or m
+            if 'p' in skyObjectSThis[3:]:
+                gLonIndexSign = 3 + skyObjectSThis[3:].index('p')
+                gLonDegThis = float(skyObjectSThis[gLonIndexSign + 1:])
+            elif 'm' in skyObjectSThis[3:]:
+                gLonIndexSign = 3 + skyObjectSThis[3:].index('m')
+                gLonDegThis = -float(skyObjectSThis[gLonIndexSign + 1:])
             else:
                 print()
                 print()
@@ -547,17 +591,17 @@ def plotPrep():
                 print()
                 print()
                 print(' ========== FATAL ERROR:  Command line has this unrecognized word:')
-                print(skyCoordinateSL[skyCoordinateIndex])
+                print(skyObjectL[skyObjectIndex])
                 print()
                 print()
                 print()
                 print()
                 exit()
-            # parse GLon, starts at 1 with p or m, ends before gLatIndexSign
-            if skyCoordinateSThis[1] == 'p':
-                gLonDegThis = float(skyCoordinateSThis[2:gLatIndexSign])
-            elif skyCoordinateSThis[1] == 'm':
-                gLonDegThis = -float(skyCoordinateSThis[2:gLatIndexSign])
+            # parse GLat, starts at 1 with p or m, ends before gLonIndexSign
+            if skyObjectSThis[1] == 'p':
+                gLatDegThis = float(skyObjectSThis[2:gLonIndexSign])
+            elif skyObjectSThis[1] == 'm':
+                gLatDegThis = -float(skyObjectSThis[2:gLonIndexSign])
             else:
                 print()
                 print()
@@ -565,33 +609,26 @@ def plotPrep():
                 print()
                 print()
                 print(' ========== FATAL ERROR:  Command line has this unrecognized word:')
-                print(skyCoordinateSL[skyCoordinateIndex])
+                print(skyObjectL[skyObjectIndex])
                 print()
                 print()
                 print()
                 print()
                 exit()
-            # have gLonDegThis and gLatDegThis, get astropy bearing
-            pointingTelescopeThis = SkyCoord(l = gLonDegThis*u.deg, b = gLatDegThis*u.deg,
+            # have gLatDegThis and gLonDegThis, get astropy bearing
+            pointingTelescopeThis = SkyCoord(b = gLatDegThis*u.deg, l = gLonDegThis*u.deg,
                 frame = 'galactic', location = locBase)
-
-            ## extract RaDec coordinates
-            #raDegThis = float(pointingTelescope.icrs.ra.degree)
-            #raHrThis = raDegThis / 15.       # 24 / 360 = 1 / 15
-            ##print(' raHrThis =', raHrThis, 'Hours')
-            #decDegThis = float(pointingTelescope.icrs.dec.degree)
-            ##print(' decDegThis =', decDegThis, 'degrees')
 
         # RxPx for RightAscension (hours) and Declination (degrees) float numbers
         # 01234
-        elif 4 <= len(skyCoordinateSThis) and skyCoordinateSThis[0] == 'r':
+        elif 4 <= len(skyObjectSThis) and skyObjectSThis[0] == 'r':
             # parse Declination, starts at decIndexSign with p or m
-            if 'p' in skyCoordinateSThis[2:]:
-                decIndexSign = 2 + skyCoordinateSThis[2:].index('p')
-                decDegThis = float(skyCoordinateSThis[decIndexSign + 1:])
-            elif 'm' in skyCoordinateSThis[2:]:
-                decIndexSign = 2 + skyCoordinateSThis[2:].index('m')
-                decDegThis = -float(skyCoordinateSThis[decIndexSign + 1:])
+            if 'p' in skyObjectSThis[2:]:
+                decIndexSign = 2 + skyObjectSThis[2:].index('p')
+                decDegThis = float(skyObjectSThis[decIndexSign + 1:])
+            elif 'm' in skyObjectSThis[2:]:
+                decIndexSign = 2 + skyObjectSThis[2:].index('m')
+                decDegThis = -float(skyObjectSThis[decIndexSign + 1:])
             else:
                 print()
                 print()
@@ -599,43 +636,28 @@ def plotPrep():
                 print()
                 print()
                 print(' ========== FATAL ERROR:  Command line has this unrecognized word:')
-                print(skyCoordinateSL[skyCoordinateIndex])
+                print(skyObjectL[skyObjectIndex])
                 print()
                 print()
                 print()
                 print()
                 exit()
             # parse RightAscension, starts at 1 with value, ends before decIndexSign
-            raHrThis = float(skyCoordinateSThis[1:decIndexSign])
-            raDegThis = raHrThis * 15.       # 24 / 360 = 1 / 15
+            raHThis = float(skyObjectSThis[1:decIndexSign])
 
             # have RightAscension and Declination, get astropy bearing
-            #pointingTelescope = SkyCoord(ra = raDegThis*u.deg, dec = decDegThis*u.deg,
-            #    obstime = dataTimeUtcStrThis, frame = 'icrs', location = locBase)
-            pointingTelescopeThis = SkyCoord(ra = raDegThis*u.deg, dec = decDegThis*u.deg,
+            pointingTelescopeThis = SkyCoord(ra = raHThis*u.hour, dec = decDegThis*u.deg,
                 frame = 'icrs', location = locBase)
-
-        # Sun
-        # 0123
-        elif skyCoordinateSThis == 'sun':
-            # https://stackoverflow.com/questions/47663082
-            # pick noon UTC
-            datetimeUTCValue = Time(dateUTCValue + 12 / 24, format='mjd')
-            # get astropy bearing
-            pointingTelescopeThis = get_sun(datetimeUTCValue)
 
         # Moon
         # 01234
-        elif skyCoordinateSThis == 'moon':
-            # pick noon UTC
-            #datetimeUTCValue = Time(dateUTCValue + 12 / 24, format='mjd')
-            datetimeUTCValue = Time(dateUTCValue, format='mjd')
-            # get astropy bearing
-            # https://docs.astropy.org/en/stable/api/astropy.coordinates.get_body.html#astropy.coordinates.get_body
-            #from astropy.coordinates import solar_system_ephemeris      # just curious of menu
-            #print(solar_system_ephemeris.bodies)       # just curious of menu
-            #   says ('earth', 'sun', 'moon', 'mercury', 'venus', 'earth-moon-barycenter', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune')
-            pointingTelescopeThis = get_body('moon', datetimeUTCValue, location = locBase)
+        elif skyObjectSThis == 'moon':
+            pass            # pointingTelescopeThis created in special case below
+
+        # Sun
+        # 0123
+        elif skyObjectSThis == 'sun':
+            pass            # pointingTelescopeThis created in special case below
 
         else:
             print()
@@ -644,42 +666,116 @@ def plotPrep():
             print()
             print()
             print(' ========== FATAL ERROR:  Command line has this unrecognized word:')
-            print(skyCoordinateSL[skyCoordinateIndex])
+            print(skyObjectL[skyObjectIndex])
             print()
             print()
             print()
             print()
             exit()
 
-        # have pointingTelescopeThis for skyCoordinateSThis
+        # now have pointingTelescopeThis, except for the moving Sun and Moon
 
         # for each hourUTC find AzEl, and grow azDegL, elDegL, markerSL, and colorSL
-        for hourUTC in range(24):
-            #print()
+        if dayHH:
+            hourUTCFirst = int(dayHH)
+            hourQty = 1
+        else:
+            hourUTCFirst = 0
+            hourQty = 24
+        #for hourUTC in range(24):
+        for hourUTC in range(hourUTCFirst, hourUTCFirst+hourQty):
             #print('hourUTC =', hourUTC)
 
             datetimeUTCValue = Time(dateUTCValue + hourUTC / 24, format='mjd')
+            #datetimeUTCValue = Time(dateUTCValue + 15      / 24, format='mjd')
             #print(' UTC time =', datetimeUTCValue)                              # UTC time = 60275.1
             #print('type(datetimeUTCValue) =', type(datetimeUTCValue))           # type(datetimeUTCValue) = <class 'astropy.time.core.Time'>
+            #print(" ------------------------ datetimeUTCValue.strftime('%Y-%m-%dT%H:%M:%S ') =", datetimeUTCValue.strftime('%Y-%m-%dT%H:%M:%S '))
+
+            if skyObjectSThis == 'moon':
+                # special case because Moon moves across the sky
+                # get astropy bearing
+                # https://docs.astropy.org/en/stable/api/astropy.coordinates.get_body.html#astropy.coordinates.get_body
+                #from astropy.coordinates import solar_system_ephemeris      # just curious of menu
+                #print(solar_system_ephemeris.bodies)       # just curious of menu
+                #   says ('earth', 'sun', 'moon', 'mercury', 'venus', 'earth-moon-barycenter', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune')
+                #
+                pointingMoon = get_body('moon', datetimeUTCValue)
+                #print(' pointingMoon =', pointingMoon)
+
+                raHThis = float(pointingMoon.gcrs.ra.hour)
+                #print(' raHThis =', raHThis, 'Hours')
+                #raDegThis = float(pointingMoon.gcrs.ra.degree)
+                #print(' raDegThis =', raDegThis, 'Degrees')
+                decDegThis = float(pointingMoon.gcrs.dec.degree)
+                #print(' decDegThis =', decDegThis, 'degrees')
+
+                pointingTelescopeThis = SkyCoord(ra = raHThis*u.hour, dec = decDegThis*u.deg,
+                    frame = 'icrs', location = locBase)
+
+            elif skyObjectSThis == 'sun':
+                # special case because Sun moves across the sky
+                pointingSun = get_body('sun', datetimeUTCValue)
+                #print(' pointingSun =', pointingSun)
+
+                raHThis = float(pointingSun.gcrs.ra.hour)
+                #print(' raHThis =', raHThis, 'Hours')
+                #raDegThis = float(pointingSun.gcrs.ra.degree)
+                #print(' raDegThis =', raDegThis, 'Degrees')
+                decDegThis = float(pointingSun.gcrs.dec.degree)
+                #print(' decDegThis =', decDegThis, 'degrees')
+
+                pointingTelescopeThis = SkyCoord(ra = raHThis*u.hour, dec = decDegThis*u.deg,
+                    frame = 'icrs', location = locBase)
 
             # extract AzEl coordinates
             azEl = pointingTelescopeThis.transform_to(AltAz(obstime=datetimeUTCValue, location=locBase))
-            azDeg = azEl.az.degree
+            #print(' azEl =', azEl)
+            azDeg = float(azEl.altaz.az.degree)
             #print(' azDeg =', azDeg)
-            elDeg = azEl.alt.degree
+            elDeg = float(azEl.altaz.alt.degree)
             #print(' elDeg =', elDeg)
+
+            # extract RaDec coordinates
+            #print(' pointingTelescopeThis =', pointingTelescopeThis)
+            #print(' pointingTelescopeThis.icrs =', pointingTelescopeThis.icrs)
+            raH = float(pointingTelescopeThis.gcrs.ra.hour)
+            #print(' raH =', raH, 'Hours')
+            #raDeg = float(pointingTelescopeThis.gcrs.ra.degree)
+            #print(' raDeg =', raDeg, 'Degrees')
+            decDeg = float(pointingTelescopeThis.gcrs.dec.degree)
+            #print(' decDeg =', decDeg, 'degrees')
+
+            # extract Gal coordinates
+            #print(' pointingTelescopeThis.galactic =', pointingTelescopeThis.galactic)
+            gLatDeg = float(pointingTelescopeThis.galactic.b.degree)
+            #gLatDeg = float(azEl.galactic.b.degree)
+            #print(' gLatDeg =', gLatDeg, 'degrees')
+            gLonDeg = float(pointingTelescopeThis.galactic.l.degree)
+            #gLonDeg = float(azEl.galactic.l.degree)
+            if 180. < gLonDeg:
+                gLonDeg -= 360.
+            #print(' gLonDeg =', gLonDeg, 'degrees')
 
             # recorded for each marker
             azDegL.append(azDeg)
             elDegL.append(elDeg)
-            markerSL.append(f'${markerS[skyCoordinateIndex]}{hourUTC}$')
-            colorSL.append(colorSMenuL[skyCoordinateIndex % colorSMenuLen])
+            raHL.append(raH)
+            decDegL.append(decDeg)
+            gLatDegL.append(gLatDeg)
+            gLonDegL.append(gLonDeg)
+            markerSL.append(f'${markerS[skyObjectIndex]}{hourUTC}$')
+            colorSL.append(colorSMenuL[skyObjectIndex % colorSMenuLen])
 
-        legendSL.append(f'{markerS[skyCoordinateIndex]}  {skyCoordinateSL[skyCoordinateIndex]}')
+        legendSL.append(f'{markerS[skyObjectIndex]}  {skyObjectL[skyObjectIndex]}')
+
+    #print()
+    #print(' datetimeUTCValue =', datetimeUTCValue)
+    #print(" datetimeUTCValue.strftime('%Y-%m-%dT%H:%M:%S ') =", datetimeUTCValue.strftime('%Y-%m-%dT%H:%M:%S '))
 
 
 
-def ezWhen100azEl():
+def ezWhen030azEl():
     # AzEl plot, from azDegL, elDegL, markerSL, and colorSL
     
     global dayYYMMDD                        # string
@@ -688,34 +784,27 @@ def ezWhen100azEl():
     global markerSL                         # list of strings
     global colorSL                          # list of strings
     global legendSL                         # list of strings
+    global hourQty                          # integer
     global titleS                           # string
     global ezWhenPlotRangeL                 # integer list
 
     # if plot not wanted, then return
-    if ezWhenPlotRangeL[1] < 100 or 100 < ezWhenPlotRangeL[0]:
+    if ezWhenPlotRangeL[1] < 30 or 30 < ezWhenPlotRangeL[0]:
         return(1)
 
-    plotName = 'ezWhen100azEl' + dayYYMMDD + '.png'
+    plotName = 'ezWhen030azEl' + dayYYMMDD + '.png'
     print()
-    print('   ezWhen100azEl = AzEl plot ===============')
+    print('   ezWhen030azEl = AzEl plot ===============')
 
     plt.clf()
     fig = plt.figure()
     ax = fig.add_subplot()
-
-    #print()
-    #print(' azDegL   =', azDegL)
-    #print(' elDegL   =', elDegL)
-    #print(' markerSL =', markerSL)
-    #print(' colorSL  =', colorSL)
 
     for i in range(len(azDegL)):
         plt.scatter(azDegL[i], elDegL[i], marker=markerSL[i], s=100., c=colorSL[i])
 
     plt.title(titleS)
 
-    #plt.xlabel('\nAzimuth (Degrees)')
-    #plt.xlabel('\nMarkers = Legend + UTC Hour        Azimuth (Degrees)                                ')
     plt.xlabel('Azimuth (Degrees)\nMarkers = Location of Legend Sky Object at UTC Hours')
     plt.xlim(0., 360.)
     plt.xticks( \
@@ -728,11 +817,119 @@ def ezWhen100azEl():
     ezWhenDispGrid = 1
     plt.grid(ezWhenDispGrid)
 
-    # legend for each SkyCoordinate
+    # legend for each skyObject
     ax.text(370., 85., 'Legend', color='black')
     ax.text(370., 80., '======', color='black')
     for i in range(len(legendSL)):
-        ax.text(370., 75.-i*5., legendSL[i], color=colorSL[i*24])
+        ax.text(370., 75.-i*5., legendSL[i], color=colorSL[i*hourQty])
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+
+
+
+def ezWhen050raDec():
+    # RaDec plot, from raHL, decDegL, markerSL, and colorSL
+    
+    global dayYYMMDD                        # string
+    global raHL                             # list of floats
+    global decDegL                          # list of floats
+    global markerSL                         # list of strings
+    global colorSL                          # list of strings
+    global legendSL                         # list of strings
+    global hourQty                          # integer
+    global titleS                           # string
+    global ezWhenPlotRangeL                 # integer list
+
+    # if plot not wanted, then return
+    if ezWhenPlotRangeL[1] < 50 or 50 < ezWhenPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezWhen050raDec' + dayYYMMDD + '.png'
+    print()
+    print('   ezWhen050raDec = RaDec plot ===============')
+
+    plt.clf()
+    fig = plt.figure()
+    ax = fig.add_subplot()
+
+    for i in range(len(azDegL)):
+        plt.scatter(raHL[i], decDegL[i], marker=markerSL[i], s=100., c=colorSL[i])
+
+    plt.title(titleS)
+
+    plt.xlabel('Right Ascension (Hours)\nMarkers = Location of Legend Sky Object at UTC Hours')
+    plt.xlim(24., 0.)
+    plt.xticks( \
+        [24.,   22.,  20.,  18.,  16.,  14.,  12.,  10.,  8.,  6.,  4.,  2.,  0.],
+        ['24', '22', '20', '18', '16', '14', '12', '10', '8', '6', '4', '2', '0'])
+
+    plt.ylabel('Declination (Degrees)')
+    plt.ylim(-90., 90.)
+
+    ezWhenDispGrid = 1
+    plt.grid(ezWhenDispGrid)
+
+    # legend for each skyObject
+    ax.text(-0.6, 80., 'Legend', color='black')
+    ax.text(-0.6, 70., '======', color='black')
+    for i in range(len(legendSL)):
+        ax.text(-0.6, 60.-i*10., legendSL[i], color=colorSL[i*hourQty])
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+
+
+
+def ezWhen080gal():
+    # Galactic plot, from GLatL, GLonL, markerSL, and colorSL
+    
+    global dayYYMMDD                        # string
+    global gLatDegL                         # list of floats
+    global gLonDegL                         # list of floats
+    global markerSL                         # list of strings
+    global colorSL                          # list of strings
+    global legendSL                         # list of strings
+    global hourQty                          # integer
+    global titleS                           # string
+    global ezWhenPlotRangeL                 # integer list
+
+    # if plot not wanted, then return
+    if ezWhenPlotRangeL[1] < 80 or 80 < ezWhenPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezWhen080gal' + dayYYMMDD + '.png'
+    print()
+    print('   ezWhen080gal = Galactic plot ===============')
+
+    plt.clf()
+    fig = plt.figure()
+    ax = fig.add_subplot()
+
+    for i in range(len(azDegL)):
+        plt.scatter(gLonDegL[i], gLatDegL[i], marker=markerSL[i], s=100., c=colorSL[i])
+
+    plt.title(titleS)
+
+    plt.xlabel('Galactic Longitude (Degrees)\nMarkers = Location of Legend Sky Object at UTC Hours')
+    plt.xlim(180., -180.)
+    plt.xticks( \
+        [180.,   150.,  120.,  90.,  60.,  30.,  0.,  -30.,  -60.,  -90.,  -120.,  -150.,  -180.],
+        ['180', '150', '120', '90', '60', '30', '0', '-30', '-60', '-90', '-120', '-150', '-180'])
+
+    plt.ylabel('Galactic Latitude (Degrees)')
+    plt.ylim(-90., 90.)
+
+    ezWhenDispGrid = 1
+    plt.grid(ezWhenDispGrid)
+
+    # legend for each skyObject
+    ax.text(-189., 80., 'Legend', color='black')
+    ax.text(-189., 70., '======', color='black')
+    for i in range(len(legendSL)):
+        ax.text(-189., 60.-i*10., legendSL[i], color=colorSL[i*hourQty])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -749,6 +946,7 @@ def ezWhen110azElS():
     global markerSL                         # list of strings
     global colorSL                          # list of strings
     global legendSL                         # list of strings
+    global hourQty                          # integer
     global titleS                           # string
     global ezWhenPlotRangeL                 # integer list
 
@@ -764,12 +962,6 @@ def ezWhen110azElS():
     fig = plt.figure()
     ax = fig.add_subplot()
 
-    #print()
-    #print(' azDegL   =', azDegL)
-    #print(' elDegL   =', elDegL)
-    #print(' markerSL =', markerSL)
-    #print(' colorSL  =', colorSL)
-
     for i in range(len(azDegL)):
         azDegThis = azDegL[i]
         elDegThis = elDegL[i]
@@ -783,8 +975,6 @@ def ezWhen110azElS():
     plt.xticks( \
         [90.,         120.,  150.,  180.,         210.,  240.,  270.],
         ['90\nEast', '120', '150', '180\nFacing South', '210', '240', '270\nWest'])
-    #plt.xlabel('\nFacing South,  Azimuth (Degrees)')
-    #plt.xlabel('Facing South,  Azimuth (Degrees)\nMarkers = Location of Legend Sky Object at UTC Hour')
     plt.xlabel('Azimuth (Degrees)\nMarkers = Location of Legend Sky Object at UTC Hours')
 
     plt.ylabel('Elevation Above Horizon (Degrees)')
@@ -793,11 +983,11 @@ def ezWhen110azElS():
     ezWhenDispGrid = 1
     plt.grid(ezWhenDispGrid)
 
-    # legend for each SkyCoordinate
+    # legend for each skyObject
     ax.text(275., 85., 'Legend', color='black')
     ax.text(275., 80., '======', color='black')
     for i in range(len(legendSL)):
-        ax.text(275., 75.-i*5., legendSL[i], color=colorSL[i*24])
+        ax.text(275., 75.-i*5., legendSL[i], color=colorSL[i*hourQty])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -814,6 +1004,7 @@ def ezWhen120azElN():
     global markerSL                         # list of strings
     global colorSL                          # list of strings
     global legendSL                         # list of strings
+    global hourQty                          # integer
     global titleS                           # string
     global ezWhenPlotRangeL                 # integer list
 
@@ -828,12 +1019,6 @@ def ezWhen120azElN():
     plt.clf()
     fig = plt.figure()
     ax = fig.add_subplot()
-
-    #print()
-    #print(' azDegL   =', azDegL)
-    #print(' elDegL   =', elDegL)
-    #print(' markerSL =', markerSL)
-    #print(' colorSL  =', colorSL)
 
     for i in range(len(azDegL)):
         azDegThis = azDegL[i]
@@ -858,11 +1043,11 @@ def ezWhen120azElN():
     ezWhenDispGrid = 1
     plt.grid(ezWhenDispGrid)
 
-    # legend for each SkyCoordinate
+    # legend for each skyObject
     ax.text(455., 85., 'Legend', color='black')
     ax.text(455., 80., '======', color='black')
     for i in range(len(legendSL)):
-        ax.text(455., 75.-i*5., legendSL[i], color=colorSL[i*24])
+        ax.text(455., 75.-i*5., legendSL[i], color=colorSL[i*hourQty])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -879,6 +1064,7 @@ def ezWhen210azElDS():
     global markerSL                         # list of strings
     global colorSL                          # list of strings
     global legendSL                         # list of strings
+    global hourQty                          # integer
     global titleS                           # string
     global ezWhenPlotRangeL                 # integer list
 
@@ -894,15 +1080,10 @@ def ezWhen210azElDS():
     fig = plt.figure()
     ax = fig.add_subplot()
 
-    #print()
-    #print(' azDegL   =', azDegL)
-    #print(' elDegL   =', elDegL)
-    #print(' markerSL =', markerSL)
-    #print(' colorSL  =', colorSL)
-
-    import numpy as np
     piD180 = 3.141 / 180.
     piD360 = 3.141 / 360.
+
+    import numpy as np
 
     if 1:
         # plot markers
@@ -932,8 +1113,6 @@ def ezWhen210azElDS():
 
     if 1:
         # draw grid of dots
-        #for azDegThis in range(90, 271, 5):
-        #    for elDegThis in range(0, 91, 5):
         for azDegThis in range(90, 271, 10):
             for elDegThis in range(0, 91, 10):
                 #print('               azDegThis =', azDegThis, '    elDegThis =', elDegThis)
@@ -984,8 +1163,6 @@ def ezWhen210azElDS():
  
     ax.text(180., 95., 'Zenith', color='black', verticalalignment='bottom', horizontalalignment='center')
     ax.text(90., -5., '90\u00b0\nEast', color='black', verticalalignment='top', horizontalalignment='right')
-    #ax.text(180., -5., '180\u00b0\n\nFacing South', color='black', verticalalignment='top', horizontalalignment='center')
-    #ax.text(180., -5., '180\u00b0\nFacing South', color='black', verticalalignment='top', horizontalalignment='center')
     ax.text(180., -5., '180\u00b0\nFacing South\nAzimuth (Degrees)\nMarkers = Location of Legend Sky Object at UTC Hours'
         , color='black', verticalalignment='top', horizontalalignment='center')
     ax.text(270., -5., '270\u00b0\nWest', color='black', verticalalignment='top', horizontalalignment='left')
@@ -995,9 +1172,6 @@ def ezWhen210azElDS():
 
     plt.title(dayYYMMDD)
 
-    #plt.xlabel('Azimuth')
-    #plt.xlabel('Azimuth (Degrees)\nMarkers = Location of Legend Sky Object at UTC Hours')
-    #plt.xlim(0., 360.)
     plt.xlim(80., 280.)
 
     plt.ylabel('Elevation Above Horizon (Degrees)')
@@ -1005,14 +1179,13 @@ def ezWhen210azElDS():
 
     plt.title(titleS)
 
-    #ax.grid(False)  # Hide grid lines
     plt.grid(False)
 
-    # legend for each SkyCoordinate
+    # legend for each skyObject
     ax.text(285., 108., 'Legend', color='black')
     ax.text(285., 100., '======', color='black')
     for i in range(len(legendSL)):
-        ax.text(285., 92.-i*8., legendSL[i], color=colorSL[i*24])
+        ax.text(285., 92.-i*8., legendSL[i], color=colorSL[i*hourQty])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -1029,6 +1202,7 @@ def ezWhen220azElDN():
     global markerSL                         # list of strings
     global colorSL                          # list of strings
     global legendSL                         # list of strings
+    global hourQty                          # integer
     global titleS                           # string
     global ezWhenPlotRangeL                 # integer list
 
@@ -1044,15 +1218,10 @@ def ezWhen220azElDN():
     fig = plt.figure()
     ax = fig.add_subplot()
 
-    #print()
-    #print(' azDegL   =', azDegL)
-    #print(' elDegL   =', elDegL)
-    #print(' markerSL =', markerSL)
-    #print(' colorSL  =', colorSL)
-
-    import numpy as np
     piD180 = 3.141 / 180.
     piD360 = 3.141 / 360.
+
+    import numpy as np
 
     if 1:
         # plot markers
@@ -1084,8 +1253,6 @@ def ezWhen220azElDN():
 
     if 1:
         # draw grid of dots
-        #for azDegThis in range(90, 271, 5):
-        #    for elDegThis in range(0, 91, 5):
         for azDegThis in range(270, 451, 10):
             for elDegThis in range(0, 91, 10):
                 #print('               azDegThis =', azDegThis, '    elDegThis =', elDegThis)
@@ -1136,8 +1303,6 @@ def ezWhen220azElDN():
  
     ax.text(360., 95., 'Zenith', color='black', verticalalignment='bottom', horizontalalignment='center')
     ax.text(270., -5., '270\u00b0\nWest', color='black', verticalalignment='top', horizontalalignment='right')
-    #ax.text(360., -5., '0\u00b0\n\nFacing North', color='black', verticalalignment='top', horizontalalignment='center')
-    #ax.text(360., -5., '0\u00b0\nFacing North', color='black', verticalalignment='top', horizontalalignment='center')
     ax.text(360., -5., '0\u00b0\nFacing North\nAzimuth (Degrees)\nMarkers = Location of Legend Sky Object at UTC Hours'
         , color='black', verticalalignment='top', horizontalalignment='center')
     ax.text(450., -5., '90\u00b0\nEast', color='black', verticalalignment='top', horizontalalignment='left')
@@ -1147,8 +1312,6 @@ def ezWhen220azElDN():
 
     plt.title(dayYYMMDD)
 
-    #plt.xlabel('Azimuth')
-    #plt.xlabel('Azimuth (Degrees)\nMarkers = Location of Legend Sky Object at UTC Hours')
     plt.xlim(260., 460.)
 
     plt.ylabel('Elevation')
@@ -1156,14 +1319,13 @@ def ezWhen220azElDN():
 
     plt.title(titleS)
 
-    #ax.grid(False)  # Hide grid lines
     plt.grid(False)
 
-    # legend for each SkyCoordinate
+    # legend for each skyObject
     ax.text(465., 108., 'Legend', color='black')
     ax.text(465., 100., '======', color='black')
     for i in range(len(legendSL)):
-        ax.text(465., 92.-i*8., legendSL[i], color=colorSL[i*24])
+        ax.text(465., 92.-i*8., legendSL[i], color=colorSL[i*hourQty])
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -1180,6 +1342,7 @@ def ezWhen300azElPZ():
     global markerSL                         # list of strings
     global colorSL                          # list of strings
     global legendSL                         # list of strings
+    global hourQty                          # integer
     global titleS                           # string
     global ezWhenPlotRangeL                 # integer list
 
@@ -1194,12 +1357,6 @@ def ezWhen300azElPZ():
     plt.clf()
     fig = plt.figure()
     ax = fig.add_subplot(projection='polar')
-
-    #print()
-    #print(' azDegL   =', azDegL)
-    #print(' elDegL   =', elDegL)
-    #print(' markerSL =', markerSL)
-    #print(' colorSL  =', colorSL)
 
     piD180 = 3.141 / 180.
 
@@ -1218,61 +1375,28 @@ def ezWhen300azElPZ():
         ezWhenDispGrid = 1
         plt.grid(ezWhenDispGrid)
 
-    #import numpy as np
-    #theta = np.array([i * 6.282 / 360 for i in azDegL])
-    #r = np.array(elDegL)
-    #print(' theta =', theta)
-    #print(' r =', r)
-    #print(' markerSL =', markerSL)
-    #print(' colorSL =', colorSL)
-
-    #ax.scatter(theta, r, c=colors, s=area, cmap='hsv', alpha=0.75)
-    #ax.scatter(thetaL, elDegL)
-    #ax.scatter(np.array(thetaL), np.array(elDegL))
-    #area = 200 * r**2
-    #area = r
-    #colors = theta
-    #c = ax.scatter(theta, r, c=colors, s=area, cmap='hsv', alpha=0.75)
-    #c = ax.scatter(theta, r, marker=markerSL[i], s=100., c=colorSL[i])
-    if 1:
-        for i in range(len(azDegL)):
-            #c = ax.scatter(theta[i], r[i], marker=markerSL[i], s=100., c=colorSL[i])
-            #c = ax.scatter(azDegL[i] * 3.141 / 180, elDegL[i], marker=markerSL[i], s=100., c=colorSL[i])
-            c = ax.scatter(azDegL[i] * piD180, elDegL[i], marker=markerSL[i], s=100., c=colorSL[i])
+    for i in range(len(azDegL)):
+        #c = ax.scatter(theta[i], r[i], marker=markerSL[i], s=100., c=colorSL[i])
+        #c = ax.scatter(azDegL[i] * 3.141 / 180, elDegL[i], marker=markerSL[i], s=100., c=colorSL[i])
+        c = ax.scatter(azDegL[i] * piD180, elDegL[i], marker=markerSL[i], s=100., c=colorSL[i])
 
     plt.title(titleS)
 
-    #plt.xlim(0, 6.282)
     plt.ylim(90., 0.)
 
-    #ax.set_rgrids((fileFreqBinQty/2.,), ('',))
-    #ax.set_theta_zero_location('S', offset=0.)
     ax.set_theta_zero_location('N', offset=0.)
-    #ax.set_thetagrids((90, 180, 270, 360), ('-90', '0', '90', '180 and -180'))
-    #ax.set_thetagrids((90, 180, 270, 360), ('90\u00b0\nEast', '180\u00b0\nFacing South', '270\u00b0\nWest', 'Bending over backwards North\n0\u00b0'))
     ax.set_thetagrids((90, 180, 270, 360),
         ('90\u00b0\nEast', '\n\n180\u00b0\nFacing South\nAzimuth (Degrees)\nMarkers = Location of Legend Sky Object at UTC Hours',
         ' 270\u00b0\n West', 'Bending over backwards North\n0\u00b0'))
     ax.set_rlabel_position(135)
-    #ax.text( 1.4, -2.5, 'Elevation', color='black')
     ax.text(135 * piD180, -3., 'Elevation\nAbove\nHorizon\n(Degrees)', color='black', verticalalignment='top', horizontalalignment='right')
-    #radiusTextQuadrant = fileFreqBinQty * 1.1
-    #ax.text(-2.55, radiusTextQuadrant, 'Quadrant 1', color='red', horizontalalignment='right')
-    #ax.text(-0.6,  radiusTextQuadrant, 'Quadrant 2', color='red', horizontalalignment='right')
-    #ax.text( 0.6,  radiusTextQuadrant, 'Quadrant 3', color='red')
-    #ax.text( 2.55, radiusTextQuadrant, 'Quadrant 4', color='red')
-    #ax.text(-3.05, radiusTextQuadrant*0.95, 'Toward', color='blue', horizontalalignment='right')
-    #ax.text( 3.05, radiusTextQuadrant*0.95, 'Galactic Center', color='blue')
-    #ax.text(-2.2, radiusTextQuadrant*0.95, 'Sun at\nCenter', color='blue', horizontalalignment='right')
 
-    # legend for each SkyCoordinate
+    # legend for each skyObject
     legendPolarS = 'Legend\n======'
-    #for i in range(len(legendSL)):
-    #   legendPolarS = legendPolarS + '\n' + legendSL[i]
-    ax.text(305. * piD180, -55., legendPolarS, color='black', verticalalignment='top', horizontalalignment='left')
+    ax.text(308. * piD180, -62., legendPolarS, color='black', verticalalignment='top', horizontalalignment='left')
     for i in range(len(legendSL)):
         legendPolarS = '\n' * (i+2) + legendSL[i]
-        ax.text(305. * piD180, -55., legendPolarS, color=colorSL[i*24], verticalalignment='top', horizontalalignment='left')
+        ax.text(308. * piD180, -62., legendPolarS, color=colorSL[i*hourQty], verticalalignment='top', horizontalalignment='left')
 
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
@@ -1290,18 +1414,22 @@ def main():
 
     #global dayYYMMDD                        # string
     #global dateUTCValue                     # class 'astropy.time.core.Time'
-    #global skyCoordinateSL                  # list of strings
+    #global skyObjectL                       # list of strings
+
 
     printHello()
-    
-    ezConArguments()
 
-    plotPrep()
+    ezWhenArguments()
 
-    ezWhen100azEl()     # AzEl plot
+    ezWhenPlotPrep()
+
+    ezWhen030azEl()     # AzEl plot
+    ezWhen050raDec()    # RaDec plot
+    ezWhen080gal()      # Galactic plot
+
     ezWhen110azElS()    # AzEl South plot
     ezWhen120azElN()    # AzEl North plot
-    
+
     ezWhen210azElDS()   # AzEl Dome South plot
     ezWhen220azElDN()   # AzEl Dome North plot
 
@@ -1330,4 +1458,6 @@ if __name__== '__main__':
 # a@u22-221222a:~/aaaEzRABase/ezWhen$ 
 #   python3 ../ezRA/ezWhen240113a.py  Gm0p0  -exR3p10 Gp40p0 Gp80p0 R0p60
 #   python3  ../ezRA/ezWhen240117b.py  sun  Moon  R0P60  GP0P0  Gp80p10  Gp80m10  -240317  -ezWhenPlotRangeL 0 210
+#   python3 ../ezRA/ezWhen240307c.py   -240307  -ezWhenPlotRangeL 0 99 gp0p0 gp0p20 gp0p40 gp0p60 gp0p80 gp0p100 gp0p120 gp0p140 gp0p160 gp0p180
+#   -ezWhenSkyObjectL gp0p0 gp0p20 gp0p40 gp0p60 gp0p80 gp0p100 gp0p120 gp0p140 gp0p160 gp0p180
 
