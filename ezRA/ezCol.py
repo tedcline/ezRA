@@ -1,11 +1,11 @@
-programName = 'ezCol231211a.py'
+programName = 'ezCol240522a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCol Data COLlector program,
 #   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,12 +23,35 @@ programRevision = programName
 
 # Modified from Victor Boesen's https://github.com/byggemandboesen/H-line-software
 
-# Thanks to Todd Ullery, this ezColX.py was an experimental multiple process version of ezCol.py ,
-# to improve graphic dashboard responsiveness.
-# Problems ?  Dashboard more responsive ?  Faster ?
-# 221202, works on Win7Pro 'Python 3.8.10'
-# 221130, works on Ubuntu22 'Python 3.10.6'
+# Thanks to Todd Ullery, ezColX.py was an experimental multiple process version of ezCol.py ,
+# to improve graphic dashboard responsiveness, 221130 and 221202.
 
+# ezCol240522a, first sampleNumber and fileSample are now 0
+# ezCol240422a, newFileButton should not clear stripchart plots
+# ezCol240420a, fixed New File,
+#   many improvements near rmsAvgHistoryLenRecent24Hour and rmsAvgHistoryLenRecent1Hour
+# ezCol240419b, New File bug
+# ezCol240419a, fixes for ezColDashboard 0, stopped at rmsAvgHistoryLenRecentMost,
+#   sys.version
+# ezCol240418a, stops at 510 ?, if not ezColDashboard: programStateQueue = Queue()
+# ezCol240417f, dusting
+# ezCol240417e, unlock graphics window autofocus (allows window sizing), dusting
+# ezCol240417c, plot trimmed rmsAvgHistory to avoid y-autoScaling on unseen data,
+#   unlock graphics window autofocus ?
+# ezCol240417b, if "Idle", print red fileNameDashS inside parentheses
+# ezCol240417a,
+#   0/1/2 = Collect/Idle/Exit to "To File/Idle/Exit"
+# ezCol240416a, -ezColSampleMax for environment RFI surveys
+#   0/1/2 = Collect/Pause/Exit to Collect/Idle/Exit
+#       where Idle still exercises the SDR to keep it warm,
+#   removed need for programStatePutLast and ezColIntegQtyPutLast
+# ezCol240221b, add RaDec and GLatGLon creation,
+#   changed ezRA .txt file format
+#       from 'az x.xx el y.yy' to 'azDeg x.xx elDeg y.yy',
+#       and from (unposted) 'ra x.xx dec y.yy' to 'raH x.xx decDeg y.yy',
+#       and from (unposted) 'glat x.xx glon y.yy' to 'gLatDeg x.xx gLonDeg y.yy',
+#       so will need updates to ezCon240219b.py and ezColGNSM240219d.py
+# ezCol240221a, add RaDec and GLatGLon creation
 # ezCol231211a.py, if ezColUsbRelay, add ' Relay' or ' R' to end of ezColCenterFreqRef display lines
 # ezCol231108a.py, ezColAntBtwnRef into ezColArgumentsFile()
 # ezCol231004c.py, write commandStringEnd in file header
@@ -118,14 +141,9 @@ programRevision = programName
 #              from ezColIntegQty datasets
 #########################################################################################
 
-#import operator
 import os
-#from pickle import FALSE
 import sys
 import time
-
-#import threading
-#import queue
 # delayed other imports until after possible help screen
 
 
@@ -191,8 +209,16 @@ def printUsage():
     print('              -ezColOffsetPPM   5           (Tuner offset Parts-Per-Million (integer)')
     print('              -ezColAntBtwnRef  5           (number of Ant samples between Ref samples)')
     print()
-    print('              -ezColAzimuth   180.0         (Azimuth   pointing of antenna (degrees))')
-    print('              -ezColElevation  45.0         (Elevation pointing of antenna (degrees))')
+    #print('              -ezColAzimuth   180.0         (Azimuth   pointing of antenna (degrees))')
+    #print('              -ezColElevation  45.0         (Elevation pointing of antenna (degrees))')
+    print('              -ezColAzDeg     180.0         (Azimuth            pointing of antenna (degrees))')
+    print('              -ezColElDeg      45.0         (Elevation          pointing of antenna (degrees))')
+    print()
+    print('              -ezColRaH        20.0         (Right Ascension    pointing of antenna (hours))')
+    print('              -ezColDecDeg     40.7         (Declination        pointing of antenna (degrees))')
+    print()
+    print('              -ezColGLatDeg     0.0         (Galactic Latitude  pointing of antenna (degrees))')
+    print('              -ezColGLonDeg    30.0         (Galactic Longitude pointing of antenna (degrees))')
     print()
     print('              -ezColVerbose     1           (Turn on Verbose mode)')
     print('              -ezColDashboard   0           (Turn off graphical display)')
@@ -211,11 +237,10 @@ def printUsage():
     print('              -ezColUsbRelay   29           (2 SPST HID relays, driving a latching feedRef',
         'relay with pulses)')
     print()
-    #print('              -ezColSlowness   0.9          (Define "Slow" data collect, to allow faster',
-    #    'Dashboard interaction)')
     print('              -ezColIntegQty   31000        (Number of readings to be integrated into',
         'one sample)')
     print('              -ezColTextFontSize   11       (Size of text font)')
+    print('              -ezColSampleMax      10       (last sample number before exit)')
     print('              -ezColYLimL      0.1  0.4     (Fraction of Y Auto Scale, Min and Max)')
     print()
     print('              -ezDefaultsFile ..\\bigDish8.txt   (Additional file of default arguments)')
@@ -239,7 +264,6 @@ def printUsage():
     print()
     print('##############################################################################################')
     print()
-
     exit()
 
 
@@ -261,8 +285,13 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
     global ezColGain                        # integer
     global ezColAntBtwnRef                  # integer
 
-    global ezColAzimuth                     # float
-    global ezColElevation                   # float
+    global ezColAzDeg                       # float
+    global ezColElDeg                       # float
+    global ezColRaH                         # float
+    global ezColDecDeg                      # float
+    global ezColGLatDeg                     # float
+    global ezColGLonDeg                     # float
+    global coordType                        # integer
 
     global ezColVerbose                     # integer
     global ezColDashboard                   # integer
@@ -270,9 +299,9 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
 
     global ezColUsbRelay                    # integer
 
-    #global ezColSlowness                    # float
     global ezColIntegQty                    # integer
     global ezColTextFontSize                # integer
+    global ezColSampleMax                   # integer
     global ezColYLim0                       # float
     global ezColYLim1                       # float
 
@@ -350,6 +379,10 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezColTextFontSize'.lower():
                 ezColTextFontSize = int(thisLineSplit[1])
 
+            elif thisLine0Lower == '-ezColSampleMax'.lower():
+                ezColSampleMax = int(thisLineSplit[1])
+
+
             # float arguments
             elif thisLine0Lower == '-ezColCenterFreqAnt'.lower():
                 ezColCenterFreqAnt = float(thisLineSplit[1])
@@ -360,14 +393,29 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezColBandWidth'.lower():
                 ezColBandWidth = float(thisLineSplit[1])
 
-            elif thisLine0Lower == '-ezColAzimuth'.lower():
-                ezColAzimuth = float(thisLineSplit[1])
+            elif thisLine0Lower == '-ezColAzimuth'.lower() or thisLine0Lower == '-ezColAzDeg'.lower():
+                ezColAzDeg = float(thisLineSplit[1])
+                coordType = 0               # AzEl
 
-            elif thisLine0Lower == '-ezColElevation'.lower():
-                ezColElevation = float(thisLineSplit[1])
+            elif thisLine0Lower == '-ezColElevation'.lower() or thisLine0Lower == '-ezColElDeg'.lower():
+                ezColElDeg = float(thisLineSplit[1])
+                coordType = 0               # AzEl
 
-            #elif thisLine0Lower == '-ezColSlowness'.lower():
-            #    ezColSlowness = float(thisLineSplit[1])
+            elif thisLine0Lower == '-ezColRaH'.lower():
+                ezColRaH = float(thisLineSplit[1])
+                coordType = 1               # RaDec
+
+            elif thisLine0Lower == '-ezColDecDeg'.lower():
+                ezColDecDeg = float(thisLineSplit[1])
+                coordType = 1               # RaDec
+
+            elif thisLine0Lower == '-ezColGLatDeg'.lower():
+                ezColGLatDeg = float(thisLineSplit[1])
+                coordType = 2               # GLatGLon
+
+            elif thisLine0Lower == '-ezColGLonDeg'.lower():
+                ezColGLonDeg = float(thisLineSplit[1])
+                coordType = 2               # GLatGLon
 
 
             # list arguments
@@ -419,8 +467,13 @@ def ezColArgumentsCommandLine():
     global ezColGain                        # integer
     global ezColAntBtwnRef                  # integer
 
-    global ezColAzimuth                     # float
-    global ezColElevation                   # float
+    global ezColAzDeg                       # float
+    global ezColElDeg                       # float
+    global ezColRaH                         # float
+    global ezColDecDeg                      # float
+    global ezColGLatDeg                     # float
+    global ezColGLonDeg                     # float
+    global coordType                        # integer
 
     global ezColVerbose                     # integer
     global ezColDashboard                   # integer
@@ -430,9 +483,9 @@ def ezColArgumentsCommandLine():
 
     global ezColUsbRelay                    # integer
 
-    #global ezColSlowness                    # float
     global ezColIntegQty                    # integer
     global ezColTextFontSize                # integer
+    global ezColSampleMax                   # integer
     global ezColYLim0                       # float
     global ezColYLim1                       # float
 
@@ -533,6 +586,11 @@ def ezColArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezColTextFontSize = int(cmdLineSplit[cmdLineSplitIndex])
 
+            elif cmdLineArgLower == '-ezColSampleMax'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezColSampleMax = int(cmdLineSplit[cmdLineSplitIndex])
+
+
             # float arguments:
             elif cmdLineArgLower == '-ezColCenterFreqAnt'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -546,17 +604,35 @@ def ezColArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezColBandWidth = float(cmdLineSplit[cmdLineSplitIndex])
 
-            elif cmdLineArgLower == '-ezColAzimuth'.lower():
+            elif cmdLineArgLower == '-ezColAzimuth'.lower() or cmdLineArgLower == '-ezColAzDeg'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezColAzimuth = float(cmdLineSplit[cmdLineSplitIndex])
+                ezColAzDeg = float(cmdLineSplit[cmdLineSplitIndex])
+                coordType = 0               # AzEl
 
-            elif cmdLineArgLower == '-ezColElevation'.lower():
+            elif cmdLineArgLower == '-ezColElevation'.lower() or cmdLineArgLower == '-ezColElDeg'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezColElevation = float(cmdLineSplit[cmdLineSplitIndex])
+                ezColElDeg = float(cmdLineSplit[cmdLineSplitIndex])
+                coordType = 0               # AzEl
 
-            #elif cmdLineArgLower == '-ezColSlowness'.lower():
-            #    cmdLineSplitIndex += 1      # point to first argument value
-            #    ezColSlowness = float(cmdLineSplit[cmdLineSplitIndex])
+            elif cmdLineArgLower == '-ezColRaH'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezColRaH = float(cmdLineSplit[cmdLineSplitIndex])
+                coordType = 1               # RaDec
+
+            elif cmdLineArgLower == '-ezColDecDeg'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezColDecDeg = float(cmdLineSplit[cmdLineSplitIndex])
+                coordType = 1               # RaDec
+
+            elif cmdLineArgLower == '-ezColGLatDeg'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezColGLatDeg = float(cmdLineSplit[cmdLineSplitIndex])
+                coordType = 2               # GLatGLon
+
+            elif cmdLineArgLower == '-ezColGLonDeg'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezColGLonDeg = float(cmdLineSplit[cmdLineSplitIndex])
+                coordType = 2               # GLatGLon
 
 
             # list arguments:
@@ -617,8 +693,16 @@ def ezColArguments():
     global ezColGain                        # integer
     global ezColAntBtwnRef                  # integer
 
-    global ezColAzimuth                     # float
-    global ezColElevation                   # float
+    global ezColAzDeg                       # float
+    global ezColElDeg                       # float
+    global ezColRaH                         # float
+    global ezColDecDeg                      # float
+    global ezColGLatDeg                     # float
+    global ezColGLonDeg                     # float
+    global coordType                        # integer
+    global coord0                           # float
+    global coord1                           # float
+    global coordMayBeNew                    # integer
 
     global ezColVerbose                     # integer
     global ezColDashboard                   # integer
@@ -626,9 +710,9 @@ def ezColArguments():
 
     global ezColUsbRelay                    # integer
 
-    #global ezColSlowness                    # float         creation
     global ezColIntegQty                    # integer       creation
     global ezColTextFontSize                # integer       creation
+    global ezColSampleMax                   # integer       creation
 
     global ezColYLim0                       # float         creation
     global ezColYLim1                       # float         creation
@@ -668,8 +752,13 @@ def ezColArguments():
 
         ezColAntBtwnRef = 1         # number of Ant samples between REF samples
 
-        ezColAzimuth   = 180.0      # Azimuth   pointing of antenna (degrees)
-        ezColElevation =  45.0      # Elevation pointing of antenna (degrees)
+        ezColAzDeg   = 180.0        # Azimuth            pointing of antenna (degrees)
+        ezColElDeg   =  45.0        # Elevation          pointing of antenna (degrees)
+        ezColRaH     =  11.3        # Right Ascension    pointing of antenna (hours)
+        ezColDecDeg  =  40.0        # Declination        pointing of antenna (degrees)
+        ezColGLatDeg =   0.0        # Galactic Latitude  pointing of antenna (degrees)
+        ezColGLonDeg =  30.0        # Galactic Longitude pointing of antenna (degrees)
+        coordType    = 0            # AzEl
 
         ezColVerbose   = 0
         ezColDashboard = 1
@@ -677,9 +766,10 @@ def ezColArguments():
 
         ezColUsbRelay = 0           # no relays driving a feedRef
 
-        #ezColSlowness = 0.9         # data collecting pause to allow dashboard interaction
         ezColIntegQty = 31000       # number of samples to be integrated into one recorded sample
         ezColTextFontSize = 10
+        ezColSampleMax    = sys.maxsize     # last integer sample number before exit
+
         ezColYLim0    = 0.0         # fraction of Y Auto Scale, Minimum
         ezColYLim1    = 1.0         # fraction of Y Auto Scale, Maximum
 
@@ -700,6 +790,19 @@ def ezColArguments():
 
     # process arguments from command line
     ezColArgumentsCommandLine()
+
+    # now know coordType, assign coord0, and coord1
+    if coordType == 0:
+        coord0     = ezColAzDeg
+        coord1     = ezColElDeg
+    elif coordType == 1:
+        coord0     = ezColRaH
+        coord1     = ezColDecDeg
+    else:
+        # 'GLatGLon'
+        coord0     = ezColGLatDeg
+        coord1     = ezColGLonDeg
+    coordMayBeNew = 1
 
     if ezColUsbRelay not in [0, 11, 15, 21, 22, 29]:
         print()
@@ -749,17 +852,22 @@ def ezColArguments():
     print('   ezColGain           =', ezColGain)
     print('   ezColAntBtwnRef     =', ezColAntBtwnRef)
     print()
-    print('   ezColAzimuth   =', ezColAzimuth)
-    print('   ezColElevation =', ezColElevation)
+    print('   ezColAzDeg =', ezColAzDeg)
+    print('   ezColElDeg =', ezColElDeg)
+    print('   ezColRaH    =', ezColRaH)
+    print('   ezColDecDeg =', ezColDecDeg)
+    print('   ezColGLatDeg =', ezColGLatDeg)
+    print('   ezColGLonDeg =', ezColGLonDeg)
+    print('   coordType =', coordType)
     print()
     print('   ezColVerbose   =', ezColVerbose)
     print('   ezColDashboard =', ezColDashboard)
     print('   ezColDispGrid  =', ezColDispGrid)
     print()
     print('   ezColUsbRelay =', ezColUsbRelay)
-    #print('   ezColSlowness =', ezColSlowness)
     print('   ezColIntegQty =', ezColIntegQty)
     print('   ezColTextFontSize =', ezColTextFontSize)
+    print('   ezColSampleMax    =', ezColSampleMax)
     print('   ezColYLimL    = [', ezColYLim0, ',', ezColYLim1, ']')
 
 
@@ -781,8 +889,16 @@ def main():
     global ezColGain                        # integer
     global ezColAntBtwnRef                  # integer
 
-    global ezColAzimuth                     # float
-    global ezColElevation                   # float
+    global ezColAzDeg                       # float
+    global ezColElDeg                       # float
+    global ezColRaH                         # float
+    global ezColDecDeg                      # float
+    global ezColGLatDeg                     # float
+    global ezColGLonDeg                     # float
+    global coordType                        # integer
+    global coord0                           # float
+    global coord1                           # float
+    global coordMayBeNew                    # integer
 
     global ezColVerbose                     # integer
     global ezColDashboard                   # integer
@@ -792,14 +908,15 @@ def main():
     global commandString                    # string
     global dateDayLastS                     # string
     global rmsAvgHistory                    # float array
-    global rmsAvgHistoryLen                 # integer
+    global rmsAvgHistoryLenRecent24Hour     # integer
+    global rmsAvgHistoryLenRecent1Hour      # integer
     global programState                     # integer
     global refAction                        # integer
-    #global ezColSlowness                    # float
     global ezColIntegQty                    # integer
     global ezColYLim0                       # float
     global ezColYLim1                       # float
     global ezColTextFontSize                # integer
+    global ezColSampleMax                   # integer
 
     printHello()
 
@@ -807,27 +924,30 @@ def main():
 
 
     # delayed these imports until after possible help screen
-    #from time import sleep
     from datetime import date, datetime, timezone
     import numpy as np
     import operator
     from multiprocessing import Process, Queue
-    #from math import sqrt
     import matplotlib
-    #matplotlib.use('agg')
+    #matplotlib.use('Agg')
+    # graphics window was always annoyingly grabbing focus
+    #   https://stackoverflow.com/questions/44278369/how-to-keep-matplotlib-python-window-in-background
+    matplotlib.use('TkAgg')
     import matplotlib.pyplot as plt
+    # ModuleNotFoundError: No module name 'tkinter'
+    #   sudo apt-get install python3-tk
+    #   sudo apt-get install python3-pil python3-pil.imagetk 
     from matplotlib.widgets import Button, RadioButtons, TextBox
 
 
-
+    print ('\n Python sys.version =', sys.version)
+    print ('\n matplotlib.__version__ =', matplotlib.__version__)
 
     freqBinQty = 2 ** ezColFreqBinQtyBits
 
-    rmsAvgHistoryLen = 9999                                 # max length of history, best if just over 24 hours
-    # rmsAvgHistory[0] is most recent, and np.nan values will not plot
-    rmsAvgHistory = np.full(rmsAvgHistoryLen, np.nan)
-    rmsAvgHistoryLenRecentHour = 1500                       # best if just over 60 minutes (100 * 60 / 40 = 150)
-    rmsAvgHistoryLenRecentMost = 510
+    coordName = [[['azDeg', 'elDeg'], ['raH', 'decDeg'], ['gLatDeg', 'gLonDeg']],
+                 [['AzDeg', 'ElDeg'], ['RaH', 'DecDeg'], ['GLatDeg', 'GLonDeg']]]
+    # print('coordName[capital][coordType][coord])
 
     print()
     # https://docs.python.org/3/library/datetime.html
@@ -867,12 +987,15 @@ def main():
 
     # calculated later with each file opening:
     ###lmstZero = gmst0UTCHour + timeStampUtcZeroHours + geodeticLongitude
-
+    lmstZero = -1.      # flag lmstZero as not yet calculated
 
     # relative history of timeStampUtc in hours
     # timeStampUtcHourRelHistory[0] is most recent, on the right edge of stripcharts
-    timeStampUtcHourRelHistory = np.zeros(rmsAvgHistoryLen)
-
+    timeStampUtcHourRelHistory = np.zeros(0)
+    rmsAvgHistory = np.full(0, np.nan)
+    rmsAvgHistoryLenRecent24Hour = 0
+    rmsAvgHistoryLenRecent1Hour  = 0
+    rmsAvgHistoryLenRecentMost   = 510
 
     freqMinAnt = (ezColCenterFreqAnt - (ezColBandWidth / 2.))   # in MHz
     freqMaxAnt = freqMinAnt + ezColBandWidth                    # in MHz
@@ -881,7 +1004,7 @@ def main():
     centerFreqRefHz = int(ezColCenterFreqRef * 1e6)         	# in integer Hz
     bandWidthHz = ezColBandWidth * 1e6                          # in float Hz
 
-    programState = 0                # 0: Collect, 1: Pause, 2: Exit, in case no ezColDashboard
+    programState = 0                # 0: "To File", 1: Idle, 2: Exit, in case no ezColDashboard
     
     if ezColUsbRelay:
         ezColUsbRelayS = ' Relay'
@@ -919,57 +1042,101 @@ def main():
         # dashboard 'NewPlot' button, to clear stripchart plots
         def newPlot(event):
             global rmsAvgHistory
-            global rmsAvgHistoryLen
-            rmsAvgHistory = np.full(rmsAvgHistoryLen, np.nan)   # clear plot history
+            global rmsAvgHistoryLenRecent24Hour
+            global rmsAvgHistoryLenRecent1Hour
+            rmsAvgHistory = np.full(0, np.nan)
+            rmsAvgHistoryLenRecent24Hour = 0
+            rmsAvgHistoryLenRecent1Hour  = 0
         axNewPlot = plt.axes([0.865, 0.95, 0.05, 0.04])
         bNewPlot = Button(axNewPlot, 'New Plot')
         bNewPlot.on_clicked(newPlot)
 
-        # dashboard 'NewFile' button, to start a new data file
+        # dashboard 'NewFile' button, to start a new data file, and clear stripchart plots
         def newFile(event):
             global dateDayLastS
-            global rmsAvgHistory
-            global rmsAvgHistoryLen
-            rmsAvgHistory = np.full(rmsAvgHistoryLen, np.nan)   # clear plot history
             dateDayLastS = 'newFileButton'                      # silly value to force new data file
         axNewFile = plt.axes([0.92, 0.95, 0.05, 0.04])
         bNewFile = Button(axNewFile, 'New File')
         bNewFile.on_clicked(newFile)
 
-        # dashboard 'programState' radio button, control data collecting priority
+        # dashboard 'coord0' number entry, change coord0 value live
+        def coord0Entry(coord0EntryS):
+            global coord0                           # float
+            global coordMayBeNew                    # integer
+            coord0EntrySplit = coord0EntryS.split()
+            if coord0EntrySplit:
+                coord0 = float(coord0EntrySplit[0])
+                coordMayBeNew = 1
+        coord0Entry_ax = fig.add_axes([0.58, 0.81, 0.04, 0.04])
+        coord0EntryBox = TextBox(coord0Entry_ax, '')
+        coord0EntryBox.on_submit(coord0Entry)
+        coord0EntryBox.set_val(str(coord0))         # initialize string of coord0EntryBox
+
+        # dashboard 'coord1' number entry, change coord1 value live
+        def coord1Entry(coord1EntryS):
+            global coord1                           # float
+            global coordMayBeNew                    # integer
+            coord1EntrySplit = coord1EntryS.split()
+            if coord1EntrySplit:
+                coord1 = float(coord1EntrySplit[0])
+                coordMayBeNew = 1
+        coord1Entry_ax = fig.add_axes([0.58, 0.77, 0.04, 0.04])
+        coord1EntryBox = TextBox(coord1Entry_ax, '')
+        coord1EntryBox.on_submit(coord1Entry)
+        coord1EntryBox.set_val(str(coord1))         # initialize string of coord1EntryBox
+
+        # dashboard 'coordType' radio buttons (no change of coord0 and coord1)
+        def coordTypeEntry(label):
+            global coordType            # integer
+            global coordMayBeNew        # integer
+            if label == 'AzEl':
+                coordType  = 0
+            elif label == 'RaDec':
+                coordType = 1
+            else:
+                # 'GLatGLon'
+                coordType = 2
+            coordMayBeNew = 1
+        radio3_ax = plt.axes([0.625, 0.77, 0.05, 0.08], facecolor='lightgoldenrodyellow')
+        radio3 = RadioButtons(radio3_ax, ('AzEl', 'RaDec', 'GLatGLon'))
+        radio3.on_clicked(coordTypeEntry)
+
+        # now that radio3 RadioButtons and coordTypeEntry() exist, initialize radio3
+        if coordType == 0:              # AzEl
+            coordTypeEntry('AzEl')
+        elif coordType == 1:            # RaDec
+            coordTypeEntry('RaDec')
+        else:                           # GLatGLon
+            coordTypeEntry('GLatGLon')
+
+        programState = 0                # default "To File"
+        programStateQueue = Queue()
+        programStateQueue.put(programState)
+        # dashboard 'programState' radio buttons, control data collecting priority
         # https://blog.finxter.com/matplotlib-widgets-button/
         def programStateEntry(label):
             global programState                 # integer
-            global programStatePutLast          # integer
-            #if label == 'Fast':
-            if label == 'Collect':
+            if label == 'To File':
                 programState = 0
                 programStateQueue.put(programState)
-                programStatePutLast = programState
-            elif label == 'Pause': 
+            elif label == 'Idle': 
                 programState = 1
                 programStateQueue.put(programState)
-                programStatePutLast = programState
             else:
-                # label == 'Exit'
-                #exit()
                 programState = 2
                 programStateQueue.put(programState)
-                programStatePutLast = programState
+                plt.close("all")
                 #sdrProcess.join()               # needed ????????????????????
-                sys.exit(0)
+                print('\n\n\n\n\n =============== Try fully killing this program by repeating many Control-C on keyboard ? ....\n\n\n\n\n')
+                exit(0)
 
-            print(' label =', label,'= ')
-            print(' programState =', programState)
+            print('\n programState =', programState, '    label =', label)
 
         radio2_ax = plt.axes([0.865, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
-        #radio2 = RadioButtons(radio2_ax, ('Fast', 'Slow', 'Pause', 'Exit'))
-        radio2 = RadioButtons(radio2_ax, ('Collect', 'Pause', 'Exit'))
+        radio2 = RadioButtons(radio2_ax, ('To File', 'Idle', 'Exit'))
         radio2.on_clicked(programStateEntry)
-        #programState  = 0               # default Fast
-        programState  = 0               # default Collect
 
-        # dashboard 'RefDiv' radio button, spectrum divided by (or subtracting) last REF sample
+        # dashboard 'RefDiv' radio buttons, spectrum divided by (or subtracting) last REF sample
         def refActionFunction(label):
             global refAction
             if label == 'Off':
@@ -984,49 +1151,18 @@ def main():
         radio1.on_clicked(refActionFunction)
         refAction = 0                   # default Off
 
-        ## dashboard 'ezColSlowness' number entry, define slowness when programState = 1
-        #def ezColSlownessEntry(ezColSlownessEntryS):
-        #    global ezColSlowness                    # float
-        #    ezColSlownessEntrySplit = ezColSlownessEntryS.split()
-        #    if ezColSlownessEntrySplit:
-        #        ezColSlowness = float(ezColSlownessEntrySplit[0])
-        #ezColSlownessEntry_ax = fig.add_axes([0.92, 0.80, 0.05, 0.04])
-        #ezColSlownessEntryBox = TextBox(ezColSlownessEntry_ax, 'ezColSlowness ')
-        #ezColSlownessEntryBox.on_submit(ezColSlownessEntry)
-        #ezColSlownessEntryBox.set_val(str(ezColSlowness))  # initialize string of ezColSlownessEntryBox
-
+        ezColIntegQtyQueue = Queue()
         # dashboard 'ezColIntegQty' number entry, define number of readings per data sample
         def ezColIntegQtyEntry(ezColIntegQtyEntryS):
             global ezColIntegQty                    # integer
             ezColIntegQtyEntrySplit = ezColIntegQtyEntryS.split()
             if ezColIntegQtyEntrySplit:
                 ezColIntegQty = int(ezColIntegQtyEntrySplit[0])
+                ezColIntegQtyQueue.put(ezColIntegQty)
         ezColIntegQtyEntry_ax = fig.add_axes([0.92, 0.75, 0.05, 0.04])
         ezColIntegQtyEntryBox = TextBox(ezColIntegQtyEntry_ax, 'ezColIntegQty ')
         ezColIntegQtyEntryBox.on_submit(ezColIntegQtyEntry)
         ezColIntegQtyEntryBox.set_val(str(ezColIntegQty))   # initialize string of ezColIntegQtyEntryBox
-
-        # dashboard 'ezColAzimuth' number entry, change ezColAzimuth live
-        def ezColAzEntry(ezColAzEntryS):
-            global ezColAzimuth                     # float
-            ezColAzEntrySplit = ezColAzEntryS.split()
-            if ezColAzEntrySplit:
-                ezColAzimuth   = float(ezColAzEntrySplit[0])
-        ezColAzEntry_ax = fig.add_axes([0.56, 0.81, 0.04, 0.04])
-        ezColAzEntryBox = TextBox(ezColAzEntry_ax, 'Azimuth ')
-        ezColAzEntryBox.on_submit(ezColAzEntry)
-        ezColAzEntryBox.set_val(str(ezColAzimuth))          # initialize string of ezColAzEntryBox
-
-        # dashboard 'ezColElEntry' number entry, change ezColElevation live
-        def ezColElEntry(ezColElEntryS):
-            global ezColElevation                   # float
-            ezColElEntrySplit = ezColElEntryS.split()
-            if ezColElEntrySplit:
-                ezColElevation = float(ezColElEntrySplit[0])
-        ezColElEntry_ax = fig.add_axes([0.56, 0.77, 0.04, 0.04])
-        ezColElEntryBox = TextBox(ezColElEntry_ax, 'Elevation ')
-        ezColElEntryBox.on_submit(ezColElEntry)
-        ezColElEntryBox.set_val(str(ezColElevation))        # initialize string of ezColElEntryBox
 
         # dashboard 'ezColYLimEntry' number pair entry, change displayed spectrum y scale live
         def ezColYLimEntry(ezColYLimEntryS):
@@ -1048,6 +1184,17 @@ def main():
         #    mng = plt.get_current_fig_manager()
         #    #mng.window.state('zoomed')
 
+        fig.show()  # show the window (figure will be in foreground, but the user may move it to background)
+        #           # (avoid calling plt.show() and plt.pause() to prevent window popping to foreground)
+
+    else:
+        # ezColDashboard is 0
+        programState = 0                # default "To File"
+        programStateQueue = Queue()
+        programStateQueue.put(programState)
+
+        ezColIntegQtyQueue = Queue()
+        ezColIntegQtyQueue.put(ezColIntegQty)
 
     commandStringEnd = ' '.join(commandString.split()[1:])
 
@@ -1055,16 +1202,6 @@ def main():
     if not os.path.exists('data'):
         os.makedirs('data')
         print(' Created new "data" directory')
-
-
-    #create the SDR Process
-    programStateQueue = Queue()
-    programStateQueue.put(programState)
-    programStatePutLast = programState
-
-    ezColIntegQtyQueue = Queue()
-    ezColIntegQtyQueue.put(ezColIntegQty)
-    ezColIntegQtyPutLast = ezColIntegQty
 
     sdrOutQueue = Queue()               #sdr to main communication
 
@@ -1074,11 +1211,11 @@ def main():
     #   It will loop and read the latest inputs from programStateQueue and ezColIntegQtyQueue.
     #   At the end of each loop it will output one tuple through sdrOutQueue.
     #   The tuple includes sdrGain, rmsSpectrum, and dataFlagsS.
-    # sdrThread.start()
     sdrProcess.start()
 
 
     dateDayLastS = ''         # silly value to force new data file
+    sampleNumber = 0
     fileNameS = ''
     fileSample = 0
     fileNamePostS = 'bcdefghijklmnopqrstuvwxyz'
@@ -1091,18 +1228,20 @@ def main():
         '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
         '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '0']
     firstDraw = 1           # flag to draw the plot the first time without data
-    #mainLoop = 0
-    while programState <= 1:
-        # update inputs to sdrTask
-        if programState != programStatePutLast:
+    ###mainLoop = 0
+    while 1:
+        ###print(' =========== mainLoop =', mainLoop)
+
+        # exit ezCol ?
+        if ezColSampleMax <= sampleNumber:
+            programState = 2
             programStateQueue.put(programState)
-            programStatePutLast = programState
-        if ezColIntegQty != ezColIntegQtyPutLast:
-            ezColIntegQtyQueue.put(ezColIntegQty)
-            ezColIntegQtyPutLast = ezColIntegQty
+            plt.close("all")
+            #sdrProcess.join()               # needed ????????????????????
+            print('\n\n\n\n\n =============== Try fully killing this program by repeating many Control-C on keyboard ? ....\n\n\n\n\n')
+            exit(0)
 
         #get the rmsSpectrum from the queue
-        #if firstDraw and programState <= 1:
         hasNewData = 1
         if firstDraw:
             sdrOut = sdrOutQueue.get()
@@ -1129,90 +1268,6 @@ def main():
             # timeStampUtcS = '2022-12-22T21:19:49 '
             #                  01234567890123456789
             dateDayThisS = timeStampUtcS[8:10]
-            if dateDayLastS != dateDayThisS:
-                # start new data file, because of new UTC day, or newFileButton
-                # if old data file open, close it
-                if len(fileNameS):
-                    fileWrite.close()
-
-                # try to not write over existing data files,
-                # assumes 'data' directory exists
-                # fileNameHourS = 'YYMMDD_HH'
-                #                  0123456789
-                fileNameHourS = timeStampUtcS[2:4] + timeStampUtcS[5:7] + dateDayThisS + '_' \
-                    + timeStampUtcS[11:13]
-                fileNameMidS = 'data' + os.path.sep + ezColFileNamePrefix + fileNameHourS
-                # first try with no trailing character
-                fileNameS = fileNameMidS + '.txt'
-                if not os.path.exists(fileNameS):       # if fileNameS is available
-                    fileNameDashS = ezColFileNamePrefix + fileNameHourS + '.txt'  # for dashboard
-                else:
-                    # try with one trailing character
-                    for i in range(25):
-                        fileNameS = fileNameMidS + fileNamePostS[i] + '.txt'
-                        if not os.path.exists(fileNameS):       # if fileNameS is available
-                            # for dashboard
-                            fileNameDashS = ezColFileNamePrefix + fileNameHourS + fileNamePostS[i] + '.txt'
-                            break           # get out of FOR loop
-                        fileNameS = ''      # to flag no available filenames
-                    if not fileNameS:
-                        # no available filenames
-                        print()
-                        print('ERROR: already too many files with same fileName base on this UTC date')
-                        print()
-                        programState = 2
-                        programStateQueue.put(programState)
-                        programStatePutLast = programState
-                        #sdrProcess.join()               # needed ????????????????????
-                        exit()
-
-                print()
-                print('Starting new output file:', fileNameS, '===============')
-
-                # with each new file, update lmstZero (changes about 4 minutes each 24 hours).
-                # As described above, calculate Local Mean Sidereal Time (LMST) Hours
-                tU = (timeStampUtcZeroMjd + (timeStampUtcHourRelThis / 24.) + 2400000.5 - 2451545.0) \
-                    / 36525.
-                gmst0UTCSec = 24110.54841 + 8640184.812866 * tU + 0.093104 * tU * tU \
-                    - 6.2e-6 * tU * tU * tU
-                gmst0UTCHour = gmst0UTCSec / 3600.
-                lmstZero = gmst0UTCHour + timeStampUtcZeroHours + geodeticLongitude
-                print('lmstZero % 24 =', lmstZero % 24.)
-
-                # open() with 1 to write to file after every '\n'
-                fileWrite = open(fileNameS, 'w', 1)
-
-                # write file header
-                #fileWrite.write('from ' + programRevision + '\n' \
-                fileWrite.write(f'from {programRevision} {commandStringEnd}\n' \
-                    + f'lat {ezRAObsLat:g} ' \
-                    + f'long {ezRAObsLon:g} ' \
-                    + 'amsl ' + str(ezRAObsAmsl) \
-                    + ' name ' + ezRAObsName + '\n' \
-                    + f'freqMin {freqMinAnt:g} ' \
-                    + f'freqMax {freqMaxAnt:g} ' \
-                    + 'freqBinQty ' + str(freqBinQty) + '\n' \
-                    + f'az {ezColAzimuth:g} ' \
-                    + f'el {ezColElevation:g}' \
-                    + '\n# times are in UTC\n')
-                fileWrite.write('# gain ' + str(sdrGain) + '\n')
-                fileWrite.write('# frequency spectrums of RMS power = sqrt(mean of sum of squares)\n')
-
-                # initialize ezColAzimuthLast and ezColElevationLast
-                ezColAzimuthLast = ezColAzimuth
-                ezColElevationLast = ezColElevation
-
-                dateDayLastS = dateDayThisS
-                fileSample = 0
-
-            # not new file, if az or el changed, write an az line
-            elif ezColAzimuthLast != ezColAzimuth or ezColElevationLast != ezColElevation:
-                ezColAzimuthLast   = ezColAzimuth
-                ezColElevationLast = ezColElevation
-                fileWrite.write(f'az {ezColAzimuth:g} el {ezColElevation:g}\n')
-
-            # now feedRef, timeStampUtcS, fileNameS, and fileSample are updated
-            fileSample += 1
 
             # timeStampUtcS = '2022-12-22T21:19:49 '
             #                  01234567890123456789
@@ -1223,41 +1278,141 @@ def main():
             timePcDateS = timePcS[:10]
             timePcTimeS = timePcS[11:19]
 
-            print()
-            currentCenterFreq = ezColCenterFreqRef if feedRef else ezColCenterFreqAnt
-            print(timeStampUtcS, 'UTC    ', fileNameS, '   ', fileSample, '  ', currentCenterFreq, 'Hz  ', dataFlagsS)
-            print('Receiving', ezColIntegQty, 'readings, each with', freqBinQty, 'frequencies ...')
-
-            # write data sample line
-            fileWrite.write(timeStampUtcS + ' '.join(f'{i:.9g}' for i in rmsSpectrum) + dataFlagsS + '\n')
+            if lmstZero < 0.0:       # if lmstZero not yet calculated
+                # with each new file, update lmstZero (changes about 4 minutes each 24 hours).
+                # As described above, calculate Local Mean Sidereal Time (LMST) Hours
+                tU = (timeStampUtcZeroMjd + (timeStampUtcHourRelThis / 24.) + 2400000.5 - 2451545.0) \
+                    / 36525.
+                gmst0UTCSec = 24110.54841 + 8640184.812866 * tU + 0.093104 * tU * tU \
+                    - 6.2e-6 * tU * tU * tU
+                gmst0UTCHour = gmst0UTCSec / 3600.
+                lmstZero = gmst0UTCHour + timeStampUtcZeroHours + geodeticLongitude
+                print('lmstZero % 24 =', lmstZero % 24.)
 
             # this sample's Local Mean Sidereal Time (LMST) in hours, value at dashboard stripcharts' right edge
             lmstThis = (lmstZero + timeStampUtcHourRelThis) % 24.
 
-            if ezColVerbose:
-                print(ezRAObsName)
-                print(f'  Latitude    {ezRAObsLat:0.1f}')
-                print(f'  Longitude   {ezRAObsLon:0.1f}')
-                print(f'  Amsl        {ezRAObsAmsl:0.0f}')
-                print(f'  Azimuth     {ezColAzimuth:0.1f}')
-                print(f'  Elevation   {ezColElevation:0.1f}')
-                print(f'FreqBinQty    {freqBinQty:d}')
-                print(f'Gain          {sdrGain:0.1f}')
-                print(f'Integration   {timeStampUtcSecRelThis - timeStampUtcSecRelLast:0.1f}  sec')
-                print( 'ezColIntegQty', ezColIntegQty)
-                print('---')
-                print(f'ezColCenterFreqRef {ezColCenterFreqRef:0.6f}{ezColUsbRelayS}')
-                print(f'ezColCenterFreqAnt {ezColCenterFreqAnt:0.6f}')
-                print(f'FreqMin            {freqMinAnt:0.6f}')
-                print(f'FreqMax            {freqMaxAnt:0.6f}')
-                print('---')
-                print(fileNameDashS)
-                print('SampleQty   ', fileSample, dataFlagsS)
-                print('---')
-                print(timeUtcDateS + '   ' + timeUtcTimeS + '  UTC')
-                print(timePcDateS  + '   ' + timePcTimeS  + '  PC')
-                print( \
-                    f"approximate Local Mean Sidereal Time (LMST) Hours = south's Right Ascension = {lmstThis:0.1f}")
+            if programState != 1:       # if not "Idle"
+                if dateDayLastS != dateDayThisS:
+                    # start new data file, because of new UTC day, or newFileButton
+                    # if old data file open, close it
+                    if len(fileNameS):
+                        fileWrite.close()
+
+                    # try to not write over existing data files,
+                    # assumes 'data' directory exists
+                    # fileNameHourS = 'YYMMDD_HH'
+                    #                  0123456789
+                    fileNameHourS = timeStampUtcS[2:4] + timeStampUtcS[5:7] + dateDayThisS + '_' \
+                        + timeStampUtcS[11:13]
+                    fileNameMidS = 'data' + os.path.sep + ezColFileNamePrefix + fileNameHourS
+                    # first try fileNameS with no trailing character
+                    fileNameS = fileNameMidS + '.txt'
+                    if not os.path.exists(fileNameS):       # if fileNameS is available
+                        fileNameDashS = ezColFileNamePrefix + fileNameHourS + '.txt'  # for dashboard
+                    else:
+                        # try fileNameS with one trailing character
+                        for i in range(25):
+                            fileNameS = fileNameMidS + fileNamePostS[i] + '.txt'
+                            if not os.path.exists(fileNameS):       # if fileNameS is available
+                                # for dashboard
+                                fileNameDashS = ezColFileNamePrefix + fileNameHourS + fileNamePostS[i] + '.txt'
+                                break           # get out of FOR loop
+                            fileNameS = ''      # to flag no available filenames
+                        if not fileNameS:
+                            # no available filenames
+                            print()
+                            print('ERROR: already too many files with same fileName base on this UTC date')
+                            print()
+                            programState = 2
+                            programStateQueue.put(programState)
+                            plt.close("all")
+                            #sdrProcess.join()               # needed ????????????????????
+                            print('\n\n\n\n\n =============== Try fully killing this program by repeating many Control-C on keyboard ? ....\n\n\n\n\n')
+                            exit()
+
+                    print()
+                    print('Starting new output file:', fileNameS, '===============')
+
+                    # with each new file, update lmstZero (changes about 4 minutes each 24 hours).
+                    # As described above, calculate Local Mean Sidereal Time (LMST) Hours
+                    tU = (timeStampUtcZeroMjd + (timeStampUtcHourRelThis / 24.) + 2400000.5 - 2451545.0) \
+                        / 36525.
+                    gmst0UTCSec = 24110.54841 + 8640184.812866 * tU + 0.093104 * tU * tU \
+                        - 6.2e-6 * tU * tU * tU
+                    gmst0UTCHour = gmst0UTCSec / 3600.
+                    lmstZero = gmst0UTCHour + timeStampUtcZeroHours + geodeticLongitude
+                    print('lmstZero % 24 =', lmstZero % 24.)
+
+                    # open() with 1 to write to file after every '\n'
+                    fileWrite = open(fileNameS, 'w', 1)
+
+                    # write file header
+                    fileWrite.write(f'from {programRevision} {commandStringEnd}\n' \
+                        + f'lat {ezRAObsLat:g} ' \
+                        + f'long {ezRAObsLon:g} ' \
+                        + f'amsl {str(ezRAObsAmsl)} ' \
+                        + f'name {ezRAObsName}\n' \
+                        + f'freqMin {freqMinAnt:g} ' \
+                        + f'freqMax {freqMaxAnt:g} ' \
+                        + f'freqBinQty {str(freqBinQty)}\n' \
+                        + f'{coordName[0][coordType][0]} {coord0:g} ' \
+                        + f'{coordName[0][coordType][1]} {coord1:g}\n' \
+                        + '# times are in UTC\n'\
+                        + f'# gain {str(sdrGain)}\n' \
+                        + '# frequency spectrums of RMS power = sqrt(mean of sum of squares)\n')
+
+                    coordMayBeNew = 0
+
+                    dateDayLastS = dateDayThisS
+                    fileSample = 0
+
+                # not new file, but if coordType or coord0 or coord1 has changed, write a coord line
+                elif coordMayBeNew:
+                    fileWrite.write(f'{coordName[0][coordType][0]} {coord0:g} {coordName[0][coordType][1]} {coord1:g}\n')
+                    coordMayBeNew = 0
+
+                # now feedRef, timeStampUtcS, fileNameS, and fileSample are updated
+
+                print()
+                currentCenterFreq = ezColCenterFreqRef if feedRef else ezColCenterFreqAnt
+                print(timeStampUtcS, 'UTC    ', fileNameS, '   ', fileSample, '  ', currentCenterFreq, 'Hz  ', dataFlagsS)
+                print('Receiving', ezColIntegQty, 'readings, each with', freqBinQty, 'frequencies ...')
+
+                # write data sample line
+                fileWrite.write(timeStampUtcS + ' '.join(f'{i:.9g}' for i in rmsSpectrum) + dataFlagsS + '\n')
+
+                if ezColVerbose:
+                    print(ezRAObsName)
+                    print(f'  Latitude    {ezRAObsLat:0.1f}')
+                    print(f'  Longitude   {ezRAObsLon:0.1f}')
+                    print(f'  Amsl        {ezRAObsAmsl:0.0f}')
+                    if coordType == 0:              # AzEl
+                        print(f'  AzDeg       {coord0:0.1f}')
+                        print(f'  ElDeg       {coord1:0.1f}')
+                    elif coordType == 1:            # RaDec
+                        print(f'  RaH         {coord0:0.1f}')
+                        print(f'  DecDeg      {coord1:0.1f}')
+                    else:                           # GLatGLon
+                        print(f'  GLatDeg     {coord0:0.1f}')
+                        print(f'  GLonDeg     {coord1:0.1f}')
+                    print(f'FreqBinQty    {freqBinQty:d}')
+                    print(f'Gain          {sdrGain:0.1f}')
+                    print(f'Integration   {timeStampUtcSecRelThis - timeStampUtcSecRelLast:0.1f}  sec')
+                    print( 'ezColIntegQty', ezColIntegQty)
+                    print('---')
+                    print(f'ezColCenterFreqRef {ezColCenterFreqRef:0.6f}{ezColUsbRelayS}')
+                    print(f'ezColCenterFreqAnt {ezColCenterFreqAnt:0.6f}')
+                    print(f'FreqMin            {freqMinAnt:0.6f}')
+                    print(f'FreqMax            {freqMaxAnt:0.6f}')
+                    print('---')
+                    print(fileNameDashS)
+                    print('File SampleQty   ', fileSample, dataFlagsS)
+                    print('---')
+                    print(timeUtcDateS + '   ' + timeUtcTimeS + '  UTC')
+                    print(timePcDateS  + '   ' + timePcTimeS  + '  PC')
+                    print( \
+                        f"approximate Local Mean Sidereal Time (LMST) Hours = south's Right Ascension = {lmstThis:0.1f}")
 
             if ezColDashboard:
                 # erase dashboard
@@ -1266,7 +1421,6 @@ def main():
                 powerTime_ax2.clear()       # middle right "Recent One Hour" stripchart
                 powerTime_ax3.clear()       # bottom       "Recent 24 Hours" stripchart
                 spectrum_ax.clear()         # top left frequency spectrum
-
 
                 # update top right text section
                 details_ax.axis('off')
@@ -1287,20 +1441,34 @@ def main():
                 fig.text(0.61, 0.95, \
                     f'\n{ezRAObsLat:0.1f}\n{ezRAObsLon:0.1f}\n{ezRAObsAmsl:0.0f}\n', \
                     horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
-                fig.text(0.61, 0.83, \
-                    f'{ezColAzimuth:0.1f}\n{ezColElevation:0.1f}', \
+                fig.text(0.51, 0.83, \
+                    f'{coordName[1][coordType][0]}\n\n{coordName[1][coordType][1]}', \
+                    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                fig.text(0.55, 0.83, \
+                    f'{coord0:0.1f}\n\n{coord1:0.1f}', \
                     horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
                 fig.text(0.61, 0.76, \
                     f'{freqBinQty:d}\n{sdrGain:0.1f}\n{timeStampUtcSecRelThis - timeStampUtcSecRelLast:0.1f}  sec', \
                     horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
 
                 # write column 3
-                fig.text(0.68, 0.95, \
-                    'FreqCtrRef\nFreqCtr\nFreqMin\nFreqMax\n\n' \
-                    + fileNameDashS + '\nSampleQty\n\n' \
-                    + timeUtcDateS + '  ' + timeUtcTimeS + '  UTC\n' \
-                    + timePcDateS  + '  ' + timePcTimeS  + '  PC', \
-                    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                if programState == 1:       # if "Idle", print red fileNameDashS inside parentheses
+                    fig.text(0.68, 0.95, \
+                        'FreqCtrRef\nFreqCtr\nFreqMin\nFreqMax\n\n' \
+                        + '\nFile SampleQty\n\n' \
+                        + timeUtcDateS + '  ' + timeUtcTimeS + '  UTC\n' \
+                        + timePcDateS  + '  ' + timePcTimeS  + '  PC', \
+                        horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                    fig.text(0.68, 0.95, \
+                        '\n\n\n\n\n(' + fileNameDashS + ')', color='red', \
+                        horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
+                else:
+                    fig.text(0.68, 0.95, \
+                        'FreqCtrRef\nFreqCtr\nFreqMin\nFreqMax\n\n' \
+                        + fileNameDashS + '\nFile SampleQty\n\n' \
+                        + timeUtcDateS + '  ' + timeUtcTimeS + '  UTC\n' \
+                        + timePcDateS  + '  ' + timePcTimeS  + '  PC', \
+                        horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
 
                 # write column 4 (right)
                 fig.text(0.77, 0.95, \
@@ -1309,46 +1477,38 @@ def main():
                     + dataFlagsS, \
                     horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
 
-                # update stripchart data.
-                # trim last of rmsAvgHistory and append this sample's average of rmsSpectrum to first position
+
+
+                # update stripchart data
+
+                # append this sample's average of rmsSpectrum to first position of rmsAvgHistory
                 rmsAvgHistory = np.concatenate([ \
-                    np.array([sum(rmsSpectrum) / freqBinQty]), rmsAvgHistory[:-1] ])
+                    np.array([sum(rmsSpectrum) / freqBinQty]), rmsAvgHistory ])
+                rmsAvgHistoryLenRecent24Hour += 1
+                rmsAvgHistoryLenRecent1Hour  += 1
 
-                # trim last of timeStampUtcHourRelHistory and append this sample's timeStamp to first position
+                # append this sample's timeStamp to first position of timeStampUtcHourRelHistory
                 timeStampUtcHourRelHistory = np.concatenate([ \
-                    np.array([timeStampUtcHourRelThis]), \
-                    timeStampUtcHourRelHistory[:-1] ])
+                    np.array([timeStampUtcHourRelThis]), timeStampUtcHourRelHistory ])
 
+                # reduce rmsAvgHistoryLenRecent24Hour index to 24 hours
+                timeStampUtcHourRelHistory24Max = timeStampUtcHourRelThis + 24.
+                while timeStampUtcHourRelHistory24Max < timeStampUtcHourRelHistory[rmsAvgHistoryLenRecent24Hour - 1]:
+                    rmsAvgHistoryLenRecent24Hour -= 1
+                # trim span of rmsAvgHistory and timeStampUtcHourRelHistory to 24 hours
+                timeStampUtcHourRelHistory = timeStampUtcHourRelHistory[:rmsAvgHistoryLenRecent24Hour]
+                rmsAvgHistory              = rmsAvgHistory[             :rmsAvgHistoryLenRecent24Hour]
 
+                # reduce rmsAvgHistoryLenRecent1Hour index to 1 hour
+                timeStampUtcHourRelHistory1Max = timeStampUtcHourRelThis + 1.
+                while timeStampUtcHourRelHistory1Max < timeStampUtcHourRelHistory[rmsAvgHistoryLenRecent1Hour - 1]:
+                    rmsAvgHistoryLenRecent1Hour -= 1
 
-                # plot top right "Recent Samples" stripchart
-                powerTime_ax1.plot(range(rmsAvgHistoryLenRecentMost), \
-                    rmsAvgHistory[:rmsAvgHistoryLenRecentMost], \
-                    marker = '.', markersize = 2, color = 'b')
-                # x axis increases to the left
-                powerTime_ax1.set(xlim = [rmsAvgHistoryLenRecentMost, 0], \
-                    xlabel = 'Recent Samples', ylabel = 'Relative RMS Power')
+                # reduce rmsAvgHistoryLenRecent to rmsAvgHistoryLenRecentMost
+                rmsAvgHistoryLenRecent = min(rmsAvgHistoryLenRecent24Hour, rmsAvgHistoryLenRecentMost)
 
-
-
-                # plot middle right "Recent One Hour" stripchart
+                # plot using timeStampUtcHourRelHistoryRecent
                 timeStampUtcHourRelHistoryRecent = timeStampUtcHourRelThis - timeStampUtcHourRelHistory
-
-                powerTime_ax2.plot(timeStampUtcHourRelHistoryRecent[:rmsAvgHistoryLenRecentHour], \
-                    rmsAvgHistory[:rmsAvgHistoryLenRecentHour], \
-                    marker = '.', markersize = 2, color = 'c')
-                # x-scale increases to the left
-                powerTime_ax2.set(xlim = [1, 0], xticks=np.linspace(1, 0, num=11, endpoint=True),
-                    xlabel = 'Recent One Hour', ylabel = 'Relative RMS Power')
-
-                # set top Local Mean Sidereal Time (LMST) x-scale
-                lmstThisInTenths = int(lmstThis * 10.) / 10.        # lmstThis with one decimal digit
-                powerTime_ax2XBXticks = \
-                    [lmstThisInTenths - x for x in [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]]
-                powerTime_ax2XB.set(xlim=[lmstThis - 1, lmstThis], \
-                    xticks=powerTime_ax2XBXticks, \
-                    xticklabels=[f'{x:0.1f}' for x in powerTime_ax2XBXticks], \
-                    xlabel = "approximate Local Mean Sidereal Time (LMST) Hours = south's Right Ascension")
 
 
 
@@ -1368,6 +1528,36 @@ def main():
                         9, 8, 7, 6, 5, 4, 3, 2, 1, 0]],
                     xticklabels=lmstLabels1to0to0[lmstThisInt:lmstThisInt + 24], \
                     xlabel = "Local Mean Sidereal Time (LMST) Hours = south's Right Ascension")
+
+
+
+                # plot middle right "Recent One Hour" stripchart
+                powerTime_ax2.plot(timeStampUtcHourRelHistoryRecent[:rmsAvgHistoryLenRecent1Hour], \
+                    rmsAvgHistory[:rmsAvgHistoryLenRecent1Hour], \
+                    marker = '.', markersize = 2, color = 'c')
+                # x-scale increases to the left
+                powerTime_ax2.set(xlim = [1., 0.], xticks=np.linspace(1, 0, num=11, endpoint=True),
+                    xlabel = 'Recent One Hour', ylabel = 'Relative RMS Power')
+
+                # set top Local Mean Sidereal Time (LMST) x-scale
+                lmstThisInTenths = int(lmstThis * 10.) / 10.        # lmstThis with one decimal digit
+                powerTime_ax2XBXticks = \
+                    [lmstThisInTenths - x for x in [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]]
+                powerTime_ax2XB.set(xlim=[lmstThis - 1, lmstThis], \
+                    xticks=powerTime_ax2XBXticks, \
+                    xticklabels=[f'{x:0.1f}' for x in powerTime_ax2XBXticks], \
+                    xlabel = "approximate Local Mean Sidereal Time (LMST) Hours = south's Right Ascension")
+
+
+
+                # plot top right "Recent Samples" stripchart
+                powerTime_ax1.plot(range(rmsAvgHistoryLenRecent), \
+                    rmsAvgHistory[:rmsAvgHistoryLenRecent], \
+                    marker = '.', markersize = 2, color = 'b')
+                # x axis increases to the left
+                powerTime_ax1.set(xlim = [rmsAvgHistoryLenRecentMost, 0], \
+                    xlabel = 'Recent Samples', ylabel = 'Relative RMS Power')
+
 
 
                 # plot top left frequency spectrum
@@ -1434,22 +1624,20 @@ def main():
 
 
                 plt.draw()
+
+                # graphics window was always grabbing focus
+                # https://stackoverflow.com/questions/44278369/how-to-keep-matplotlib-python-window-in-background
+                #fig.canvas.draw_idle()
+                fig.canvas.flush_events()   # update the plot and take care of window events (like resizing etc.)
+
             timeStampUtcSecRelLast = timeStampUtcSecRelThis
 
-        # allow time for dashboard interaction ?
-        plt.pause(0.5)
-        #if programState:            # if Slow (, Pause, Exit)
-        #    plt.pause(ezColSlowness)
-        #else:
-        #    plt.pause(0.1)          # Fast, allow little time for dashboard interaction
-        #firstDraw = 0
-        #timeStampUtcSecRelLast = timeStampUtcSecRelThis
+            # not a "sample" if not written to file
+            sampleNumber += 1
+            fileSample   += 1
+            ###mainLoop = 0
 
-        # mainLoop heartbeat indicator, only for testing, dashboard erased only on new spectrum
-        #fig.text(0.68, 0.75, (' '*61)[:(mainLoop+mainLoop)%58] \
-        #    + '1234567890'[mainLoop%10], \
-        #    horizontalalignment='left', verticalalignment='top', fontsize=ezColTextFontSize)
-        #mainLoop += 1
+        ###mainLoop += 1
 
         # go to top of while loop, to start next data sample
 
@@ -1497,10 +1685,6 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
     if ezColUsbRelay:
         if os.name == 'nt':     # Windows
             # hidusb-relay-cmd.exe or serialSend.exe assumed to be in same  directory as ezCol program
-            # in case os.path.dirname(__file__) contains space characters
-            #relayOff0 = os.path.dirname(__file__).replace(' ', '\ ')
-            #print(relayOff0)
-            #print()
 
             if ezColUsbRelay == 11:
                 # ezColUsbRelay = 11: 1 SPST HID relay, driving feedRef ON or OFF
@@ -1738,20 +1922,20 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
                 os.system(relayOff0)
                 sleep(0.5) # Sleep for 0.5 seconds
 
-    sdrProgramState = 0     # to enter While loop
+    sdrProgramState = 0     # "To File"
     feedRef = 0             # assume last sample was ANT sample
     antB4Ref = 0            # number of ANT samples before next REF sample
     dataFlagsS = ' '
-    while sdrProgramState <= 1:
-        #print('Running sdrProcess')
-        # update status of 0/1/2 = Collect/Pause/Exit
+    while 1:
+        # update status of 0/1/2 = "To File/Idle/Exit"
         if not programStateQueue.empty():
             sdrProgramState = programStateQueue.get_nowait()
 
         if sdrProgramState == 2: 
-            sys.exit(0)
+            exit(0)
 
-        elif sdrProgramState == 0: 
+        else: 
+            # take ezColIntegQty readings and create a sample
 
             if not ezColIntegQtyQueue.empty():
                 sdrEzColIntegQty = ezColIntegQtyQueue.get_nowait()

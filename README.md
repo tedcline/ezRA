@@ -107,6 +107,8 @@ Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astr
 
 ## Status:
 
+  * ezSky's ezSkyXYLimL allows zoomed interpolated plots of the sky.
+  * ezCol and ezCon now support RaDec and Galactic sky tracking (but no motor control).
   * ezCon's default is now the faster "-ezConAstroMath  1".
 
 Thanks to Todd Ullery, the  ezColX.py  was an experimental multiple process version of  ezCol.py , to improve dashboard responsiveness.
@@ -127,7 +129,7 @@ Always need more documentation.
 Did ezRA work for you ?
 
 <p align="center">
-  <img src="/ezRA/doc/ezRA_users240118.png?raw=true" alt="ezRA_users240118"/>
+  <img src="/ezRA/doc/ezRA_users240616.png?raw=true" alt="ezRA_users240616"/>
 </p>
 
 Comments are encouraged !
@@ -138,7 +140,7 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Jun-7-2024
+Jun-16-2024
 
 (World Map by juicy_fish on Freepik.com)
 
