@@ -129,7 +129,7 @@ Always need more documentation.
 Did ezRA work for you ?
 
 <p align="center">
-  <img src="/ezRA/doc/ezRA_users240616.png?raw=true" alt="ezRA_users240616"/>
+  <img src="/ezRA/doc/ezRA_users240616.png?raw=true" alt="ezRA_users240716"/>
 </p>
 
 Comments are encouraged !
