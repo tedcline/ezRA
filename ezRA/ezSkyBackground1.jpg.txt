@@ -1,0 +1,10 @@
+
+From the ezSky.py source code,
+    # ezRA's ezSky uses ezSkyBackground1.jpg
+    #   which came with Jun-24-2021 emailed permission from Whitham D. Reeve
+    #   	http://www.reeve.com/Documents/Articles%20Papers/Reeve_CelestialRadioSources.pdf
+    #   who got the image with permission from
+    #   the International Telecommunication Union (ITU) Recommendation P.372-8 (04/03)
+    #   	https://www.itu.int/rec/R-REC-P.372-8-200304-S/en
+    #   which leads to pages 20-23 of
+    #   	https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.372-8-200304-S!!PDF-E.pdf

@@ -1,4 +1,4 @@
-programName = 'ezCol240522a.py'
+programName = 'ezCol240716a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCol Data COLlector program,
@@ -26,6 +26,24 @@ programRevision = programName
 # Thanks to Todd Ullery, ezColX.py was an experimental multiple process version of ezCol.py ,
 # to improve graphic dashboard responsiveness, 221130 and 221202.
 
+
+# ezCol240716a, helpful config comments for ezSerRelay.py
+# ezCol240715b, swapped locations of 'To File' and 'Off' RadioButtons
+# ezCol240715a, Python3.12+ SyntaxWarnings
+# ezCol240714b, relayQuietS for Linux syntax
+# ezCol240714a, removed several os.path.sep,
+#   improvements thanks to Richard Cochois
+#       ezColGain to float, and sdr.set_gain(), and sdr.get_gain(),
+#       sdr.valid_gains_db,
+#       ezColBiasTeeOn,
+#       relaySudoS and relayQuietS,
+#       ezColUsbRelay == 15 on Linux, using new ezSerRelay.py
+#       sdr.close()
+# ezCol240712a, raw string for -ezDefaultsFile Windows help
+# ezCol240706a, use double quotes to allow for spaces in path of Window call of hidusb-relay-cmd.exe
+# ezCol240705a, accounting for any spaces in path, '\ ' to r'\ ' to fix the many (Python3.12+ ?)
+#       SyntaxWarning: invalid escape sequence '\ ',
+#   moved print of sys.version
 # ezCol240522a, first sampleNumber and fileSample are now 0
 # ezCol240422a, newFileButton should not clear stripchart plots
 # ezCol240420a, fixed New File,
@@ -161,6 +179,7 @@ def printHello():
     print('=================================================')
     print(' Local time =', time.asctime(time.localtime()))
     print(' programRevision =', programRevision)
+    print(' Python sys.version =', sys.version)
     print()
 
     commandString = '  '.join(sys.argv)
@@ -205,9 +224,13 @@ def printUsage():
     print('              -ezColFreqBinQtyBits   8      (For  256 freqBinQty frequencies)')
     print('              -ezColFreqBinQtyBits  10      (For 1024 freqBinQty frequencies)')
     print()
-    print('              -ezColGain        9999        (Use max gain)')
+    print('              -ezColGain        999.9       (Use max gain)')
     print('              -ezColOffsetPPM   5           (Tuner offset Parts-Per-Million (integer)')
     print('              -ezColAntBtwnRef  5           (number of Ant samples between Ref samples)')
+    #print()
+    #print('              -ezColBiasTeeOn   -1          (SDR BiasTee voltage no change)')
+    #print('              -ezColBiasTeeOn    0          (SDR BiasTee voltage OFF)')
+    #print('              -ezColBiasTeeOn    1          (SDR BiasTee voltage ON )')
     print()
     #print('              -ezColAzimuth   180.0         (Azimuth   pointing of antenna (degrees))')
     #print('              -ezColElevation  45.0         (Elevation pointing of antenna (degrees))')
@@ -231,7 +254,7 @@ def printUsage():
     #print('              -ezColUsbRelay   3            (1 SPST non-HID relay, driving feedRef ON or OFF)')
     print('              -ezColUsbRelay    0           (No relays driving a feed Dicke reference)')
     print('              -ezColUsbRelay   11           (1 SPST HID relay,     driving feedRef ON or OFF)')
-    print('              -ezColUsbRelay   15           (1 SPST non-HID relay, driving feedRef ON or OFF, no Linux)')
+    print('              -ezColUsbRelay   15           (1 SPST non-HID relay, driving feedRef ON or OFF)')
     print('              -ezColUsbRelay   21           (2 SPST HID relays, #1 driving feedRef ON or OFF)')
     print('              -ezColUsbRelay   22           (2 SPST HID relays, #2 driving feedRef ON or OFF)')
     print('              -ezColUsbRelay   29           (2 SPST HID relays, driving a latching feedRef',
@@ -243,7 +266,7 @@ def printUsage():
     print('              -ezColSampleMax      10       (last sample number before exit)')
     print('              -ezColYLimL      0.1  0.4     (Fraction of Y Auto Scale, Min and Max)')
     print()
-    print('              -ezDefaultsFile ..\\bigDish8.txt   (Additional file of default arguments)')
+    print(r'              -ezDefaultsFile ..\bigDish8.txt   (Additional file of default arguments)')
     print()
     print('              -eXXXXXXXXXXXXXXzIgonoreThisWholeOneWord')
     print('         (any one word starting with -eX is ignored, handy for long command line editing)')
@@ -282,7 +305,8 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
     global ezColBandWidth                   # float
 
     global ezColFreqBinQtyBits              # integer
-    global ezColGain                        # integer
+    global ezColGain                        # float
+    global ezColBiasTeeOn                   # integer
     global ezColAntBtwnRef                  # integer
 
     global ezColAzDeg                       # float
@@ -355,8 +379,8 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezColFreqBinQtyBits'.lower():
                 ezColFreqBinQtyBits = int(thisLineSplit[1])
 
-            elif thisLine0Lower == '-ezColGain'.lower():
-                ezColGain = int(thisLineSplit[1])
+            elif thisLine0Lower == '-ezColBiasTeeOn'.lower():
+                ezColBiasTeeOn = int(thisLineSplit[1])
 
             elif thisLine0Lower == '-ezColAntBtwnRef'.lower():
                 ezColAntBtwnRef = int(thisLineSplit[1])
@@ -417,6 +441,9 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
                 ezColGLonDeg = float(thisLineSplit[1])
                 coordType = 2               # GLatGLon
 
+            elif thisLine0Lower == '-ezColGain'.lower():
+                ezColGain = float(thisLineSplit[1])
+
 
             # list arguments
             elif thisLine0Lower == '-ezColYLimL'.lower():
@@ -464,7 +491,8 @@ def ezColArgumentsCommandLine():
     global ezColBandWidth                   # float
 
     global ezColFreqBinQtyBits              # integer
-    global ezColGain                        # integer
+    global ezColGain                        # float
+    global ezColBiasTeeOn                   # integer
     global ezColAntBtwnRef                  # integer
 
     global ezColAzDeg                       # float
@@ -556,7 +584,11 @@ def ezColArgumentsCommandLine():
 
             elif cmdLineArgLower == '-ezColGain'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezColGain = int(cmdLineSplit[cmdLineSplitIndex])
+                ezColGain = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezColBiasTeeOn'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezColBiasTeeOn = int(cmdLineSplit[cmdLineSplitIndex])
 
             elif cmdLineArgLower == '-ezColAntBtwnRef'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -690,7 +722,8 @@ def ezColArguments():
     global ezColBandWidth                   # float
 
     global ezColFreqBinQtyBits              # integer
-    global ezColGain                        # integer
+    global ezColGain                        # float
+    global ezColBiasTeeOn                   # integer
     global ezColAntBtwnRef                  # integer
 
     global ezColAzDeg                       # float
@@ -748,7 +781,8 @@ def ezColArguments():
         ezColFreqBinQtyBits  =  8   # means freqBinQty will be 2 to the power of  8 = 2 **  8 =  256
         #ezColFreqBinQtyBits = 10   # means freqBinQty will be 2 to the power of 10 = 2 ** 10 = 1024
 
-        ezColGain = 9999            # silly big number which RtlSdr library will reduce
+        ezColGain = 999.9           # silly big number which RtlSdr library will reduce ?
+        ezColBiasTeeOn = -1         # SDR BiasTee voltage no change
 
         ezColAntBtwnRef = 1         # number of Ant samples between REF samples
 
@@ -790,6 +824,19 @@ def ezColArguments():
 
     # process arguments from command line
     ezColArgumentsCommandLine()
+
+    if ezColBiasTeeOn not in [-1, 0, 1]:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print(' ========== FATAL ERROR: ', ezColBiasTeeOn, 'is an unrecognized value for ezColBiasTeeOn')
+        print()
+        print()
+        print()
+        print()
+        exit()
 
     # now know coordType, assign coord0, and coord1
     if coordType == 0:
@@ -850,6 +897,7 @@ def ezColArguments():
     print()
     print('   ezColFreqBinQtyBits =', ezColFreqBinQtyBits)
     print('   ezColGain           =', ezColGain)
+    print('   ezColBiasTeeOn      =', ezColBiasTeeOn)
     print('   ezColAntBtwnRef     =', ezColAntBtwnRef)
     print()
     print('   ezColAzDeg =', ezColAzDeg)
@@ -886,7 +934,8 @@ def main():
     global ezColBandWidth                   # float
 
     global ezColFreqBinQtyBits              # integer
-    global ezColGain                        # integer
+    global ezColGain                        # float
+    global ezColBiasTeeOn                   # integer
     global ezColAntBtwnRef                  # integer
 
     global ezColAzDeg                       # float
@@ -939,9 +988,7 @@ def main():
     #   sudo apt-get install python3-pil python3-pil.imagetk 
     from matplotlib.widgets import Button, RadioButtons, TextBox
 
-
-    print ('\n Python sys.version =', sys.version)
-    print ('\n matplotlib.__version__ =', matplotlib.__version__)
+    print('\n matplotlib.__version__ =', matplotlib.__version__)
 
     freqBinQty = 2 ** ezColFreqBinQtyBits
 
@@ -1131,8 +1178,8 @@ def main():
                 exit(0)
 
             print('\n programState =', programState, '    label =', label)
-
-        radio2_ax = plt.axes([0.865, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
+        #radio2_ax = plt.axes([0.865, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
+        radio2_ax = plt.axes([0.92, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
         radio2 = RadioButtons(radio2_ax, ('To File', 'Idle', 'Exit'))
         radio2.on_clicked(programStateEntry)
 
@@ -1146,7 +1193,8 @@ def main():
             else:
                 # 'RefSub'
                 refAction = 2           # plot last Ant spectrum after subtracting last REF spectrum
-        radio1_ax = plt.axes([0.92, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
+        #radio1_ax = plt.axes([0.92, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
+        radio1_ax = plt.axes([0.865, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
         radio1 = RadioButtons(radio1_ax, ('Off', 'RefDiv', 'RefSub'))
         radio1.on_clicked(refActionFunction)
         refAction = 0                   # default Off
@@ -1205,9 +1253,9 @@ def main():
 
     sdrOutQueue = Queue()               #sdr to main communication
 
-    sdrProcess = Process(target=sdrTask, args=(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, ezColAntBtwnRef,
+    sdrProcess = Process(target=sdrTask, args=(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, ezColVerbose, ezColAntBtwnRef,
         programStateQueue, ezColIntegQtyQueue, sdrOutQueue))
-    # sdrTask is started once, with arguments bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, and ezColAntBtwnRef.
+    # sdrTask is started once, with arguments bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, ezColVerbose, and ezColAntBtwnRef.
     #   It will loop and read the latest inputs from programStateQueue and ezColIntegQtyQueue.
     #   At the end of each loop it will output one tuple through sdrOutQueue.
     #   The tuple includes sdrGain, rmsSpectrum, and dataFlagsS.
@@ -1643,9 +1691,10 @@ def main():
 
 
 
-def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, ezColAntBtwnRef,
-        programStateQueue, ezColIntegQtyQueue, sdrOutQueue):
-    # sdrTask is started once, with arguments bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, and ezColAntBtwnRef.
+def sdrTask(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz, centerFreqRefHz,
+        ezColUsbRelay, ezColVerbose, ezColAntBtwnRef, programStateQueue, ezColIntegQtyQueue, sdrOutQueue):
+    # sdrTask is started once, with arguments bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty,
+    #    centerFreqAntHz, centerFreqRefHz, ezColUsbRelay, ezColVerbose, and ezColAntBtwnRef.
     #   It will loop and read the latest inputs from programStateQueue and ezColIntegQtyQueue.
     #   At the end of each loop it will output one tuple through sdrOutQueue.
     #   The tuple includes sdrGain, rmsSpectrum, and dataFlagsS.
@@ -1662,17 +1711,33 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
 
     #initialize the SDR
     sdr = RtlSdr()
-    sdr.sample_rate = int(bandWidthHz)                          # in integer Hz
-    sdr.center_freq = centerFreqAntHz                           # in integer Hz
-    sdr.gain = ezColGain        # "set" SDR gain
-    sdrGain = sdr.gain          # what the SDR actually set the gain to
+    sdr.sample_rate = int(bandWidthHz)          # in integer Hz
+    sdr.center_freq = centerFreqAntHz           # in integer Hz
+    #sdr.gain = ezColGain                        # "set" SDR gain
+    sdr.set_gain(ezColGain)                     # "set" SDR gain
+    #sdrGain = sdr.gain                          # what the SDR actually set the gain to
+    sdrGain = sdr.get_gain()                    # what the SDR actually set the gain to
 
     print('sdr.bandwidth =', sdr.bandwidth)
     print('sdr.center_freq =', sdr.center_freq)
     print('sdr.fc =', sdr.fc)
     print('sdr.freq_correction =', sdr.freq_correction)
-    print('sdr.gain =', sdr.gain)
+    print('sdr.valid_gains_db =', sdr.valid_gains_db)
+    #print('sdr.gain =', sdr.gain)
+    print('sdr.gain =', sdrGain)
     print('sdr.rs =', sdr.rs)
+
+    # Control SDR BiasTee voltage
+    if 0 <= ezColBiasTeeOn:
+        # set/unset SDR BiasTee voltage
+        if sdr.set_bias_tee(ezColBiasTeeOn) < 0:
+            print('============ Could not set SDR BiasTee voltage')
+        else:
+            if ezColBiasTeeOn:
+                print('SDR BiasTee voltage ON')
+            else:
+                print('SDR BiasTee voltage OFF')
+        sleep(0.2)  # Sleep for x seconds
 
     # by operating system, initialize (reset) feedRef relay system, if any
     # -ezColUsbRelay    0           No relays driving a feed Dicke reference
@@ -1692,15 +1757,15 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
                 # https://github.com/pavel-a/usb-relay-hid
                 # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
                 # Assumes hidusb-relay-cmd.exe program is in the same directory as this ezCol program.
-                # Account for any spaces in path.
                 # define relay command strings
                 # the command prompt command line
                 #      ..\ezRA\hidusb-relay-cmd.exe enum 
                 # returned
                 #      Board ID=[HW348] State: R1=OFF
                 # because of the "R1" on that last line, I use:
-                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 1'
-                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 1'
+                # Use double quotes to allow for spaces in path of Window call of hidusb-relay-cmd.exe
+                relayOff0 = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" off 1'
+                relayOn0  = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" on 1'
                 # initialize relays
                 os.system(relayOff0)
                 sleep(0.5) # Sleep for 0.5 seconds
@@ -1718,9 +1783,9 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
                 # https://batchloaf.wordpress.com/serialsend/
                 # https://batchloaf.wordpress.com/2011/12/05/serialsend-a-windows-program-to-send-a-text-word-via-serial-port/
                 # Assumes serialSend.exe program is in the same directory as this ezCol program.
-                # Account for any spaces in path.
-                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'serialSend.exe /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x00\\xA1"'
-                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'serialSend.exe /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x01\\xA2"'
+                # Use double quotes to allow for spaces in path of Window call of hidusb-relay-cmd.exe
+                relayOff0 = '"' + os.path.dirname(__file__) + r'\serialSend.exe" /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x00\\xA1"'
+                relayOn0  = '"' + os.path.dirname(__file__) + r'\serialSend.exe" /devnum 11 /noscan /baudrate 9600 /hex "\\xA0\\x01\\x01\\xA2"'
                 # initialize relays
                 os.system(relayOff0)
                 sleep(0.5) # Sleep for 0.5 seconds
@@ -1730,15 +1795,15 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
                 # https://github.com/pavel-a/usb-relay-hid
                 # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
                 # Assumes hidusb-relay-cmd.exe program is in the same directory as this ezCol program.
-                # Account for any spaces in path.
                 # define relay command strings
                 # the command prompt command line
                 #      ..\ezRA\hidusb-relay-cmd.exe enum 
                 # returned
                 #      Board ID=[BITFT] State: R1=OFF R2=OFF
                 # because of the "R1" and "R2" on that last line, I use:
-                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 1'
-                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 1'
+                # Use double quotes to allow for spaces in path of Window call of hidusb-relay-cmd.exe
+                relayOff0 = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" off 1'
+                relayOn0  = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" on 1'
                 # initialize relays
                 os.system(relayOff0)
                 sleep(0.5) # Sleep for 0.5 seconds
@@ -1748,15 +1813,15 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
                 # https://github.com/pavel-a/usb-relay-hid
                 # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
                 # Assumes hidusb-relay-cmd.exe program is in the same directory as this ezCol program.
-                # Account for any spaces in path.
                 # define relay command strings
                 # the command prompt command line
                 #      ..\ezRA\hidusb-relay-cmd.exe enum 
                 # returned
                 #      Board ID=[BITFT] State: R1=OFF R2=OFF
                 # because of the "R1" and "R2" on that last line, I use:
-                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 2'
-                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 2'
+                # Use double quotes to allow for spaces in path of Window call of hidusb-relay-cmd.exe
+                relayOff0 = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" off 2'
+                relayOn0  = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" on 2'
                 # initialize relays
                 os.system(relayOff0)
                 sleep(0.5) # Sleep for 0.5 seconds
@@ -1766,17 +1831,17 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
                 # https://github.com/pavel-a/usb-relay-hid
                 # https://github.com/pavel-a/usb-relay-hid/releases/tag/usb-relay-lib_v2.1
                 # Assumes hidusb-relay-cmd.exe program is in the same directory as this ezCol program.
-                # Account for any spaces in path.
                 # define relay command strings
                 # the command prompt command line
                 #      ..\ezRA\hidusb-relay-cmd.exe enum 
                 # returned
                 #      Board ID=[BITFT] State: R1=OFF R2=OFF
                 # because of the "R1" and "R2" on that last line, I use:
-                relayOff0 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 1'
-                relayOff1 = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe off 2'
-                relayOn0  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 1'
-                relayOn1  = os.path.dirname(__file__).replace(' ', '\ ') + os.path.sep + 'hidusb-relay-cmd.exe on 2'
+                # Use double quotes to allow for spaces in path of Window call of hidusb-relay-cmd.exe
+                relayOff0 = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" off 1'
+                relayOff1 = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" off 2'
+                relayOn0  = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" on 1'
+                relayOn1  = '"' + os.path.dirname(__file__) + r'\hidusb-relay-cmd.exe" on 2'
                 # initialize relays
                 # both relays off
                 os.system(relayOff0)
@@ -1838,13 +1903,23 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
             #                   CommandApp_USBRelay.exe J34EL close 01
             #                   CommandApp_USBRelay.exe J34EL open 01
 
+            # 'sudo ' may want renewal and cause trouble ?
+            relaySudoS = ''
+            relaySudoS = 'sudo '
+
+            if ezColVerbose:
+                relayQuietS = ''
+            else:
+                # quiet mode
+                relayQuietS = ' -q'
+
             if ezColUsbRelay == 11:
                 # ezColUsbRelay = 11: 1 SPST HID relay, driving feedRef ON or OFF
                 # for USB Relay that talks HID
                 ##os.system('sudo usbrelay BITFT_1=0 BITFT_2=0')
                 #os.system('sudo usbrelay HW348_1=0')        # works !
                 # define relay command strings
-                # the linux command line
+                # the Linux command line
                 #      sudo usbrelay
                 # returned
                 #      Device Found
@@ -1858,23 +1933,45 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
                 #        Number of Relays = 1
                 #      HW348_1=0
                 # because of that last line, I use:
-                relayOff0 = 'sudo usbrelay HW348_1=0'
-                relayOn0  = 'sudo usbrelay HW348_1=1'
+                relayOff0 = relaySudoS + 'usbrelay' + relayQuietS + ' HW348_1=0'
+                relayOn0  = relaySudoS + 'usbrelay' + relayQuietS + ' HW348_1=1'
                 # initialize relays
                 os.system(relayOff0)
                 sleep(0.5) # Sleep for 0.5 seconds
             elif ezColUsbRelay == 15:
+                #######################################################
+                ################ untested as of 240714 ################
+                #######################################################
                 # ezColUsbRelay = 15: 1 SPST non-HID relay with serialSend.exe
                 # for USB Relay that talks serial
-                relayOff0 = '#'             # linux: not yet implemented
-                relayOn0  = '#'             # linux: not yet implemented
+                #relayOff0 = '#'             # Linux: not yet implemented
+                #relayOn0  = '#'             # Linux: not yet implemented
+                #relayOff0 = 'stty -F /dev/ttyUSB0 9600; sleep 0.1s; echo echo -ne "\\xA0\\x01\\x00\\xA1" > /dev/ttyUSB0' # Working inside batch, Not working inside Python
+                #relayOn0  = 'stty -F /dev/ttyUSB0 9600; sleep 0.1s; echo echo -ne "\\xA0\\x01\\x01\\xA2" > /dev/ttyUSB0' # Working inside batch, Not working inside Python
+                #relayConf0 = 'sudo chmod 777 /dev/ttyUSB0'     # working
+                # Put the user in the dialout group for Serial,
+                #   and also in the plugdev group for USB:
+                #     sudo usermod -a -G dialout,plugdev <username>
+                #   
+                # See the group for serial:
+                #   ls -l /dev/ttyUSB0
+                # gives
+                #   crw-rw---- 1 root dialout 188, 0 15 juil. 14:12 /dev/ttyUSB0
+                #   
+                # See the group for USB:
+                #   ls -l /dev/hidraw1
+                # gives
+                #   crw-rw---- 1 root plugdev 246, 1 15 juil. 14:12 /dev/hidraw1
+                relayOff0 = relaySudoS + 'python3 ' + os.path.dirname(__file__) + '/ezSerRelay.py /dev/ttyUSB0 9600 0'
+                relayOn0  = relaySudoS + 'python3 ' + os.path.dirname(__file__) + '/ezSerRelay.py /dev/ttyUSB0 9600 1'
                 # initialize relays
-                #os.system(relayOff0)
+                os.system(relayOff0)
+                sleep(0.5) # Sleep for x seconds
             elif ezColUsbRelay == 21:
                 # ezColUsbRelay = 21: 2 SPST HID relays, #1 driving feedRef ON or OFF
                 # for USB Relay that talks HID
-                relayOff0 = 'sudo usbrelay BITFT_1=0 BITFT_2=0'
-                relayOn0  = 'sudo usbrelay BITFT_1=1 BITFT_2=0'
+                relayOff0 = relaySudoS + 'usbrelay' + relayQuietS + ' BITFT_1=0 BITFT_2=0'
+                relayOn0  = relaySudoS + 'usbrelay' + relayQuietS + ' BITFT_1=1 BITFT_2=0'
                 # initialize relays
                 # both relays off
                 os.system(relayOff0)
@@ -1882,8 +1979,8 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
             elif ezColUsbRelay == 22:
                 # ezColUsbRelay = 22: 2 SPST HID relays, #2 driving feedRef ON or OFF
                 # for USB Relay that talks HID
-                relayOff0 = 'sudo usbrelay BITFT_1=0 BITFT_2=0'
-                relayOn0  = 'sudo usbrelay BITFT_1=0 BITFT_2=1'
+                relayOff0 = relaySudoS + 'usbrelay' + relayQuietS + ' BITFT_1=0 BITFT_2=0'
+                relayOn0  = relaySudoS + 'usbrelay' + relayQuietS + ' BITFT_1=0 BITFT_2=1'
                 # initialize relays
                 # both relays off
                 os.system(relayOff0)
@@ -1891,7 +1988,7 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
             elif ezColUsbRelay == 29:
                 # ezColUsbRelay = 29: 2 SPST HID relays, driving a latching feedRef relay with pulses
                 # define relay command strings
-                # the linux command line
+                # the Linux command line
                 #      sudo usbrelay
                 # returned
                 #      Device Found
@@ -1906,10 +2003,10 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
                 #      BITFT_1=0
                 #      BITFT_2=0
                 # because of those 2 last lines, I use:
-                relayOff0 = 'sudo usbrelay BITFT_1=0 BITFT_2=0'
+                relayOff0 = relaySudoS + 'usbrelay' + relayQuietS + ' BITFT_1=0 BITFT_2=0'
                 relayOff1 = relayOff0
-                relayOn0  = 'sudo usbrelay BITFT_1=1 BITFT_2=0'
-                relayOn1  = 'sudo usbrelay BITFT_1=0 BITFT_2=1'
+                relayOn0  = relaySudoS + 'usbrelay' + relayQuietS + ' BITFT_1=1 BITFT_2=0'
+                relayOn1  = relaySudoS + 'usbrelay' + relayQuietS + ' BITFT_1=0 BITFT_2=1'
                 # initialize relays
                 # both relays off
                 os.system(relayOff0)
@@ -1931,7 +2028,15 @@ def sdrTask(bandWidthHz, ezColGain, freqBinQty, centerFreqAntHz, centerFreqRefHz
         if not programStateQueue.empty():
             sdrProgramState = programStateQueue.get_nowait()
 
-        if sdrProgramState == 2: 
+        if sdrProgramState == 2:
+            if 0 <= ezColBiasTeeOn:
+                # unset SDR BiasTee voltage
+                if sdr.set_bias_tee(False) < 0:
+                    print('============ Could not set SDR BiasTee voltage')
+                else:
+                    print('SDR BiasTee voltage OFF')
+                sleep(0.2) # Sleep for x seconds
+            sdr.close()
             exit(0)
 
         else: 

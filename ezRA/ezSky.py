@@ -1,4 +1,4 @@
-programName = 'ezSky240615a.py'
+programName = 'ezSky240715a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
@@ -28,6 +28,10 @@ programRevision = programName
 #       Sorry I did not include Az and El as .ezb columns 1 and 2
 #       Sorry I ordered gLat before gLon
 
+# ezSky240715a, sys.version
+# ezSky240712a, ezSkyBackground1.jpg notes
+# ezSky240711a, raw strings for 3 '\' characters to fix the 3 (Python3.12+ ?)
+#       SyntaxWarning: invalid escape sequence '\ '
 # ezSky240615a, fixed ezSkyGridGalacticBox() division by zero bugs, dusting
 # ezSky240607a, ezSkyXYLimL useage note =
 #   Milky Way Galaxy center = Sagittarius A* = 17h 45m 40.0409s, −29° 0′ 28.118″
@@ -167,7 +171,7 @@ programRevision = programName
 import matplotlib.pyplot as plt
 
 import os
-import sys                
+import sys
 import time
 import datetime
 
@@ -278,15 +282,15 @@ def printUsage():
     print('          with XMin XMax YMin YMax minimum and maximum limits (RaDec or Galactic degrees),')
     print('          with data connected dot size of 5)')
     print()
-    print('    -ezDefaultsFile ..\\bigDish.txt      (additional file of ezRA arguments)')
+    print(r'    -ezDefaultsFile ..\bigDish.txt      (additional file of ezRA arguments)')
     print()
     print('    -eXXXXXXXXXXXXXXzIgonoreThisWholeOneWord')
     print('         (any one word starting with -eX is ignored, handy for long command line editing)')
     print()
     print('EXAMPLES:')
     print()
-    print('  Windows:   py       ..\ezRA\ezSky.py  .')
-    print('             py       ..\ezRA\ezSky.py  .  -ezSkyInput  18  -ezSkyPlotRangeL  200  450')
+    print(r'  Windows:   py       ..\ezRA\ezSky.py  .')
+    print(r'             py       ..\ezRA\ezSky.py  .  -ezSkyInput  18  -ezSkyPlotRangeL  200  450')
     print()
     print('  Linux:     python3  ../ezRA/ezSky.py  .')
     print('             python3  ../ezRA/ezSky.py  .  -ezSkyInput  18  -ezSkyPlotRangeL  200  450')
@@ -325,6 +329,7 @@ def printHello():
     print('=================================================')
     print(' Local time =', time.asctime(time.localtime()))
     print(' programRevision =', programRevision)
+    print(' Python sys.version =', sys.version)
     print()
 
     commandString = '  '.join(sys.argv)
@@ -763,6 +768,14 @@ def ezSkyArguments():
     
     #ezSkyMaskFileLong = '.' + os.path.sep + ezSkyMaskFile
     # in same directory as this program
+    # ezRA's ezSky uses ezSkyBackground1.jpg
+    #   which came with Jun-24-2021 emailed permission from Whitham D. Reeve
+    #       http://www.reeve.com/Documents/Articles%20Papers/Reeve_CelestialRadioSources.pdf
+    #   who got the image with permission from
+    #   the International Telecommunication Union (ITU) Recommendation P.372-8 (04/03)
+    #       https://www.itu.int/rec/R-REC-P.372-8-200304-S/en
+    #   which leads to pages 20-23 of
+    #       https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.372-8-200304-S!!PDF-E.pdf
     ezSkyBackground1 = os.path.dirname(__file__) + os.path.sep + 'ezSkyBackground1.jpg'  
     ezSkyBackground1XMax = 1624
     ezSkyBackground1YMax =  812
@@ -4667,7 +4680,7 @@ def main():
 
     startTime = time.time()
 
-    print('programRevision = ' + programRevision)
+    #print('programRevision = ' + programRevision)
     print()
 
     commandString = ''
