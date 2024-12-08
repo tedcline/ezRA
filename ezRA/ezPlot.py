@@ -1,4 +1,4 @@
-programName = 'ezPlot240108a.py'
+programName = 'ezPlot241106a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezPlot data Plotter program,
@@ -29,6 +29,14 @@ programRevision = programName
 #   -ezPlotAntSamplesUseL   25   102  (first Ant Sample number    last Ant Sample number),
 #   colors by signal
 
+# ezPlot241106a, improved comments on ezPlot481's xSnapStart and xSnapLast (for Sun transits),
+#   some element of ezPlot481's ezPlot481count might be zero, which caused
+#       "RuntimeWarning: invalid value encountered in true_divide" warning
+# ezPlot240915a, -ezPlotUseSamplesL bug
+# ezPlot240811a.py, few append() in ezPlotArgumentsFile() and ezPlotArgumentsCommandLine()
+# ezPlot240809a.py, ezPlot481defDayAntXTVT, -ezPlotUseTimesL, -ezPlotUseSamplesL
+# ezPlot240806a.py, ezPlot481defDayAntXTVT, -ezPlotUseTimesL, -ezPlotUseSamplesL
+# ezPlot240801a.py, ezPlot481defDayAntXTVT
 # ezPlot240108a.py, ezPlot191 Ant to AntXTVT top-bottom order reversed
 # ezPlot240107a.py, -ezPlotAntXTVTMaxPluckQtyL and -ezPlotAntXTVTMaxPluckValL,
 #   and             -ezPlotAntXTVTAvgPluckQtyL and -ezPlotAntXTVTAvgPluckValL,
@@ -108,6 +116,9 @@ def printUsage():
     print('    -ezRAObsLon    -98.5696          (Observatory Longitude (degrees))')
     print('    -ezRAObsAmsl   563.88            (Observatory Above Mean Sea Level (meters))')
     print()
+    print('    -ezPlotUseTimesL    2024-07-20T00:00:00  2024-08-02T00:00:00  (2 times in YYYY-MM-DDTHH:MM:SS)')
+    print('    -ezPlotUseSamplesL  0    100     (first Sample number    last Sample number)')
+    print()
     print('    -ezPlotAntXTVTMaxPluckQtyL   3    5')
     print('         (Pluck (ignore) AntXTVTMax samples with the 3 Quantity lowest, and 5 highest, sorted AntXTVTMax)')
     print('    -ezPlotAntXTVTMaxPluckValL  .01   .03')
@@ -128,6 +139,9 @@ def printUsage():
     #print('      -ezPlotAstroMath  1:    using math from MIT Haystack SRT')
     #print('      -ezPlotAstroMath  2:    using math from slower Astropy library')
     #print()
+    print('    -ezPlot481defDayH     23.9345    (Defined Day length (hours))')
+    print('    -ezPlot481res         1440       (Defined Day resolution (24*60=1440)')
+    print()
     print('    -ezDefaultsFile ../bigDish8.txt  (additional file of ezRA arguments)')
     print()
     print('    -eXXXXXXXXXXXXXXzIgonoreThisWholeOneWord')
@@ -184,6 +198,9 @@ def ezPlotArgumentsFile(ezDefaultsFileNameInput):
 
     #global ezPlotAstroMath                  # integer
 
+    global ezPlotUseTimesSL                 # string list
+    global ezPlotUseSamplesL                # integer list
+
     global ezPlotAntXTVTMaxPluckQtyL        # integer list
     global ezPlotAntXTVTMaxPluckValL        # float list
     global ezPlotAntXTVTAvgPluckQtyL        # integer list
@@ -191,6 +208,8 @@ def ezPlotArgumentsFile(ezDefaultsFileNameInput):
     global ezPlotAntXTVTPluckL              # integer list
 
     global ezPlotDispGrid                   # integer
+    global ezPlot481defDayH                 # float
+    global ezPlot481res                     # integer
     global ezPlotPlotRangeL                 # integer list
 
 
@@ -237,36 +256,42 @@ def ezPlotArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezPlotDispGrid'.lower():
                 ezPlotDispGrid = int(thisLine[1])
 
+            elif thisLine0Lower == '-ezPlot481defDayH'.lower():
+                ezPlot481defDayH = float(thisLine[1])
+
+            elif thisLine0Lower == '-ezPlot481res'.lower():
+                ezPlot481res = int(thisLine[1])
+
             #elif thisLine0Lower == '-ezPlotAstroMath'.lower():
             #    ezPlotAstroMath = int(thisLine[1])
 
+            elif thisLine0Lower == '-ezPlotUseTimesL'.lower():
+                ezPlotUseTimesSL.append(int(thisLine[1]))
+                ezPlotUseTimesSL.append(int(thisLine[2]))
+
+            elif thisLine0Lower == '-ezPlotUseSamplesL'.lower():
+                ezPlotUseSamplesL.append(int(thisLine[1]))
+                ezPlotUseSamplesL.append(int(thisLine[2]))
+
+
             elif thisLine0Lower == '-ezPlotAntXTVTMaxPluckQtyL'.lower():
-                cmdLineSplitIndex += 1      # point to first argument value
-                ezPlotAntXTVTMaxPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
-                cmdLineSplitIndex += 1
-                ezPlotAntXTVTMaxPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                ezPlotAntXTVTMaxPluckQtyL.append(int(thisLine[1]))
+                ezPlotAntXTVTMaxPluckQtyL.append(int(thisLine[2]))
 
             elif thisLine0Lower == '-ezPlotAntXTVTMaxPluckValL'.lower():
-                cmdLineSplitIndex += 1      # point to first argument value
-                ezPlotAntXTVTMaxPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
-                cmdLineSplitIndex += 1
-                ezPlotAntXTVTMaxPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                ezPlotAntXTVTMaxPluckValL.append(float(thisLine[1]))
+                ezPlotAntXTVTMaxPluckValL.append(float(thisLine[2]))
 
             elif thisLine0Lower == '-ezPlotAntXTVTAvgPluckQtyL'.lower():
-                cmdLineSplitIndex += 1      # point to first argument value
-                ezPlotAntXTVTAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
-                cmdLineSplitIndex += 1
-                ezPlotAntXTVTAvgPluckQtyL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                ezPlotAntXTVTAvgPluckQtyL.append(int(thisLine[1]))
+                ezPlotAntXTVTAvgPluckQtyL.append(int(thisLine[2]))
 
             elif thisLine0Lower == '-ezPlotAntXTVTAvgPluckValL'.lower():
-                cmdLineSplitIndex += 1      # point to first argument value
-                ezPlotAntXTVTAvgPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
-                cmdLineSplitIndex += 1
-                ezPlotAntXTVTAvgPluckValL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                ezPlotAntXTVTAvgPluckValL.append(float(thisLine[1]))
+                ezPlotAntXTVTAvgPluckValL.append(float(thisLine[2]))
 
             elif thisLine0Lower == '-ezPlotAntXTVTPluck'.lower():
-                cmdLineSplitIndex += 1      # point to first argument value
-                ezPlotAntXTVTPluckL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                ezPlotAntXTVTPluckL.append(int(thisLine[1]))
 
             elif thisLine0Lower == '-ezPlotPlotRangeL'.lower():
                 ezPlotPlotRangeL[0] = int(thisLine[1])
@@ -311,6 +336,9 @@ def ezPlotArgumentsCommandLine():
 
     #global ezPlotAstroMath                  # integer
 
+    global ezPlotUseTimesSL                 # string list
+    global ezPlotUseSamplesL                # integer list
+
     global ezPlotAntXTVTMaxPluckQtyL        # integer list
     global ezPlotAntXTVTMaxPluckValL        # float list
     global ezPlotAntXTVTAvgPluckQtyL        # integer list
@@ -318,6 +346,8 @@ def ezPlotArgumentsCommandLine():
     global ezPlotAntXTVTPluckL              # integer list
 
     global ezPlotDispGrid                   # integer
+    global ezPlot481defDayH                 # float
+    global ezPlot481res                     # integer
     global ezPlotPlotRangeL                 # integer list
 
     global cmdDirectoryS                    # string            creation
@@ -377,15 +407,36 @@ def ezPlotArgumentsCommandLine():
             elif cmdLineArgLower == '-ezRAObsName'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezRAObsName = cmdLineSplit[cmdLineSplitIndex]   # cmd line allows only one ezRAObsName word
-            
+
 
             elif cmdLineArgLower == '-ezPlotDispGrid'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezPlotDispGrid = int(cmdLineSplit[cmdLineSplitIndex])
 
+            elif cmdLineArgLower == '-ezPlot481defDayH'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlot481defDayH = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezPlot481res'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlot481res = int(cmdLineSplit[cmdLineSplitIndex])
+
             #elif cmdLineArgLower == '-ezPlotAstroMath'.lower():
             #    cmdLineSplitIndex += 1      # point to first argument value
             #    ezPlotAstroMath = int(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezPlotUseTimesL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotUseTimesSL.append(cmdLineSplit[cmdLineSplitIndex])
+                cmdLineSplitIndex += 1
+                ezPlotUseTimesSL.append(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezPlotUseSamplesL'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezPlotUseSamplesL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezPlotUseSamplesL.append(int(cmdLineSplit[cmdLineSplitIndex]))
+
 
             elif cmdLineArgLower == '-ezPlotAntXTVTMaxPluckQtyL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -472,6 +523,9 @@ def ezPlotArguments():
 
     #global ezPlotAstroMath                  # integer
 
+    global ezPlotUseTimesSL                 # string list
+    global ezPlotUseSamplesL                # integer list
+
     global ezPlotAntXTVTMaxPluckQtyL        # integer list
     global ezPlotAntXTVTMaxPluckValL        # float list
     global ezPlotAntXTVTAvgPluckQtyL        # integer list
@@ -481,6 +535,8 @@ def ezPlotArguments():
     global fileNameLast                     # string
     global plotCountdown                    # integer
     global ezPlotDispGrid                   # integer
+    global ezPlot481defDayH                 # float
+    global ezPlot481res                     # integer
     global ezPlotPlotRangeL                 # integer list
 
 
@@ -491,9 +547,14 @@ def ezPlotArguments():
     #ezRAObsName = 'LebanonKS'
     ezRAObsName = ''                    # silly name
 
-    ezPlotDispGrid    = 0
+    ezPlotDispGrid   = 0
+    ezPlot481defDayH = 23.9345          # 23.9345 hours is a sidereal day
+    ezPlot481res     = 2880             # resolution = 30 seconds (24*60*2=2880)
 
     #ezPlotAstroMath = 1
+
+    ezPlotUseTimesSL  = []              # empty to disable
+    ezPlotUseSamplesL = []              # empty to disable
 
     ezPlotAntXTVTMaxPluckQtyL = []      # empty to disable
     ezPlotAntXTVTMaxPluckValL = []      # empty to disable
@@ -503,7 +564,7 @@ def ezPlotArguments():
 
     ezPlotPlotRangeL = [0, 9999]        # save this range of plots to file
 
-    plotCountdown = 90                  # number of plots still to print
+    plotCountdown = 91                  # number of plots still to print
 
     # Program argument priority:
     #    Start with the argument value defaults inside the programs.
@@ -546,7 +607,18 @@ def ezPlotArguments():
         print('   ezRAObsLon  =', ezRAObsLon)
         print('   ezRAObsAmsl =', ezRAObsAmsl)
         print()
+        print('   ezPlotUseTimesL   =', ezPlotUseTimesSL)
+        print('   ezPlotUseSamplesL =', ezPlotUseSamplesL)
+        print()
+        print('   ezPlotAntXTVTMaxPluckQtyL =', ezPlotAntXTVTMaxPluckQtyL)
+        print('   ezPlotAntXTVTMaxPluckValL =', ezPlotAntXTVTMaxPluckValL)
+        print('   ezPlotAntXTVTAvgPluckQtyL =', ezPlotAntXTVTAvgPluckQtyL)
+        print('   ezPlotAntXTVTAvgPluckValL =', ezPlotAntXTVTAvgPluckValL)
+        print('   ezPlotAntXTVTPluckL    =', ezPlotAntXTVTPluckL)
+        print()
         print('   ezPlotDispGrid         =', ezPlotDispGrid)
+        print('   ezPlot481defDayH       =', ezPlot481defDayH)
+        print('   ezPlot481res           =', ezPlot481res)
         print()
         #print('   ezPlotAstroMath        =', ezPlotAstroMath)
         #print()
@@ -830,6 +902,8 @@ def printGoodbye(startTime):
             print('   ezPlotAntFreqBinSmooth    =', ezPlotAntFreqBinSmooth)
             print('   ezPlotRefAvgTrimFracL     =', ezPlotRefAvgTrimFracL)
             print('   ezPlotDispGrid            =', ezPlotDispGrid)
+            print('   ezPlot481defDayH          =', ezPlot481defDayH)
+            print('   ezPlot481res              =', ezPlot481res)
             print('   ezPlotDispFreqBin         =', ezPlotDispFreqBin)
         print('   antLen =', antLen)
 
@@ -861,7 +935,104 @@ def printGoodbye(startTime):
 
 
 
-# Pluck filters #########################################################
+# filters #########################################################
+
+
+def ezPlotUseDo():
+
+    global ezPlotIn                 # float and int 2d array
+    #global antXTV                   # float 2d array
+    #global antXTVT                  # float 2d array
+    global antLen                   # integer
+    global antLenM1                 # integer
+    global xTickLocsAnt             # float array
+
+    global ezPlotUseTimesSL         # string list
+    global ezPlotUseSamplesL        # integer list
+
+    global ezPlotInIdxByMjdRel      # eventually float array
+
+    #if not ezPlotUseTimesSL and not ezPlotUseSamplesL:      # if both empty, no plucking needed
+    #    return(1)
+
+    #print(f'   before ezPlotAntXTVTMaxPluckQtyL, antLen = ', {antLen:,}')
+
+    print()
+    print('   ezPlotUseDo ===============')
+
+    print('   np.shape(ezPlotIn)[0] =', np.shape(ezPlotIn)[0])
+    print('   np.shape(ezPlotIn)[1] =', np.shape(ezPlotIn)[1])
+
+    #antXTVTMax = np.amax(ezPlotIn[:, 19], axis=0)
+    antXTVTMax = ezPlotIn[:, 19]
+    #print('   antXTVTMax =', antXTVTMax)
+    print(f'   len(antXTVTMax) = {len(antXTVTMax):,}')
+    print()
+
+    if ezPlotUseTimesSL:
+        # assume want to keep all samples
+        ezPlotUseTimesKeepMask = np.ones(antLen, dtype=bool)
+
+        ## ezPlotIn[n:] indices sorted by increasing MJD
+        #if not len(ezPlotInIdxByMjdRel):
+        #    ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
+
+        ##from astropy.time import Time
+        #dataTimeUtcVlsr2000 = Time('2000-01-01T00:00:00', format='fits', scale='utc')
+        ##print(' dataTimeUtcVlsr2000.mjd =', dataTimeUtcVlsr2000.mjd)
+
+        #from astropy.time import Time
+        ezPlotUseTimesMjdMin = Time(ezPlotUseTimesSL[0], format='fits', scale='utc').mjd
+        print(' ezPlotUseTimesMjdMin =', ezPlotUseTimesMjdMin)
+        ezPlotUseTimesMjdMax = Time(ezPlotUseTimesSL[1], format='fits', scale='utc').mjd
+        print(' ezPlotUseTimesMjdMax =', ezPlotUseTimesMjdMax)
+
+        # use ezPlotUseTimesSL to mask off unwanted samples
+        for i in range(antLen):
+            ezPlotInTimeMjdThis = ezPlotIn[i, 0]
+            if ezPlotInTimeMjdThis < ezPlotUseTimesMjdMin or ezPlotUseTimesMjdMax < ezPlotInTimeMjdThis:
+                ezPlotUseTimesKeepMask[i] = False
+
+        #print('   ezPlotUseTimesKeepMask =', ezPlotUseTimesKeepMask)
+        print(f'   ezPlotUseTimesKeepMask.sum() =', ezPlotUseTimesKeepMask.sum())
+        print(f'   len(ezPlotUseTimesKeepMask) = {len(ezPlotUseTimesKeepMask):,}')
+
+        # thin most data arrays to keep only ezPlotUseTimesKeepMask samples
+        #azimuth     = azimuth    [ezPlotUseTimesKeepMask]
+        #elevation   = elevation  [ezPlotUseTimesKeepMask]
+        #dataTimeUtc = dataTimeUtc[ezPlotUseTimesKeepMask]
+        #rawIndex    = rawIndex   [ezPlotUseTimesKeepMask]
+        # thin ezPlotIn[n, :]
+        ezPlotIn     = ezPlotIn    [ezPlotUseTimesKeepMask, :]
+        #antXTV      = antXTV      [:, ezPlotUseTimesKeepMask]    # keep antXTV for Galaxy crossing plots
+        #antXTVT     = antXTVT     [:, ezPlotUseTimesKeepMask]
+        antLen = ezPlotIn.shape[0]
+        antLenM1 = antLen - 1
+        #refLen = ref.shape[1]
+        #refLenM1 = refLen - 1
+        print(f'   antLen = {antLen:,}')
+        #print(f'   refLen = {refLen:,}')
+        xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
+
+    if ezPlotUseSamplesL:
+        ezPlotUseSamplesMin   = ezPlotUseSamplesL[0]
+        ezPlotUseSamplesMaxP1 = ezPlotUseSamplesL[1] + 1
+        # thin most data arrays to keep only wanted samples
+        #azimuth     = azimuth    [ezPlotUseSamplesMin:ezPlotUseSamplesMinP1]
+        #elevation   = elevation  [ezPlotUseSamplesMin:ezPlotUseSamplesMinP1]
+        #dataTimeUtc = dataTimeUtc[ezPlotUseSamplesMin:ezPlotUseSamplesMinP1]
+        #rawIndex    = rawIndex   [ezPlotUseSamplesMin:ezPlotUseSamplesMinP1]
+        # thin ezPlotIn[n, :]
+        ezPlotIn     = ezPlotIn    [ezPlotUseSamplesMin:ezPlotUseSamplesMaxP1, :]
+        #antXTV      = antXTV      [:, ezPlotUseSamplesMin:ezPlotUseSamplesMinP1]    # keep antXTV for Galaxy crossing plots
+        #antXTVT     = antXTVT     [:, ezPlotUseSamplesMin:ezPlotUseSamplesMinP1]
+        antLen = ezPlotIn.shape[0]
+        antLenM1 = antLen - 1
+        #refLen = ref.shape[1]
+        #refLenM1 = refLen - 1
+        print(f'   antLen = {antLen:,}')
+        #print(f'   refLen = {refLen:,}')
+        xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
 
 
 
@@ -1213,7 +1384,7 @@ def plotEzPlot000timeUtcMjdSorted():
     timeUtcMjdMinS = Time(timeUtcMjdMin, format='mjd', scale='utc').iso
     timeUtcMjdMinS = timeUtcMjdMinS[:10] + '   ' + timeUtcMjdMinS[11:16]
 
-    # ezPlotIn[n:] indices sorted by MJD
+    # ezPlotIn[n:] indices sorted by increasing MJD
     if not len(ezPlotInIdxByMjdRel):
         ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
         #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
@@ -2085,7 +2256,7 @@ def plotEzPlot1dSamplesRa(plotName, ezPlotInColumn, plotYLabel):
 
     plt.clf()
 
-    # ezPlotIn[n:] indices sorted by MJD
+    # ezPlotIn[n:] indices sorted by increasing MJD
     if not len(ezPlotInIdxByMjdRel):
         ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
         #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
@@ -2339,7 +2510,7 @@ def plotEzPlot1dSamplesUtc(plotName, ezPlotInColumn, plotYLabel):
 
     plt.clf()
 
-    # ezPlotIn[n:] indices sorted by MJD
+    # ezPlotIn[n:] indices sorted by increasing MJD
     if not len(ezPlotInIdxByMjdRel):
         ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
         #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
@@ -2360,7 +2531,7 @@ def plotEzPlot1dSamplesUtc(plotName, ezPlotInColumn, plotYLabel):
 
             # x list = (frac part of MJD) * 24 hours
             # y list = ezPlotInColumn
-            plt.plot([ (ezPlotIn[ezPlotInIdxByMjdRel[i], 0] % 1.0) * 24.0 \
+            plt.plot([ (ezPlotIn[ezPlotInIdxByMjdRel[i], 0] % 1.0) * 24. \
                 for i in range(lastStartIndex, index - 1) ],  \
                 [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]  \
                 for i in range(lastStartIndex, index - 1) ],  \
@@ -2377,7 +2548,7 @@ def plotEzPlot1dSamplesUtc(plotName, ezPlotInColumn, plotYLabel):
     # x list = (frac part of MJD) * 24 hours
     # y list = ezPlotInColumn
     print(f'\r         plotting {lastStartIndex:,}          ,       {antLenM1:,}')
-    plt.plot([ (ezPlotIn[ezPlotInIdxByMjdRel[i], 0] % 1.0) * 24.0 \
+    plt.plot([ (ezPlotIn[ezPlotInIdxByMjdRel[i], 0] % 1.0) * 24. \
         for i in range(lastStartIndex, antLen) ], \
         [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]     \
         for i in range(lastStartIndex, antLen) ], \
@@ -2600,7 +2771,7 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
 
     plt.clf()
 
-    # ezPlotIn[n:] indices sorted by MJD
+    # ezPlotIn[n:] indices sorted by increasing MJD
     if not len(ezPlotInIdxByMjdRel):
         ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
         #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
@@ -2627,10 +2798,10 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
             # just stepped forward into a new sidereal day, plot the last sidereal day
             print(f'\r         plotting {lastStartIndex:,}          ,       {index - 1:,}')
 
-            # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % siderealOfUtc) * 24.0
+            # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % siderealOfUtc) * 24.
             # y list = ezPlotInColumn
             plt.plot([((ezPlotIn[ezPlotInIdxByMjdRel[i], 0] \
-                - timeUtcMjdLastStart0) % siderealOfUtc) *  24.0 \
+                - timeUtcMjdLastStart0) % siderealOfUtc) *  24. \
                 for i in range(lastStartIndex, index - 2) ],  \
                 [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]  \
                 for i in range(lastStartIndex, index - 2) ],  \
@@ -2644,11 +2815,11 @@ def plotEzPlot1dSamplesSid(plotName, ezPlotInColumn, plotYLabel):
             timeUtcMjdLastStart += siderealOfUtc
 
     # out of loop, plot the last sidereal day
-    # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % siderealOfUtc) * 24.0
+    # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % siderealOfUtc) * 24.
     # y list = ezPlotInColumn
     print(f'\r         plotting {lastStartIndex:,}          ,       {antLenM1:,}')
     plt.plot([((ezPlotIn[ezPlotInIdxByMjdRel[i], 0] \
-        - timeUtcMjdLastStart0) % siderealOfUtc) *  24.0 \
+        - timeUtcMjdLastStart0) % siderealOfUtc) *  24. \
         for i in range(lastStartIndex, antLen) ], \
         [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]     \
         for i in range(lastStartIndex, antLen) ], \
@@ -2846,6 +3017,158 @@ def plotEzPlot490sidAntXTVTMax():
     plotCountdown -= 1
 
     plotEzPlot1dSamplesSid(plotName, 19, 'AntXTVTMax Spectrum Average by Sidereal day')
+
+
+
+def plotEzPlot481defDayAvgAntXTVT():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+
+    if 481 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 481:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot481avgAntXTVT.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    plotEzPlot1dSamplesAvg(plotName, 18, 'Average of AntXTVT Spectrum Averages')
+
+
+
+def plotEzPlot1dSamplesAvg(plotName, ezPlotInColumn, plotYLabel):
+
+    # plotName                                  # string
+    # ezPlotInColumn                            # integer
+    # plotYLabel                                # string
+
+    global titleS                               # string
+    global ezPlotDispGrid                       # integer
+    global antLen                               # integer
+    global antLenM1                             # integer
+
+    global ezPlotIn                             # float 2d array
+    global ezPlotInIdxByMjdRel                  # eventually float array
+
+    global colorPenSL                           # list of strings
+
+    global ezPlot481defDayH                     # float
+    global ezPlot481res                         # integer
+
+
+    plt.clf()
+
+    # ezPlotIn[n:] indices sorted by increasing MJD
+    if not len(ezPlotInIdxByMjdRel):
+        ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
+        #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
+
+    # Sidereal Day math
+    # ((365.0 + 0.25 + 0.01 + 0.0025) ...
+    # ((23 * 60) + 56) * 60) + 4.091 = 86164.091 seconds in sidereal day
+    # UTC Day = 24 * 60 * 60 = 86400 seconds in UTC day
+    # sidereal day / UTC day = 86164.091 / 86400 = 0.99726957
+    #siderealOfUtc = 0.99726957
+    # Defined Day math
+    defDayOfUtc = ezPlot481defDayH / 24.
+    # xSnaps per hour
+    xSnapsPerHour = ezPlot481res / ezPlot481defDayH
+
+    # To avoid retrace lines caused by new Defined Day, plot each Defined Day separately.
+    # Just keep records until stepping forward into new Defined Day.
+    lastStartIndex = 0                         # skip 0
+    timeUtcMjdThis       = ezPlotIn[ezPlotInIdxByMjdRel[0], 0]
+    timeUtcMjdLastStart  = timeUtcMjdThis
+    timeUtcMjdLastStart0 = timeUtcMjdLastStart      # defines left side of plot
+    penIndex = 5                                    # green
+    ezPlot481value = np.zeros(ezPlot481res + 1, dtype = float)
+    ezPlot481count = np.zeros(ezPlot481res + 1, dtype = int)
+    for index in range(1, antLen):   # start loop with index == 1
+
+        timeUtcMjdThis = ezPlotIn[ezPlotInIdxByMjdRel[index], 0]
+
+        if timeUtcMjdLastStart + defDayOfUtc < timeUtcMjdThis:      # new sidereal day ?
+            # just stepped forward into a new sidereal day, plot the last sidereal day
+            print(f'\r         plotting {lastStartIndex:,}          ,       {index - 1:,}')
+
+            # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % defDayOfUtc) * 24.
+            # y list = ezPlotInColumn
+            #plt.plot([((ezPlotIn[ezPlotInIdxByMjdRel[i], 0] \
+            #    - timeUtcMjdLastStart0) % defDayOfUtc) *  24. \
+            #    for i in range(lastStartIndex, index - 2) ],  \
+            #    [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]  \
+            #    for i in range(lastStartIndex, index - 2) ],  \
+            #    c=colorPenSL[penIndex] )                                  # using pens 1-7
+            for i in range(lastStartIndex, index - 2):
+                # x in hours
+                ezPlot481xH = ((ezPlotIn[ezPlotInIdxByMjdRel[i], 0] \
+                    - timeUtcMjdLastStart0) % defDayOfUtc) *  24.
+                # x in xSnaps
+                ezPlot481xSnap = int(ezPlot481xH * xSnapsPerHour + 0.5)
+                ezPlot481y = ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]
+                # plot into mailboxes
+                ezPlot481value[ezPlot481xSnap] += ezPlot481y
+                ezPlot481count[ezPlot481xSnap] += 1
+
+            lastStartIndex = index
+
+            timeUtcMjdLastStart += defDayOfUtc
+
+    # out of loop, plot the last Defined day
+    # x list = ((timeUtcMjdThis - timeUtcMjdLastStart0) % defDayOfUtc) * 24.
+    # y list = ezPlotInColumn
+    print(f'\r         plotting {lastStartIndex:,}          ,       {antLenM1:,}')
+    #plt.plot([((ezPlotIn[ezPlotInIdxByMjdRel[i], 0] \
+    #    - timeUtcMjdLastStart0) % defDayOfUtc) *  24. \
+    #    for i in range(lastStartIndex, antLen) ], \
+    #    [ ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]     \
+    #    for i in range(lastStartIndex, antLen) ], \
+    #    c=colorPenSL[penIndex] )
+    for i in range(lastStartIndex, antLen):
+        # x in hours
+        ezPlot481xH = ((ezPlotIn[ezPlotInIdxByMjdRel[i], 0] \
+            - timeUtcMjdLastStart0) % defDayOfUtc) *  24.
+        # x in xSnaps
+        ezPlot481xSnap = int(ezPlot481xH * xSnapsPerHour + 0.5)
+        ezPlot481y = ezPlotIn[ezPlotInIdxByMjdRel[i], ezPlotInColumn]
+        # plot into mailboxes
+        ezPlot481value[ezPlot481xSnap] += ezPlot481y
+        ezPlot481count[ezPlot481xSnap] += 1
+
+    #print('\n\n================= ezPlot481count =', ezPlot481count, '\n\n')
+    #ezPlot481value /= ezPlot481count        # calculate average value for each xSnap
+    # but some element of ezPlot481count might be zero, causing
+    #   "RuntimeWarning: invalid value encountered in true_divide" warning
+    for i in range(len(ezPlot481value)):
+        if ezPlot481count[i]:
+            ezPlot481value[i] /= ezPlot481count[i]      # calculate average value for each xSnap
+        else:
+            ezPlot481value[i] = np.nan                  # unused, do not plot
+
+    # plot x in hours
+
+    # plot all 24 hours
+    plt.plot(np.arange(ezPlot481res + 1) / xSnapsPerHour, ezPlot481value, c=colorPenSL[penIndex] )
+
+    # plot just 10am to 2pm for Sun transit (in Colorado USA)
+    #xSnapStart = int(ezPlot481res * 16 / 24)    # 10am local MDT (10 + 6)
+    #xSnapLast  = int(ezPlot481res * 21 / 24)    #  2pm local MST (14 + 7)
+    #plt.plot(np.arange(ezPlot481res + 1)[xSnapStart:xSnapLast] / xSnapsPerHour, ezPlot481value[xSnapStart:xSnapLast], c=colorPenSL[penIndex] )
+
+    plt.title(titleS)
+    plt.grid(ezPlotDispGrid)
+
+    plt.xlabel(f'Hours of {ezPlot481defDayH} Hour Day  ({antLen:,} Samples)')
+    #plt.xlim(0.0, 24.)
+    #plt.xticks([0.0, 6.0, 12.0, 18.0, 24], ['0', '6', '12', '18', '24'])
+
+    plt.ylabel(plotYLabel)
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -3439,7 +3762,7 @@ def plotEzPlot1dSamplesCal(plotName, ezPlotInColumn, plotYLabel):
 
     plt.clf()
 
-    # ezPlotIn[n:] indices sorted by MJD
+    # ezPlotIn[n:] indices sorted by increasing MJD
     if not len(ezPlotInIdxByMjdRel):
         ezPlotInIdxByMjdRel = ezPlotIn[:, 0].argsort()
         #ezPlotInIdxByMjdRel -= ezPlotInIdxByMjdRel[0]
@@ -4067,6 +4390,11 @@ def main():
 
     plotPrep()              # creates antLenM1, titleS, ezPlotInIdxByMjdRel
 
+    # filters
+
+    if ezPlotUseTimesSL or ezPlotUseSamplesL:
+        ezPlotUseDo()       # thin ezPlotIn[:, :], antLen, and antLenM1
+
     if ezPlotAntXTVTMaxPluckQtyL or ezPlotAntXTVTMaxPluckValL :
         ezPlotAntXTVTMaxPluckDo()       # thin ezPlotIn[:, :], antLen, and antLenM1
     if ezPlotAntXTVTAvgPluckQtyL or ezPlotAntXTVTAvgPluckValL :
@@ -4164,6 +4492,8 @@ def main():
     plotEzPlot480sidAntXTVT()
     plotEzPlot490sidAntXTVTMax()
 
+
+    plotEzPlot481defDayAvgAntXTVT()        # user-defined day length
 
 
     # plot ezPlots with X-axis: sorted

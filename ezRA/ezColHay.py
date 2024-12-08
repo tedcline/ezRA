@@ -1,4 +1,4 @@
-programName = 'ezColHay230305a.py'
+programName = 'ezColHay240505a.py'
 programRevision  = programName
 
 # ezRA - Easy Radio Astronomy ezColHay Data COLlector program,
@@ -6,7 +6,7 @@ programRevision  = programName
 #   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,6 +22,8 @@ programRevision  = programName
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+# ezColHay240505a, write the new azDeg format
+# ezColHay240430a, updated dataFlagsS from 'C' (Calibration) to 'R' (Reference) for ezCon240225a
 # ezColHay230305a.py, boilerplate from ezSky
 # ezColHay220930a.py, prep for Git
 # ezColHay01m.py, output to ./data directory, 
@@ -819,12 +821,14 @@ def main():
                             elevationLast = elevationThis
 
                         elif azimuthThis != azimuthLast or elevationThis != elevationLast:
-                            fileWrite.write(f'az {azimuthThis:g} el {elevationThis:g}\n')
+                            #fileWrite.write(f'az {azimuthThis:g} el {elevationThis:g}\n')
+                            fileWrite.write(f'azDeg {azimuthThis:g} elDeg {elevationThis:g}\n')
                             azimuthLast   = azimuthThis
                             elevationLast = elevationThis
 
                         if feedCalOnThis:
-                            dataFlagsS = ' C\n'
+                            #dataFlagsS = ' C\n'
+                            dataFlagsS = ' R\n'
                             calQty += 1
                         else:
                             dataFlagsS = ' \n'

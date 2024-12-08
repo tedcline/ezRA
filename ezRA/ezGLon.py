@@ -1,4 +1,4 @@
-programName = 'ezGLon230930a.py'
+programName = 'ezGLon241207a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGLon single Galactic LONgitude explorer program,
@@ -6,7 +6,7 @@ programRevision = programName
 #   and optionally create .png plot files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,6 +26,15 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGLon241207a, 2 ezGLon580 X,Y,Z extremes to control X,Y,Z autoscaling to value 0.0
+# ezGLon241118a, in ezGLon570 and ezGLon571 moved plt.colorbar() to later in case no data to plot
+# ezGLon241024a, -ezGLon580CsvFrac
+# ezGLon241023b, 'for GLon' into status line
+# ezGLon241023a,
+# ezGLon241020ax, -ezGLon580Csv and -ezGLon582Csv
+#   to create CSV files for 3d colored-dot plots with rinearn.com/en-us/graph3d
+# ezGLon231012a, for ezGLon571 and ezGLon581 and ezGLon582 limit GLat plotted to -18 to +19,
+#   removed ezGLon582 vertical thin white line
 # ezGLon230930a.py, ezGLon510
 # ezGLon230824a.py, print ezGlonPlotRangeL in printGoodbye()
 # ezGLon230818a.py, ezGlon571galArmsSunMag5 and ezGLon581galArmsSunIMag5
@@ -234,6 +243,13 @@ def printUsage():
     #print()
     #print('    -ezGLon61XGain           150    (maximum height in ezGLon61XgLonCascade plots)')
     print()
+    print('    -ezGLon580Csv             1.3    (create CSV file of ezGLon580 values equal or greater than 1.3,')
+    print('                                      for 3d colored-dot plots with rinearn.com/en-us/graph3d)')
+    print('    -ezGLon580CsvFrac         0.45   (set ezGLon580Csv as Fraction 0.45 between ezGLon580 colorbar extreme values,')
+    print('                                      overrules ezGLon580Csv input, -9999.0 to disable)')
+    print('    -ezGLon582Csv             1.3    (create CSV file of ezGLon582 values equal or greater than 1.3,')
+    print('                                      for 3d colored-dot plots with rinearn.com/en-us/graph3d)')
+    print()
     print('    -ezDefaultsFile ../bigDish8.txt (additional file of ezRA arguments)')
     print()
     print('    -eXXXXXXXXXXXXXXzIgonoreThisWholeOneWord')
@@ -291,6 +307,9 @@ def ezGLonArgumentsFile(ezDefaultsFileNameInput):
     global ezGLonGalCrossingGLonNear        # float
 
     #global ezGLon61XGain                    # float
+    global ezGLon580Csv                     # float
+    global ezGLon580CsvFrac                 # float
+    global ezGLon582Csv                     # float
 
     global ezGLonPlotRangeL                 # integer list
 
@@ -336,6 +355,15 @@ def ezGLonArgumentsFile(ezDefaultsFileNameInput):
 
 
             # float arguments:
+            elif thisLine0Lower == '-ezGLon580Csv'.lower():
+                ezGLon580Csv += [float(thisLine[1])]
+
+            elif thisLine0Lower == '-ezGLon580CsvFrac'.lower():
+                ezGLon580CsvFrac += [float(thisLine[1])]
+
+            elif thisLine0Lower == '-ezGLon582Csv'.lower():
+                ezGLon582Csv += [float(thisLine[1])]
+
             elif thisLine0Lower == '-ezGLonGalCrossingGLonCenter'.lower():
                 ezGLonGalCrossingGLonCenterL += [float(thisLine[1])]
 
@@ -406,7 +434,10 @@ def ezGLonArgumentsCommandLine():
     global ezGLonGalCrossingGLonCenterL     # float list
     global ezGLonGalCrossingGLonNear        # float
 
-#    global ezGLon61XGain                    # float
+    #global ezGLon61XGain                    # float
+    global ezGLon580Csv                     # float
+    global ezGLon580CsvFrac                 # float
+    global ezGLon582Csv                     # float
 
     global ezGLonPlotRangeL                 # integer list
 
@@ -473,6 +504,15 @@ def ezGLonArgumentsCommandLine():
             # float arguments:
             elif cmdLineArgLower == 'ezGLon61XGain'.lower():
                 ezGal61XGain = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezGLon580Csv'.lower():
+                ezGLon580Csv = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezGLon580CsvFrac'.lower():
+                ezGLon580CsvFrac = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezGLon582Csv'.lower():
+                ezGLon582Csv = float(cmdLineSplit[cmdLineSplitIndex])
 
             elif cmdLineArgLower == 'ezGLonGalCrossingGLonCenter'.lower():
                 ezGLonGalCrossingGLonCenterL += [float(cmdLineSplit[cmdLineSplitIndex])]
@@ -544,6 +584,9 @@ def ezGLonArguments():
     global ezGLonGalCrossingGLonNear        # float
 
     #global ezGLon61XGain                    # float
+    global ezGLon580Csv                     # float
+    global ezGLon580CsvFrac                 # float
+    global ezGLon582Csv                     # float
 
     global ezGLonPlotRangeL                 # integer list
     global plotCountdown                    # integer
@@ -559,7 +602,10 @@ def ezGLonArguments():
     ezGLonGalCrossingGLonNear = 5.
 
     #ezGLon61XGain = 120.            # maximum height in ezGLon61XgLonSpectraCascade plots
-    
+    ezGLon580Csv     = -9999.        # silly value to disable
+    ezGLon580CsvFrac = -9999.        # silly value to disable
+    ezGLon582Csv     = -9999.        # silly value to disable
+
     ezGLonPlotRangeL = [0, 9999]    # save this range of plots to file
     plotCountdown = 25              # number of plots still to print + 1
     ezGLonDispGrid = 0
@@ -591,7 +637,10 @@ def ezGLonArguments():
     print('   ezGLonGalCrossingGLonNear    =', ezGLonGalCrossingGLonNear)
     print()
     #print('   ezGLon61XGain    =', ezGLon61XGain)
-    #print()
+    print('   ezGLon580Csv     =', ezGLon580Csv)
+    print('   ezGLon580CsvFrac =', ezGLon580CsvFrac)
+    print('   ezGLon582Csv     =', ezGLon582Csv)
+    print()
     print('   ezGLonPlotRangeL =', ezGLonPlotRangeL)
     print('   ezGLonDispGrid   =', ezGLonDispGrid)
 
@@ -643,8 +692,13 @@ def readDataDir():
             #    ' in dir', directoryCounter + 1, ' of', directoryListLen,
             #    ' =', directory + os.path.sep + fileReadName, '                                      ',
             #    end='')   # allow append to line
-            print(f'\r {gLonNpz_Qty + 1}  file = {fileCounter + 1} of {fileListLen}',
-                f' in dir {directoryCounter + 1} of {directoryListLen} =',
+            #print(f'\r {gLonNpz_Qty + 1}  file = {fileCounter + 1} of {fileListLen}',
+            #    f' in dir {directoryCounter + 1} of {directoryListLen} =',
+            #    directory + os.path.sep + fileReadName, '                                      ',
+            #    end='')   # allow append to line
+            print(f'\r {gLonNpz_Qty + 1} for GLon {ezGLonGalCrossingGLonCenter},',
+                f' in dir {directoryCounter + 1} of {directoryListLen}',
+                f' file = {fileCounter + 1} of {fileListLen} =',
                 directory + os.path.sep + fileReadName, '                                      ',
                 end='')   # allow append to line
 
@@ -878,18 +932,18 @@ def plotEzGLon510velGLat():
     # if anything in velGLatP90 to save or plot
     if ezGLonPlotRangeL[0] <= 510 and 510 <= ezGLonPlotRangeL[1] and velGLatP90CountSum:
 
-        #pltNameS = 'ezGLon510velGLat.png'
-        #pltNameS = 'ezGLon510velGLatXxxx.xXxxx.x.png'
+        #plotName = 'ezGLon510velGLat.png'
+        #plotName = 'ezGLon510velGLatXxxx.xXxxx.x.png'
         if 0 <= ezGLonGalCrossingGLonCenter:
-            pltNameS = f'ezGLon510velGLatP{ezGLonGalCrossingGLonCenter:05.1f}'
+            plotName = f'ezGLon510velGLatP{ezGLonGalCrossingGLonCenter:05.1f}'
         else:
-            pltNameS = f'ezGLon510velGLatN{ezGLonGalCrossingGLonCenter:05.1f}'
+            plotName = f'ezGLon510velGLatN{ezGLonGalCrossingGLonCenter:05.1f}'
         if 0 <= ezGLonGalCrossingGLonNear:
-            pltNameS += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
+            plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
         else:
-            pltNameS += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+            plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
         print()
-        print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+        print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
         plt.clf()
 
@@ -963,9 +1017,9 @@ def plotEzGLon510velGLat():
             + f' Nonzero={velGLatP90CountNonzero} of {len(velGLatP90Count)}',
             rotation=90, verticalalignment='bottom')
 
-        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
-            os.remove(pltNameS)
-        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -986,18 +1040,18 @@ def plotEzGLon511velGLatCount():
     # if anything in velGLatP90 to plot
     if ezGLonPlotRangeL[0] <= 511 and 511 <= ezGLonPlotRangeL[1] and velGLatP90CountSum:
 
-        #pltNameS = 'ezGLon511velGLatCount.png'
-        #pltNameS = 'ezGLon511velGLatCountXxxx.xXxxx.x.png'
+        #plotName = 'ezGLon511velGLatCount.png'
+        #plotName = 'ezGLon511velGLatCountXxxx.xXxxx.x.png'
         if 0 <= ezGLonGalCrossingGLonCenter:
-            pltNameS = f'ezGLon511velGLatCountP{ezGLonGalCrossingGLonCenter:05.1f}'
+            plotName = f'ezGLon511velGLatCountP{ezGLonGalCrossingGLonCenter:05.1f}'
         else:
-            pltNameS = f'ezGLon511velGLatCountN{ezGLonGalCrossingGLonCenter:05.1f}'
+            plotName = f'ezGLon511velGLatCountN{ezGLonGalCrossingGLonCenter:05.1f}'
         if 0 <= ezGLonGalCrossingGLonNear:
-            pltNameS += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
+            plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
         else:
-            pltNameS += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+            plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
         print()
-        print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+        print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
         plt.clf()
         plt.plot(np.arange(-90, +91, 1), velGLatP90Count)
@@ -1021,9 +1075,9 @@ def plotEzGLon511velGLatCount():
             + f' Nonzero = {velGLatP90CountNonzero} of {len(velGLatP90Count)}')
         #    rotation=90, verticalalignment='bottom')
 
-        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
-            os.remove(pltNameS)
-        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
         if 0:
@@ -1123,18 +1177,18 @@ def plotEzGlon570galArmsSun():
     if not (ezGLonPlotRangeL[0] <= 570 and 570 <= ezGLonPlotRangeL[1] and velGLatP90CountSum):
         return(0)       # plot not needed
 
-    #pltNameS = 'ezGLon570galArmsSun.png'
-    #pltNameS = 'ezGLon570galArmsSunXxxx.xXxxx.x.png'
+    #plotName = 'ezGLon570galArmsSun.png'
+    #plotName = 'ezGLon570galArmsSunXxxx.xXxxx.x.png'
     if 0 <= ezGLonGalCrossingGLonCenter:
-        pltNameS = f'ezGLon570galArmsSunP{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon570galArmsSunP{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        pltNameS = f'ezGLon570galArmsSunN{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon570galArmsSunN{ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
-        pltNameS += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        pltNameS += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
-    print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+    print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
     plt.clf()
 
@@ -1228,12 +1282,12 @@ def plotEzGlon570galArmsSun():
                 polarPlot = ax.scatter(gLatDegRadMany, plotRadii,
                     c=velGLatP90[:,gLatDegP90], s=1, cmap=plt.get_cmap('gnuplot'), alpha=0.75)
 
-        # Add a color bar which maps values to colors.
-        plt.colorbar(polarPlot, pad=0.1)
-
         # Plot yellow Sun at center
         polarPlot = ax.scatter(0., 0., c='black', s=120, alpha=0.75)
         polarPlot = ax.scatter(0., 0., c='yellow', s=100, alpha=1.)
+
+        # Add a color bar which maps values to colors.
+        plt.colorbar(polarPlot, pad=0.1)
 
         plt.title(titleS)
 
@@ -1256,9 +1310,9 @@ def plotEzGlon570galArmsSun():
 
         ax.set_ylabel('Possible Galactic Atomic Hydrogen\n\nSun = Yellow Dot\n\n')
 
-        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
-            os.remove(pltNameS)
-        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -1288,18 +1342,18 @@ def plotEzGlon571galArmsSunMag5():
     if not (ezGLonPlotRangeL[0] <= 571 and 571 <= ezGLonPlotRangeL[1] and velGLatP90CountSum):
         return(0)       # plot not needed
 
-    #pltNameS = 'ezGLon571galArmsSunMag5.png'
-    #pltNameS = 'ezGLon571galArmsSunMag5Xxxx.xXxxx.x.png'
+    #plotName = 'ezGLon571galArmsSunMag5.png'
+    #plotName = 'ezGLon571galArmsSunMag5Xxxx.xXxxx.x.png'
     if 0 <= ezGLonGalCrossingGLonCenter:
-        pltNameS = f'ezGLon571galArmsSunMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon571galArmsSunMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        pltNameS = f'ezGLon571galArmsSunMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon571galArmsSunMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
-        pltNameS += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        pltNameS += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
-    print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+    print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
     plt.clf()
 
@@ -1347,7 +1401,8 @@ def plotEzGlon571galArmsSunMag5():
 
         #print('============== velGLatP90Count =', velGLatP90Count)
 
-        for gLatDeg in range(-90, 91):
+        #for gLatDeg in range(-90, 91):
+        for gLatDeg in range(-18, 19):
             #gLatDeg += 45
             gLatDegP90 = gLatDeg + 90
             if 180 <= gLatDegP90:
@@ -1376,7 +1431,8 @@ def plotEzGlon571galArmsSunMag5():
         #        polarPlot = ax.scatter(gLatDegRadMany, plotRadii,
         #            c=velGLatP90[:,gLatDegP90], s=1, cmap=plt.get_cmap('gnuplot'), alpha=0.75)
 
-        for gLatDeg in range(-90, 91):
+        #for gLatDeg in range(-90, 91):
+        for gLatDeg in range(-18, 19):
             #gLatDeg += 45
             gLatDegP90 = gLatDeg + 90
             if 180 <= gLatDegP90:
@@ -1395,12 +1451,12 @@ def plotEzGlon571galArmsSunMag5():
                 polarPlot = ax.scatter(gLatDegRadMany, plotRadii,
                     c=velGLatP90[:,gLatDegP90], s=1, cmap=plt.get_cmap('gnuplot'), alpha=0.75)
 
-        # Add a color bar which maps values to colors.
-        plt.colorbar(polarPlot, pad=0.1)
-
         # Plot yellow Sun at center
         polarPlot = ax.scatter(0., 0., c='black', s=120, alpha=0.75)
         polarPlot = ax.scatter(0., 0., c='yellow', s=100, alpha=1.)
+
+        # Add a color bar which maps values to colors.
+        plt.colorbar(polarPlot, pad=0.1)
 
         plt.title(titleS)
 
@@ -1423,9 +1479,9 @@ def plotEzGlon571galArmsSunMag5():
 
         ax.set_ylabel('Possible Galactic Atomic Hydrogen\n\nSun = Yellow Dot, GLat Magnification = 5\n\n')
 
-        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
-            os.remove(pltNameS)
-        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -1440,6 +1496,8 @@ def plotEzGLon580galArmsSunI():
     global velGLatP90               # float 2d array
     global velGLatP90Count          # integer array
     global velGLatP90CountSum       # integer
+    global ezGLon580Csv                     # float
+    global ezGLon580CsvFrac                 # float
     global ezGLonGalCrossingGLonCenter      # float 
     global ezGLonGalCrossingGLonNear        # float
 
@@ -1467,18 +1525,18 @@ def plotEzGLon580galArmsSunI():
     if not (ezGLonPlotRangeL[0] <= 580 and 580 <= ezGLonPlotRangeL[1] and velGLatP90CountSum):
         return(0)       # plot not needed
 
-    #pltNameS = 'ezGLon580galArmsSunI.png'
-    #pltNameS = 'ezGLon580galArmsSunIXxxx.xXxxx.x.png'
+    #plotName = 'ezGLon580galArmsSunI.png'
+    #plotName = 'ezGLon580galArmsSunIXxxx.xXxxx.x.png'
     if 0 <= ezGLonGalCrossingGLonCenter:
-        pltNameS = f'ezGLon580galArmsSunIP{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon580galArmsSunIP{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        pltNameS = f'ezGLon580galArmsSunIN{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon580galArmsSunIN{ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
-        pltNameS += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        pltNameS += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
-    print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+    print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
     plt.clf()
 
@@ -1669,9 +1727,93 @@ def plotEzGLon580galArmsSunI():
         ax.set_xlabel('Distance (kiloparsecs)')
         ax.set_ylabel('Possible Galactic Atomic Hydrogen\n\nSun = Yellow Dot')
 
-        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
-            os.remove(pltNameS)
-        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
+
+        print('================== ezGLon580CsvFrac =', ezGLon580CsvFrac, '     ezGLon580Csv =', ezGLon580Csv)
+        print('================== np.nanmax(zi) =', np.nanmax(zi))
+        print('================== np.nanmin(zi) =', np.nanmin(zi))
+        if -9999. < ezGLon580CsvFrac:
+            ziNanmin = np.nanmin(zi)
+            ezGLon580Csv = ezGLon580CsvFrac * (np.nanmax(zi) - ziNanmin) + ziNanmin
+
+
+        print('================== ezGLon580CsvFrac =', ezGLon580CsvFrac, '     ezGLon580Csv =', ezGLon580Csv)
+        if -9999. < ezGLon580Csv:
+            plotNameCsv = plotName[:-3] + 'csv'
+            #ziWhere = np.argwhere(ezGLon580Csv <= zi)
+            ziEqualGreater = ezGLon580Csv <= zi
+            #ziEqualGreaterX, ziEqualGreaterY = np.nonzero(ezGLon580Csv <= zi)
+            ziEqualGreaterX, ziEqualGreaterY = np.nonzero(ziEqualGreater)
+            #zi = zi[ezGLon580Csv <= zi]
+            #row_indices, col_indices = np.indices(np.transpose(zi).shape)
+            #ziCsv = np.column_stack((row_indices.ravel()[::-1], col_indices.ravel(), np.transpose(zi).ravel()))
+            # following 3 parameters =
+            #   radius in Galactic plane from Galactic Center,
+            #   height above Galactic plane from Galactic Center,
+            #   Galactic hydrogen density value
+            #ziCsv = np.column_stack((np.max(ziEqualGreaterY) - ziEqualGreaterY, np.max(ziEqualGreaterX) / 2. - ziEqualGreaterX, \
+            #    zi[ezGLon580Csv <= zi].ravel()))
+            #ziCsv = np.column_stack((20. - ziEqualGreaterY, -ziEqualGreaterX, zi[ezGLon580Csv <= zi].ravel()))
+            #ziCsv = np.column_stack((200. - ziEqualGreaterY, 200. - ziEqualGreaterX, zi[ezGLon580Csv <= zi].ravel()))
+            # ezGLonGalCrossingGLonCenter
+
+            ############################################ tedd
+            piD180 = np.pi / 180.
+            # map to galacticX and galacticY and galacticZ, with galacticZ perpendicular to Galactic plane, all centered on Sun
+            # galacticX is kpc from Galactic Center, in Galactic plane, in direction of GLon 270 degrees
+            # galacticX is (-(200. - ziEqualGreaterY)) * sin(ezGLonGalCrossingGLonCenter * 2. * np.pi() / 360.)
+            # galacticX is (  ziEqualGreaterY - 200. ) * sin(ezGLonGalCrossingGLonCenter * np.pi() / 180.)
+            # galacticX is (  ziEqualGreaterY - 200. ) * sin(ezGLonGalCrossingGLonCenter * piD180)
+            #
+            # galacticY is kpc from Galactic Center, in Galactic plane, in direction of GLon 0 degrees
+            # galacticY is much like galacticX, but with cos() and a sign change
+            # galacticY is (+(200. - ziEqualGreaterY)) * cos(ezGLonGalCrossingGLonCenter * 2. * np.pi() / 360.)
+            # galacticY is (  200. - ziEqualGreaterY ) * cos(ezGLonGalCrossingGLonCenter * np.pi() / 180.)
+            # galacticY is (  200. - ziEqualGreaterY ) * cos(ezGLonGalCrossingGLonCenter * piD180)
+            #
+            # galacticZ is kpc from Galactic Center, perpendicular to Galactic plane
+            # galacticZ is 200. - ziEqualGreaterX
+            #
+            # dot color is Galactic hydrogen density value
+
+            # define 2 X,Y,Z extremes to control X,Y,Z autoscaling, with minimal value normalized to 0.0
+            #ziCsv = np.array([ [200, 200, 200, ezGLon580Csv], [-200, -200, -200, ezGLon580Csv] ])
+            ziCsv = np.array([ [200., 200., 200., 0.], [-200., -200., -200., 0.] ])
+            # concatenate data
+            #print(ziCsv)
+            #print(np.column_stack(( \
+            #    (ziEqualGreaterY - 200.) * np.sin(ezGLonGalCrossingGLonCenter * piD180),
+            #    (200. - ziEqualGreaterY) * np.cos(ezGLonGalCrossingGLonCenter * piD180),
+            #    200. - ziEqualGreaterX,
+            #    np.transpose(zi[ziEqualGreater]).ravel() )) )
+            # from ezGal241024a,
+            # galSunRadiusKm = 26000. * 9.46e12                   # = 2.4596e+17
+            # galSunRadiusKm2 = galSunRadiusKm * galSunRadiusKm   # = 6.0496322e+34
+            # galSunRadiusKpc = galSunRadiusKm * 3.24078e-17      # 7.971022488, in kiloparsecs
+            # print('                         galSunRadiusKpc =', galSunRadiusKpc)
+
+            # ziValues = zi thinned and normalized to 0.0 to 1.0
+            #print('======================== zi =', zi)
+            ziValues = zi[ziEqualGreater]
+            ziValuesNanmin = np.nanmin(ziValues)
+            ziValues = (ziValues - ziValuesNanmin) / (np.nanmax(ziValues) - ziValuesNanmin)
+            #print('======================== ziValues =', ziValues)
+
+            ziCsv = np.concatenate([ziCsv, np.column_stack(( \
+                (ziEqualGreaterY - 200.) * np.sin(ezGLonGalCrossingGLonCenter * piD180),
+                (200. - ziEqualGreaterY) * np.cos(ezGLonGalCrossingGLonCenter * piD180),
+                200. - ziEqualGreaterX,
+                np.transpose(ziValues).ravel() )) ])
+            #    (200. - ziEqualGreaterY) * np.cos(ezGLonGalCrossingGLonCenter * piD180 - 10.),
+            #    (200. - ziEqualGreaterY) * np.cos(ezGLonGalCrossingGLonCenter * piD180 - 7.971022488),
+            #    np.transpose(zi[ziEqualGreater]).ravel() )) ])
+            #print('======================== ziCsv =', ziCsv)
+
+            # map to galacticX and galacticY and galacticZ, with galacticZ perpendicular to Galactic plane, all centered on Galactic center
+
+            np.savetxt(plotNameCsv, ziCsv, delimiter=",")
 
 
 
@@ -1709,18 +1851,18 @@ def plotEzGLon581galArmsSunIMag5():
     if not (ezGLonPlotRangeL[0] <= 581 and 581 <= ezGLonPlotRangeL[1] and velGLatP90CountSum):
         return(0)       # plot not needed
 
-    #pltNameS = 'ezGLon581galArmsSunIMag5.png'
-    #pltNameS = 'ezGLon581galArmsSunIMag5Xxxx.xXxxx.x.png'
+    #plotName = 'ezGLon581galArmsSunIMag5.png'
+    #plotName = 'ezGLon581galArmsSunIMag5Xxxx.xXxxx.x.png'
     if 0 <= ezGLonGalCrossingGLonCenter:
-        pltNameS = f'ezGLon581galArmsSunIMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon581galArmsSunIMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        pltNameS = f'ezGLon581galArmsSunIMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon581galArmsSunIMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
-        pltNameS += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        pltNameS += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
-    print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+    print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
     plt.clf()
 
@@ -1780,7 +1922,8 @@ def plotEzGLon581galArmsSunIMag5():
         notIsNanPlotRadiiPosAny = notIsNanPlotRadiiPos.any()
 
         if notIsNanPlotRadiiPosAny:
-            for gLatDeg in range(-90, 91):
+            #for gLatDeg in range(-90, 91):
+            for gLatDeg in range(-18, 19):
                 gLatDegP90 = gLatDeg + 90
 
                 if velGLatP90Count[gLatDegP90] > 0:       # if column used
@@ -1820,7 +1963,8 @@ def plotEzGLon581galArmsSunIMag5():
         notIsNanPlotRadiiNeg = np.logical_not(np.isnan(plotRadii))
         
         if notIsNanPlotRadiiNeg.any():
-            for gLatDeg in range(-90, 91):
+            #for gLatDeg in range(-90, 91):
+            for gLatDeg in range(-18, 19):
                 gLatDegP90 = gLatDeg + 90
 
                 if velGLatP90Count[gLatDegP90] > 0:       # if column used
@@ -1853,7 +1997,8 @@ def plotEzGLon581galArmsSunIMag5():
         elif not notIsNanPlotRadiiPosAny:
             # if not notIsNanPlotRadiiNeg.any() and not notIsNanPlotRadiiPosAny:
             # plot an edge radius, all as velGLatP90.min()
-            for gLatDeg in range(-90, 91):
+            #for gLatDeg in range(-90, 91):
+            for gLatDeg in range(-18, 19):
                 gLatDegP90 = gLatDeg + 90
 
                 #gLatDegRad = gLatDeg * np.pi / 180.
@@ -1877,10 +2022,13 @@ def plotEzGLon581galArmsSunIMag5():
         #x = -x
         #y = -y
         zi = griddata((y, x), z, (xi, yi), method='linear')
+
         # free memory
         x = []
         y = []
         z = []
+        xi = []
+        yi = []
 
         ###zi = gaussian_filter(zi, 9.)
 
@@ -1912,9 +2060,9 @@ def plotEzGLon581galArmsSunIMag5():
         ax.set_xlabel('Distance (kiloparsecs)')
         ax.set_ylabel('Possible Galactic Atomic Hydrogen\n\nSun = Yellow Dot, GLat Magnification = 5')
 
-        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
-            os.remove(pltNameS)
-        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -1925,6 +2073,7 @@ def plotEzGLon582galArmsSunRIMag5():
     global velGLatP90               # float 2d array
     global velGLatP90Count          # integer array
     global velGLatP90CountSum       # integer
+    global ezGLon582Csv                     # float
     global ezGLonGalCrossingGLonCenter      # float 
     global ezGLonGalCrossingGLonNear        # float
 
@@ -1952,18 +2101,18 @@ def plotEzGLon582galArmsSunRIMag5():
     if not (ezGLonPlotRangeL[0] <= 582 and 582 <= ezGLonPlotRangeL[1] and velGLatP90CountSum):
         return(0)       # plot not needed
 
-    #pltNameS = 'ezGLon582galArmsSunRIMag5.png'
-    #pltNameS = 'ezGLon582galArmsSunRIMag5Xxxx.xXxxx.x.png'
+    #plotName = 'ezGLon582galArmsSunRIMag5.png'
+    #plotName = 'ezGLon582galArmsSunRIMag5Xxxx.xXxxx.x.png'
     if 0 <= ezGLonGalCrossingGLonCenter:
-        pltNameS = f'ezGLon582galArmsSunRIMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon582galArmsSunRIMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        pltNameS = f'ezGLon582galArmsSunRIMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon582galArmsSunRIMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
-        pltNameS += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        pltNameS += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
-    print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
+    print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
     plt.clf()
 
@@ -2023,7 +2172,8 @@ def plotEzGLon582galArmsSunRIMag5():
         notIsNanPlotRadiiPosAny = notIsNanPlotRadiiPos.any()
 
         if notIsNanPlotRadiiPosAny:
-            for gLatDeg in range(-90, 91):
+            #for gLatDeg in range(-90, 91):
+            for gLatDeg in range(-18, 19):
                 gLatDegP90 = gLatDeg + 90
 
                 if velGLatP90Count[gLatDegP90] > 0:       # if column used
@@ -2125,6 +2275,8 @@ def plotEzGLon582galArmsSunRIMag5():
         x = []
         y = []
         z = []
+        xi = []
+        yi = []
 
         ###zi = gaussian_filter(zi, 9.)
 
@@ -2139,7 +2291,7 @@ def plotEzGLon582galArmsSunRIMag5():
         # horizonal thin white line
         plt.axhline(y = 200., linewidth=0.5, color='white')
         # vertical thin white line
-        plt.axvline(x = 200., linewidth=0.5, color='white')
+        #plt.axvline(x = 200., linewidth=0.5, color='white')
 
         # Plot yellow Sun at the right
         polarPlot = ax.scatter(400., 200., c='black', s=120, alpha=1.)
@@ -2157,9 +2309,23 @@ def plotEzGLon582galArmsSunRIMag5():
         ax.set_xlabel('Distance (kiloparsecs)')
         ax.set_ylabel('Possible Galactic Atomic Hydrogen\n\nSun = Yellow Dot, GLat Magnification = 5')
 
-        if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
-            os.remove(pltNameS)
-        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
+
+        if -9999. < ezGLon582Csv:
+            plotNameCsv = plotName[:-3] + 'csv'
+            #ziWhere = np.argwhere(ezGLon582Csv <= zi)
+            ziEqualGreaterX, ziEqualGreaterY = np.nonzero(ezGLon582Csv <= zi)
+            #zi = zi[ezGLon582Csv <= zi]
+            #row_indices, col_indices = np.indices(np.transpose(zi).shape)
+            #ziCsv = np.column_stack((row_indices.ravel()[::-1], col_indices.ravel(), np.transpose(zi).ravel()))
+            ziCsv = np.column_stack((np.max(ziEqualGreaterY) - ziEqualGreaterY, np.max(ziEqualGreaterX) / 2. - ziEqualGreaterX, \
+                zi[ezGLon582Csv <= zi].ravel()))
+            # ezGLonGalCrossingGLonCenter
+            np.savetxt(plotNameCsv, ziCsv, delimiter=",")
+            # free memory
+            #ziCsv = []
 
 
 
@@ -2184,7 +2350,7 @@ def plotEzGLon60XgLonSpectra():
         return(0)       # plot not needed
 
     plt.clf()
-    pltNameS = 'ezGLon60XgLonSpectra.png'
+    plotName = 'ezGLon60XgLonSpectra.png'
 
     velGLatP90CountNonzero = np.count_nonzero(velGLatP90Count)
     #print(' velGLatP90Count =', velGLatP90Count)
@@ -2216,10 +2382,10 @@ def plotEzGLon60XgLonSpectra():
 
         if ezGLonPlotRangeL[0] <= plotNumber and plotNumber <= ezGLonPlotRangeL[1]:
 
-            #pltNameS = 'ezGal600gLonSpectraQ{gQuadrant}.png'
-            pltNameS = f'ezGal{plotNumber}gLonSpectra.png'
+            #plotName = 'ezGal600gLonSpectraQ{gQuadrant}.png'
+            plotName = f'ezGal{plotNumber}gLonSpectra.png'
             print()
-            print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ============')
+            print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ============')
 
             plt.clf()
 
@@ -2264,9 +2430,9 @@ def plotEzGLon60XgLonSpectra():
                     gLonDegS = f'+{gLonP180 - 180:03d}'        # '+nnn' with leading zeros
                 ax.text(0.99, 0.85, gLonDegS, fontsize=5, transform=ax.transAxes, horizontalalignment='right')
 
-            if os.path.exists(pltNameS): # to force plot file date update, if file exists, delete it
-                os.remove(pltNameS)
-            plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+            if os.path.exists(plotName): # to force plot file date update, if file exists, delete it
+                os.remove(plotName)
+            plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -2293,7 +2459,7 @@ def plotEzGLon605gLonSpectraCompare():
         return(0)       # plot not needed
 
     plt.clf()
-    pltNameS = 'ezGLon605gLonSpectraCompare.png'
+    plotName = 'ezGLon605gLonSpectraCompare.png'
 
     velGLatP90CountNonzero = np.count_nonzero(velGLatP90Count)
     #print(' velGLatP90Count =', velGLatP90Count)
@@ -2317,10 +2483,10 @@ def plotEzGLon605gLonSpectraCompare():
 
     if ezGLonPlotRangeL[0] <= plotNumber and plotNumber <= ezGLonPlotRangeL[1] and velGLatP90CountSum:
 
-        #pltNameS = 'ezGal600gLonSpectraQ{gQuadrant}.png'
-        pltNameS = f'ezGal{plotNumber}gLonSpectra.png'
+        #plotName = 'ezGal600gLonSpectraQ{gQuadrant}.png'
+        plotName = f'ezGal{plotNumber}gLonSpectra.png'
         print()
-        print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ============')
+        print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ============')
 
         plt.clf()
 
@@ -2362,9 +2528,9 @@ def plotEzGLon605gLonSpectraCompare():
                 gLonDegS = f'+{gLonP180 - 180:03d}'        # '+nnn' with leading zeros
             ax.text(0.99, 0.85, gLonDegS, fontsize=5, transform=ax.transAxes, horizontalalignment='right')
 
-        if os.path.exists(pltNameS): # to force plot file date update, if file exists, delete it
-            os.remove(pltNameS)
-        plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        if os.path.exists(plotName): # to force plot file date update, if file exists, delete it
+            os.remove(plotName)
+        plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -2391,7 +2557,7 @@ def plotEzGLon61XgLonSpectraCascade():
         return(0)       # plot not needed
 
     plt.clf()
-    pltNameS = 'ezGal61XgLonSpectraCascade.png'
+    plotName = 'ezGal61XgLonSpectraCascade.png'
 
     velGLatP90CountNonzero = np.count_nonzero(velGLatP90Count)
     #print(' velGLatP90Count =', velGLatP90Count)
@@ -2421,9 +2587,9 @@ def plotEzGLon61XgLonSpectraCascade():
 
         if ezGLonPlotRangeL[0] <= plotNumber and plotNumber <= ezGLonPlotRangeL[1]:
 
-            pltNameS = f'ezGal{plotNumber}gLonSpectraCascade.png'
+            plotName = f'ezGal{plotNumber}gLonSpectraCascade.png'
             print()
-            print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ============')
+            print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ============')
 
             plt.clf()
 
@@ -2496,9 +2662,9 @@ def plotEzGLon61XgLonSpectraCascade():
                 plt.ylabel('Galactic Longitudes   (-180 thru +179 degrees)')
                 plt.ylim(-186, yMax+6)
 
-            if os.path.exists(pltNameS): # to force plot file date update, if file exists, delete it
-                os.remove(pltNameS)
-            plt.savefig(pltNameS, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor(), transparent=True)
+            if os.path.exists(plotName): # to force plot file date update, if file exists, delete it
+                os.remove(plotName)
+            plt.savefig(plotName, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor(), transparent=True)
 
 
 
@@ -2536,10 +2702,10 @@ def plotEzGLon710gLonDegP180_nnnByFreqBinAvg():
         for gLonP180 in range(361):                 # for every column, RtoL
             if velGLatP90Count[gLonP180]:      # if column used
 
-                # create pltNameS with form of 'ezGal710gLonDegP180_nnnByFreqBinAvg.png'
-                pltNameS = f'ezGLon710gLonDegP180_{gLonP180:03d}ByFreqBinAvg.png'
+                # create plotName with form of 'ezGal710gLonDegP180_nnnByFreqBinAvg.png'
+                plotName = f'ezGLon710gLonDegP180_{gLonP180:03d}ByFreqBinAvg.png'
                 print()
-                print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ============')
+                print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ============')
                 print('                         gLonP180 =', gLonP180)
                 print('                         gLonP180 - 180 =', gLonP180 - 180)
                 print('                         velGLatP90Count[gLonP180] =', velGLatP90Count[gLonP180])
@@ -2575,9 +2741,9 @@ def plotEzGLon710gLonDegP180_nnnByFreqBinAvg():
                     + f'\n\nfor Galactic Longitude = {gLonDegS} deg', \
                     rotation=90, verticalalignment='bottom')
 
-                if os.path.exists(pltNameS): # to force plot file date update, if file exists, delete it
-                    os.remove(pltNameS)
-                plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+                if os.path.exists(plotName): # to force plot file date update, if file exists, delete it
+                    os.remove(plotName)
+                plt.savefig(plotName, dpi=300, bbox_inches='tight')
 
 
 
@@ -2727,5 +2893,45 @@ if __name__== '__main__':
 # python3 ../ezRA/ezGLon230628a.py *N001GLon.npz  -ezGLonGalCrossingGLonCenter 70 -h
 
 # a@u22-221222a:~/aaaEzRABase/ezCon$ python3 ../ezRA/ezGLon230628a.py *GLon.npz  -ezGLonGalCrossingGLonCenter 0
+
+# a@u22-221222a:~/ezRABase/lto16h$ 
+# python3 ../ezRA/ezGLon241023b.py .  -ezGLonGalCrossingGLonCenterL 90 90 1  -ezGLonGalCrossingGLonNear 0.5  -ezGLonPlotRangeL 580 580  -ezGLon580Csv 1.18
+# ring3d ezGLon580galArmsSunIP090.0P000.5.csv
+
+# for 21 CSV files,
+# ls *GLon.npz | grep radP070
+# python3 ../ezRA/ezGLon241023b.py .  -ezGLonGalCrossingGLonCenterL 70 90 21  -ezGLonGalCrossingGLonNear 0.5  -ezGLonPlotRangeL 580 580  -ezGLon580Csv 1.18
+# cat ezGLon580galArmsSunI*.csv  > ezGLon580.csv
+# ls -ltrh
+# ring3d ezGLon580.csv
+#   Click "OK" button to approve "4-COLUMNS"
+#   Option menu - Gradation
+#   Option menu - Gradation - AXIS to "COLUMN-4"
+#   Try Option menu - Gradation - "FADE-IN" to clicked, click the "SET" button
+#   Try Option menu - See-Through to clicked
+
+# 0-90 GLon,
+# everyEzCon="-ezConPlotRangeL 191 191 -ezRAObsName LTO16h  -ezRAObsLat 40.29953361978003 -ezRAObsLon -105.08434917119554 -ezRAObsAmsl 1524  -ezConAstroMath 1 -ezConGalCrossingGLonCenterL 0 90 91  -ezConGalCrossingGLonNear 0.5"
+# dirOut="241023rinearn"
+# Now is ...
+# Wed Oct 23 04:13:54 PM MDT 2024
+# This script was started ...
+# Wed Oct 23 02:31:41 PM MDT 2024
+# a@u22-221222a:~/ezRABase/lto16h$ ls 241023rinearn/ | wc
+#   24109   24109  719472
+# a@u22-221222a:~/ezRABase/lto16h$ du -h 241023rinearn/
+# 1.8G	241023rinearn/
+# a@u22-221222a:~/ezRABase/lto16h$ ls 241023rinearn/*GLon.npz | grep radP0 | wc
+#   23050   23050 1014314
+# like    241023rinearn/2022_125_00.radP089.0GLon.npz
+# cd 241023rinearn
+# python3 ../../ezRA/ezGLon241023b.py  .  -ezGLonGalCrossingGLonCenterL 70 90 21  -ezGLonGalCrossingGLonNear 0.5  -ezGLonPlotRangeL 580 580  -ezGLon580Csv 1.18
+# cat ezGLon580galArmsSunI*.csv  > ezGLon580.csv
+# ls -ltrh
+# ring3d ezGLon580.csv
+
+# cd galLto15Show
+# cat ezGLon580gal*.csv > ezGLon580.csv
+# ring3d ezGLon580.csv
 
 

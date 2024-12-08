@@ -1,4 +1,4 @@
-programName = 'ezSky240715a.py'
+programName = 'ezSky241201a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
@@ -25,9 +25,37 @@ programRevision = programName
 # TTD:
 #       remove many global in main() ?????????
 #       MollweideL x and y scales not linear, so xticks and yticks wrong
-#       Sorry I did not include Az and El as .ezb columns 1 and 2
-#       Sorry I ordered gLat before gLon
+#       Now sorry I did not include Az and El as .ezb columns 1 and 2
+#       Now sorry I ordered gLat before gLon
 
+# ezSky241201a, ezSky520 .csv file xAxis multiply by -1
+# ezSky241021a, -ezSky400Csv
+# ezSky241019ax, -ezSky500Csv and -ezSky520Csv for 3d plots with https://www.rinearn.com/en-us/
+#   ezSky500 antXTVT to a .csv file
+#   ezSky520 antXTVT to a .csv file
+#   for Linux:
+#       https://www.rinearn.com/en-us/graph3d/guide/launch
+#       then in the Linux directory of the 220K RinearnGraph3D.jar file,
+#           java -jar RinearnGraph3D.jar
+#               and 20 seconds to render 3d plot of 24-hour 3,932 Ant samples
+#       sudo cp -r rinearn_graph_3d_5_6_36b_en /usr/local/bin
+#       sudo chmod +x /usr/local/bin/rinearn_graph_3d_5_6_36b_en/rinearn_graph_3d_5_6_36b_en/bin/ring3d
+#       ls -lh /usr/local/bin/rinearn_graph_3d_5_6_36b_en/rinearn_graph_3d_5_6_36b_en/bin/ring3d
+#       nano ~/.bashrc
+#           and add
+#       export PATH="$PATH:/usr/local/bin/rinearn_graph_3d_5_6_36b_en/rinearn_graph_3d_5_6_36b_en/bin/"
+#       log out and log in
+#       now command line
+#           ring3d --help
+#       or command line
+#           ring3d --version
+#               RINEARN Graph 3D Ver.5.6.36
+#       or command line
+#           ring3d ezCon087antRBTVT.csv 
+#       or command line
+#           ring3d ezCon087antRBTVT.csv --overwrite --saveimg ezCon087antRBTVTcsv.png --quit
+#       or command line
+#           ring3d
 # ezSky240715a, sys.version
 # ezSky240712a, ezSkyBackground1.jpg notes
 # ezSky240711a, raw strings for 3 '\' characters to fix the 3 (Python3.12+ ?)
@@ -251,6 +279,10 @@ def printUsage():
     print('          Northern hemisphere: south horizon declination = latitude - 90.')
     print('          Written to file "ezSkyMaskBigDish_-49.7_-90.npz".)')
     print()
+    print('    -ezSky400Csv         1   (create CSV file of ezSky400 for 3d plots with rinearn.com/en-us/graph3d)')
+    print('    -ezSky500Csv         1   (create CSV file of ezSky500 for 3d plots with rinearn.com/en-us/graph3d)')
+    print('    -ezSky520Csv         1   (create CSV file of ezSky520 for 3d plots with rinearn.com/en-us/graph3d)')
+    print()
     print('    -ezSkyGalCrossingGLatCenter   1.0')
     print('         (defines center of Galactic crossing  in Galactic Latitude degrees)')
     print('    -ezSkyGalCrossingGLatNear     3.0')
@@ -349,6 +381,9 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
     global ezSkyInput                       # integer
     global ezSkyVOGain                      # float
     global ezSkyHalfTallDec                 # integer
+    global ezSky400Csv                      # integer
+    global ezSky500Csv                      # integer
+    global ezSky520Csv                      # integer
 
     global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLatNear         # float
@@ -411,6 +446,15 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
 
             elif fileLineSplit0Lower == '-ezSkyVOGain'.lower():
                 ezSkyVOGain = float(fileLineSplit[1])
+
+            elif fileLineSplit0Lower == '-ezSky400Csv'.lower():
+                ezSky400Csv = int(fileLineSplit[1])
+
+            elif fileLineSplit0Lower == '-ezSky500Csv'.lower():
+                ezSky500Csv = int(fileLineSplit[1])
+
+            elif fileLineSplit0Lower == '-ezSky520Csv'.lower():
+                ezSky520Csv = int(fileLineSplit[1])
 
             elif fileLineSplit0Lower == '-ezSkyGalCrossingGLatCenter'.lower():
                 ezSkyGalCrossingGLatCenter = float(fileLineSplit[1])
@@ -504,6 +548,9 @@ def ezSkyArgumentsCommandLine():
     global ezSkyInput                       # integer
     global ezSkyVOGain                      # float
     global ezSkyHalfTallDec                 # integer
+    global ezSky400Csv                      # integer
+    global ezSky500Csv                      # integer
+    global ezSky520Csv                      # integer
 
     global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLatNear         # float
@@ -592,6 +639,14 @@ def ezSkyArgumentsCommandLine():
             elif cmdLineArgLower == 'ezSkyVOGain'.lower():
                 ezSkyVOGain = float(cmdLineSplit[cmdLineSplitIndex])
 
+            elif cmdLineArgLower == 'ezSky400Csv'.lower():
+                ezSky400Csv = int(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezSky500Csv'.lower():
+                ezSky500Csv = int(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezSky520Csv'.lower():
+                ezSky520Csv = int(cmdLineSplit[cmdLineSplitIndex])
 
             elif cmdLineArgLower == 'ezSkyGalCrossingGLatCenter'.lower():
                 ezSkyGalCrossingGLatCenter = float(cmdLineSplit[cmdLineSplitIndex])
@@ -694,6 +749,9 @@ def ezSkyArguments():
     global ezSkyHalfTallDec                 # integer
     global ezSkyPlotRangeL                  # integer list
     global plotCountdown                    # integer
+    global ezSky400Csv                      # integer
+    global ezSky500Csv                      # integer
+    global ezSky520Csv                      # integer
 
     global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLatNear         # float
@@ -727,6 +785,10 @@ def ezSkyArguments():
 
     # (ezSkyHalfTallDec + 1 + ezSkyHalfTallDec) = thickness of tall plot trace (last drawn wins)
     ezSkyHalfTallDec = 3
+
+    ezSky400Csv = 0     # to disable
+    ezSky500Csv = 0     # to disable
+    ezSky520Csv = 0     # to disable
 
     ezSkyGalCrossingGLatCenter = 0.
     ezSkyGalCrossingGLatNear   = 0.
@@ -792,6 +854,9 @@ def ezSkyArguments():
     print('   ezSkyHalfTallDec =', ezSkyHalfTallDec)
     print('   ezSkyDispGrid    =', ezSkyDispGrid)
     print('   ezSkyPlotRangeL  =', ezSkyPlotRangeL)
+    print('   ezSky400Csv =', ezSky400Csv)
+    print('   ezSky500Csv =', ezSky500Csv)
+    print('   ezSky520Csv =', ezSky520Csv)
     print()
     print('   ezSkyGalCrossingGLatCenter =', ezSkyGalCrossingGLatCenter)
     print('   ezSkyGalCrossingGLatNear   =', ezSkyGalCrossingGLatNear)
@@ -2426,6 +2491,7 @@ def plotEzSky400RI():
     global fileNameLast             # string
     global titleS                   # string
     #global ezSkyDispGrid           # integer
+    global ezSky400Csv              # integer
 
     plotCountdown -= 1
 
@@ -2546,6 +2612,13 @@ def plotEzSky400RI():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
+
+    if ezSky400Csv:
+        plotNameCsv = plotName[:-3] + 'csv'
+        row_indices, col_indices = np.indices(np.transpose(zi).shape)
+        #ziCsv = np.column_stack((row_indices.ravel()[::-1]/2.-180., col_indices.ravel()/2.-90., np.transpose(zi).ravel()))
+        ziCsv = np.column_stack((row_indices.ravel()/2.-180., col_indices.ravel()/2.-90., np.transpose(zi).ravel()))
+        np.savetxt(plotNameCsv, ziCsv, delimiter=",")
 
 
 
@@ -3779,6 +3852,7 @@ def plotEzSky500GMI():
     global galacticGLonHalfDeg              # integer 1d array
 
     global maskGalactic                     # integer 2d array
+    global ezSky500Csv                      # integer
     #global ezSkyGalCrossingGLatCenter       # float
     #global ezSkyGalCrossingGLatNear         # float
     #global ezSkyGalCrossingGLonCenter       # float
@@ -3903,6 +3977,13 @@ def plotEzSky500GMI():
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
     #plt.close(fig)
+
+    if ezSky500Csv:
+        plotNameCsv = plotName[:-3] + 'csv'
+        row_indices, col_indices = np.indices(np.transpose(zi).shape)
+        #ziCsv = np.column_stack((row_indices.ravel()[::-1], col_indices.ravel(), np.transpose(zi).ravel()))
+        ziCsv = np.column_stack((row_indices.ravel()/2.-180., col_indices.ravel()/2.-90., np.transpose(zi).ravel()))
+        np.savetxt(plotNameCsv, ziCsv, delimiter=",")
 
 
 
@@ -4249,6 +4330,8 @@ def plotEzSkyMollweide(plotNumber):
 
     global ezSkyInputS                      # string
     global maskGalactic                     # integer 2d array
+    global ezSky520Csv                      # integer
+
     global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLatNear         # float
     global ezSkyGalCrossingGLonCenter       # float
@@ -4442,6 +4525,16 @@ def plotEzSkyMollweide(plotNumber):
         # plot contour lines and contour fills
         plt.contour(xi, yi, zi, 20, linewidths=0.2, colors='black')
         plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
+
+        if ezSky520Csv:
+            plotNameCsv = plotName[:-3] + 'csv'
+            #row_indices, col_indices = np.indices(np.transpose(zi).shape)
+            #ziCsv = np.column_stack((row_indices.ravel()[::-1], col_indices.ravel(), np.transpose(zi).ravel()))
+            #ziCsv = np.column_stack((xi.ravel()[::-1]/2.-180., yi.ravel()/2.-90., zi.ravel()))
+            ziCsv = np.column_stack((-(xi.ravel()[::-1]/2.-180.), yi.ravel()/2.-90., zi.ravel()))
+            np.savetxt(plotNameCsv, ziCsv, delimiter=",")
+            ziCsv = None     # free memory
+            del ziCsv
 
         zi = None     # free memory
         del zi
@@ -4789,4 +4882,11 @@ if __name__== '__main__':
 # python3 ../ezRA/ezSky240130c.py  Skynet_59735_AP_-_ST3_81159_29887.A.cal5.ezb -ezSkyInput 10 -ezSkyPlotRangeL 505 505  -ezSkyXYLimL 999 999  999 999  999 999  0
 
 # ezRABase\lto16h>py  ..\ezRA\ezSky240606a.py  . -ezSkyInput 14 -ezSkyPlotRangeL 405 405 -ezSkyXYLimL 999 999 265.25 267.25 -39 -19 0.5
+
+# a@u22-221222a:~/ezRABase/lto16h$
+# python3 ../ezRA/ezSky241021a.py -ezSkyInput 18  . -ezSkyMaskIn ../ezRA/ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 520 520 -ezSky400Csv 1 -ezSky500Csv 1 -ezSky520Csv 1
+# ring3d ezSky520GOI_18AntBTVTAvg.csv 
+# mv graph3d.png ezSky520GOI_18AntBTVTAvgCsv.png
+
+# python3 ../ezRA/ezSky241201a.py -ezSkyInput 18  . -ezSkyMaskIn ../ezRA/ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 520 520 -ezSky400Csv 1 -ezSky500Csv 1 -ezSky520Csv 1
 

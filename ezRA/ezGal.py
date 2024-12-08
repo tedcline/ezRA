@@ -1,4 +1,4 @@
-programName = 'ezGal231212a.py'
+programName = 'ezGal241126a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGal GALaxy explorer program,
@@ -6,7 +6,7 @@ programRevision = programName
 #   and optionally create .png plot files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,6 +26,28 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGal241126a, are GalC.npz files really needed ?   Commented out on 241126
+# ezGal241024a, print galSunRadiusKpc (7.971022488, in kiloparsecs)
+# ezGal240318a, 
+#   in ezCon: velGLonP180[:, gLonP180] += antXTVT[:, n][::-1]
+#   incoming velGLonP180 is now still the summed antXTVT frequency spectra, with decending frequency.
+#   maskOffBelowThis = 1.0      # LTO15HC
+#   Ooops!, ezGal516 and ezGal517 were plotting the simple processed antXTVT frequency values
+#   receding velocity = (fileFreqBin doppler MHz) * (299792458. m/s / 1420.406 MHz) / 1000. = km/s
+
+
+
+
+# still tedd in findVelGLonEdges()
+
+
+
+
+
+# ezGal240227b, dusting, findVelGLonEdges() error message
+# ezGal240227a, dusting
+# ezGal240226a, ezSky601 - ezSky605 errors with ax.set_xticks([], []), so
+#   ax.xaxis.set_ticks([])
 # ezGal231212a.py, per Ted's Oct 18, 2023 at 8:14 PM email,
 #   ezGal511 renamed to ezGal519, to align with the "Count" ezSky309,
 #   ezGal525 renamed to ezGal529, to align with the future "Count" ezGal519
@@ -196,8 +218,6 @@ def printUsage():
     print('    -ezGalPlotRangeL     0  500     (save only this range of ezGal plots to file, to save time)')
     print('    -ezGalDispGrid          1       (turn on graphical display plot grids)')
     print()
-    #print('    -ezGalVelGLonEdgeLevelL  1.01   1.03   30    (velGLon level for ezGal540velGLonEdgesB)')
-    #print('        (velGLon level for ezGal540velGLonEdgesB: level0, level1, gLonChangeLevel1)')
     print('    -ezGalVelGLonEdgeLevelL  1.06   40   140    (velGLon level for ezGal540velGLonEdgesB)')
     print('        (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, velGLonUEdge[gLon=0])')
     print()
@@ -664,7 +684,7 @@ def readDataDir():
             fileNameLast = fileReadName
             print()
 
-    # have now read all Gal.npz files
+    # have now read all the Gal.npz files
 
     # maybe blank out the last filename
     if not fileReadName.endswith('Gal.npz'):
@@ -714,11 +734,12 @@ def readDataDir():
     # for fileNameLast of  data/2021_333_00.txt  create fileVelWriteName as  data/2021_333_00GalC.npz
     fileVelWriteName = fileNameLast.split(os.path.sep)[-1][:-7] + 'GalC.npz'   # ezGal combines *Gal.npz
     print('      fileObsName = ', fileObsName)
-    np.savez_compressed(fileVelWriteName, fileObsName=np.array(fileObsName),
-        fileFreqMin=np.array(fileFreqMin), fileFreqMax=np.array(fileFreqMax),
-        fileFreqBinQty=np.array(fileFreqBinQty),
-        velGLonP180=velGLonP180, velGLonP180Count=velGLonP180Count,
-        galDecP90GLonP180Count=galDecP90GLonP180Count)
+    # are GalC.npz files really needed ?   Commented out on 241126
+    #np.savez_compressed(fileVelWriteName, fileObsName=np.array(fileObsName),
+    #    fileFreqMin=np.array(fileFreqMin), fileFreqMax=np.array(fileFreqMax),
+    #    fileFreqBinQty=np.array(fileFreqBinQty),
+    #    velGLonP180=velGLonP180, velGLonP180Count=velGLonP180Count,
+    #    galDecP90GLonP180Count=galDecP90GLonP180Count)
 
     # Prepare velGLonP180 for later plots.
     # velGLonP180 has been filled with sums of samples.  Now for each column, convert to sum's average.
@@ -1024,7 +1045,11 @@ def plotEzGal516velGLonAvg():
 
         plt.clf()
 
-        plt.plot(np.arange(-180, +181, 1), np.mean(velGLonP180, axis=0))
+        #plt.plot(np.arange(-180, +181, 1), np.mean(velGLonP180, axis=0))
+        # Ooops!, was plotting the simple processed antXTVT frequency values
+        # receding velocity = (fileFreqBin doppler MHz) * (299792458. m/s / 1420.406 MHz) / 1000. = km/s
+        # velocity = (fileFreqBin doppler MHz) * 211.061103656 = km/s
+        plt.plot(np.arange(-180, +181, 1), np.mean(velGLonP180, axis=0) * 211.061103656)
 
         plt.title(titleS)
         #plt.grid(ezGalDispGrid)
@@ -1073,7 +1098,11 @@ def plotEzGal517velGLonMax():
 
         plt.clf()
 
-        plt.plot(np.arange(-180, +181, 1), np.amax(velGLonP180, axis=0))
+        #plt.plot(np.arange(-180, +181, 1), np.amax(velGLonP180, axis=0))
+        # Ooops!, was plotting the simple processed antXTVT frequency values
+        # receding velocity = (fileFreqBin doppler MHz) * (299792458. m/s / 1420.406 MHz) / 1000. = km/s
+        # velocity = (fileFreqBin doppler MHz) * 211.061103656 = km/s
+        plt.plot(np.arange(-180, +181, 1), np.amax(velGLonP180, axis=0) * 211.061103656)
 
         plt.title(titleS)
         #plt.grid(ezGalDispGrid)
@@ -1471,44 +1500,27 @@ def findVelGLonEdges():
         # Page 46 of
         #   https://f1ehn.pagesperso-orange.fr/pages_radioastro/Images_Docs/Radioastro_21cm_2012b.pdf
 
-        if 0:
-            ezGalVelGLonEdgeLevelL2P180 = ezGalVelGLonEdgeLevelL[2] + 180   # lowest velGLonP180 for high gLon
-            for gLonP180 in range(361):
-                if velGLonP180Count[gLonP180]:
-                    # calculate Upper and Lower Detection Doppler of this velGLonP180 spectrum, in freqBin
-                    # https://thispointer.com/find-the-index-of-a-value-in-numpy-array/
-                    # Tuple of arrays returned :  (array([ 4,  7, 11], dtype=int32),)
-                    # velGLonP180AboveLevelFreqBins are the freqBins with velGLonP180 >= velGLonEdgeLevel
-                    #velGLonP180AboveLevelFreqBins = np.where(velGLonEdgeLevel <= velGLonP180[:, gLonP180])[0]
-                    if gLonP180 < ezGalVelGLonEdgeLevelL2P180:
-                        # for low gLon
-                        velGLonP180AboveLevelFreqBins = np.where(ezGalVelGLonEdgeLevelL[0] <= velGLonP180[:, gLonP180])[0]
-                    else:
-                        # for high gLon
-                        velGLonP180AboveLevelFreqBins = np.where(ezGalVelGLonEdgeLevelL[1] <= velGLonP180[:, gLonP180])[0]
-
-                    if velGLonP180AboveLevelFreqBins.any():
-                        #print('                         velGLonP180AboveLevelFreqBins =', velGLonP180AboveLevelFreqBins)
-                        velGLonUEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[-1] # use last  element of list
-                        #print('                         velGLonUEdgeFreqBinThis =', velGLonUEdgeFreqBinThis)
-                        velGLonLEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[ 0] # use first element of list
-
-                        # for the current gLonP180, ignoring nan,
-                        #   remember the max in velGLonUEdge and min in velGLonLEdgeFreqBinThis
-
-                        velGLonUEdge[gLonP180] = velocityBin[velGLonUEdgeFreqBinThis]
-                        velGLonLEdge[gLonP180] = velocityBin[velGLonLEdgeFreqBinThis]
-
         # -ezGalVelGLonEdgeLevelL  1.06   40   140    (velGLon level for ezGal540velGLonEdgesB)
         #   (velGLon level for ezGal540velGLonEdgesB: velGLonLevel, highGLonMin, velGLonUEdge[gLon=0])
-        highGLonMin = ezGalVelGLonEdgeLevelL[1]
-        # for low +gLon, velGLonUEdgeFreqBinThis is on the gLonP180 line,
-        #   from (x1, y1) to (x0, y0)
+        #velGLonLevel = ezGalVelGLonEdgeLevelL[0]
+        highGLonMin  = ezGalVelGLonEdgeLevelL[1]
+
+        # For most of each used gLon, calculate the Upper and Lower edges of each velGLonP180 spectrum,
+        #   in freqBin, where the velGLonP180 spectrum power value is greater or equal to velGLonLevel.
+        # But for the 'low positive gLon', where the gLon is less than highGLonMin and positive.
+        # For these 'low positive gLon', the velGLonP180 spectrum values are so weak,
+        #   ezGal calculates the Upper edges as along a straight line
+        #   from the Upper edge of highGLonMin, to ezGalVelGLonEdgeLevelL[3] where gLon is 0.
+        # This straight line typically slopes up to the right,
+        #   with the left end at the top of the (inner Galactic arms) triangle.
+        # So, using  gLonP180 coordinates, for low positive gLon,
+        #   the calculated velGLonUEdgeFreqBinThis is on the line,
+        #   from (x1, y1) to (x0, y0), meaning
         #   from (highGLonMin+180, velGLonUEdge[highGLonMin+180]) to (180, ezGalVelGLonEdgeLevelL[2])
         # slopeLowGLon = (y1 - y0) / (x1 - x0)
         # slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / (highGLonMin+180 - 180)
         # slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / highGLonMin
-        slopeLowGLon = 999.     # silly value
+        slopeLowGLon = 999.     # silly value flag
         for gLonP180 in reversed(range(361)):
             if velGLonP180Count[gLonP180]:
                 gLon = gLonP180 - 180
@@ -1522,8 +1534,8 @@ def findVelGLonEdges():
                 if velGLonP180AboveLevelFreqBins.any():
                     #print('========= gLon =', gLon)
                     if 0 <= gLon and gLon < highGLonMin:
-                        # for low +gLon
-                        if 990. < slopeLowGLon:
+                        # for low positive gLon, calculate slopeLowGLon
+                        if 990. < slopeLowGLon:     # if slopeLowGLon still silly
                             # slopeLowGLon never got calculated below
                             print()
                             print()
@@ -1531,25 +1543,40 @@ def findVelGLonEdges():
                             print()
                             print(f'   Error: ezGalVelGLonEdgeLevelL[1] ({highGLonMin}) value is invalid.')
                             print(f'          No data available for gLon = {highGLonMin} degrees.')
-                            print(f'          ezGalVelGLonEdgeLevelL was', ezGalVelGLonEdgeLevelL)
+                            print()
+                            print(f'          Next lower  used gLon is {highGLonMin} degrees.')
+                            print(f'          Next higher used gLon is {highGLonMin} degrees.')
                             print()
                             print()
                             print()
-                            print()
-                            exit()
+
+                # tedd
+
+                # nextLowerUsedGLon = np.where(ezGalVelGLonEdgeLevelL[0] <= velGLonP180[:, gLonP180])[0]
+                velGLonP180AboveLevelFreqBins = np.where(ezGalVelGLonEdgeLevelL[0] <= velGLonP180[:, gLonP180])[0]
+                if velGLonP180Count[gLonP180]:
+
+
+
+                    if 1:
+                        print()
+                        print()
+                        print()
+                        print()
+                        exit()
                         velGLonUEdge[gLonP180] = ezGalVelGLonEdgeLevelL[2] + gLon * slopeLowGLon
                     else:
-                        velGLonUEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[-1]     # use last  element of list
+                        velGLonUEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[-1]     # use last element of list
                         velGLonUEdge[gLonP180] = velocityBin[velGLonUEdgeFreqBinThis]
                         if highGLonMin == gLon:
                             slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / highGLonMin
                         # # in case of a gap in gLon data, calculate slopeLowGLon for all highGLonMin <= gLon
                         # if highGLonMin <= gLon:
                         #     slopeLowGLon = (velGLonUEdge[highGLonMin+180] - ezGalVelGLonEdgeLevelL[2]) / highGLonMin
-                    velGLonLEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[ 0]         # use first element of list
+                    velGLonLEdgeFreqBinThis = velGLonP180AboveLevelFreqBins[0]          # use first element of list
                     velGLonLEdge[gLonP180] = velocityBin[velGLonLEdgeFreqBinThis]
                 elif 0 <= gLon and gLon < highGLonMin:
-                    # for low +gLon
+                    # for low positive gLon
                     velGLonUEdge[gLonP180] = ezGalVelGLonEdgeLevelL[2] + gLon * slopeLowGLon
 
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.medfilt.html
@@ -2312,7 +2339,8 @@ def plotEzGal580galArmsGC():
 
         galSunRadiusKm = 26000. * 9.46e12                   # = 2.4596e+17
         galSunRadiusKm2 = galSunRadiusKm * galSunRadiusKm   # = 6.0496322e+34
-        galSunRadiusKpc = galSunRadiusKm * 3.24078e-17      # in kiloparsecs
+        galSunRadiusKpc = galSunRadiusKm * 3.24078e-17      # 7.971022488, in kiloparsecs
+        print('                         galSunRadiusKpc =', galSunRadiusKpc)
         galSunRadiusPlotLimit = galSunRadiusKm * 4.
 
         x = []
@@ -2548,8 +2576,11 @@ def plotEzGal60XgLonSpectra():
 
                     ax.tick_params('both',labelsize=5) 
 
-                ax.set_xticks([], [])
-                ax.set_yticks([], [])
+                #ax.set_xticklabels([])
+                #ax.set_xticks([], [])
+                #ax.set_yticks([], [])
+                ax.xaxis.set_ticks([])
+                ax.yaxis.set_ticks([])
                 ax.axvline(linewidth=0.5, color='b')
 
                 ax.text(0.02, 0.85, 'gLon', fontsize=5, transform=ax.transAxes)
@@ -2647,8 +2678,10 @@ def plotEzGal605gLonSpectraCompare():
 
                 ax.tick_params('both',labelsize=5) 
 
-            ax.set_xticks([], [])
-            ax.set_yticks([], [])
+            #ax.set_xticks([], [])
+            #ax.set_yticks([], [])
+            ax.xaxis.set_ticks([])
+            ax.yaxis.set_ticks([])
             ax.axvline(linewidth=0.5, color='b')
 
             ax.text(0.02, 0.85, 'gLon', fontsize=5, transform=ax.transAxes)

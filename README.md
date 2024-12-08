@@ -52,7 +52,7 @@ Or perhaps start with these 2 introductory videos (from the longer list of video
 * ezGal - GALaxy plots from one or more spectra *Gal.npz data files (centered on one Galactic Latitude: Galaxy rotation, Galaxy mass,
 Velocity vs Galactic Longitude, Galaxy arm plots).
 
-* ezGLon - Galaxy LONgitude plots from one or more spectra *GLon.npz data files (centered on one Galactic Longitude: Galaxy arm cross-section plots).
+* ezGLon - Galaxy LONgitude plots from one or more spectra *GLon.npz data files (centered on one Galactic Longitude: Galaxy arm cross-section plots, 4D Galaxy arms).
 
 ## Videos:
 
@@ -129,7 +129,7 @@ Always need more documentation.
 Did ezRA work for you ?
 
 <p align="center">
-  <img src="/ezRA/doc/ezRA_users240716.png?raw=true" alt="ezRA_users240716"/>
+  <img src="/ezRA/doc/ezRA_users241207.png?raw=true" alt="ezRA_users241207"/>
 </p>
 
 Comments are encouraged !
@@ -140,7 +140,7 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Jul-16-2024
+Dec-7-2024
 
 (World Map by juicy_fish on Freepik.com)
 
