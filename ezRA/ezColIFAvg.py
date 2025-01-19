@@ -1,4 +1,4 @@
-programName = 'ezColIFAvg220930a.py'
+programName = 'ezColIFAvg241207.py'
 programRevision  = programName
 
 # ezRA - Easy Radio Astronomy ezColIFAvg Data COLlector program,
@@ -7,7 +7,7 @@ programRevision  = programName
 #   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2023, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,6 +23,8 @@ programRevision  = programName
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+# ezColIFAvg241207a, oops finally updated programName,
+#   ezColIFAvg230305a.py, said programName = 'ezColIFAvg220930a.py'
 # ezColIFAvg230305a.py, boilerplate from ezSky
 # ===========skipping ezColIFAvg221126a.py, create new 'data' directory if needed
 # ezColIFAvg220930a.py, prep for Git

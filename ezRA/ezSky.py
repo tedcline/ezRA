@@ -1,4 +1,4 @@
-programName = 'ezSky241201a.py'
+programName = 'ezSky250105c.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
@@ -6,7 +6,7 @@ programRevision = programName
 #   and optionally create .png plot files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2025, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,6 +28,18 @@ programRevision = programName
 #       Now sorry I did not include Az and El as .ezb columns 1 and 2
 #       Now sorry I ordered gLat before gLon
 
+# ezSky250105c, mesh .csv file for -ezSkyBallCsv and ezSky400
+# ezSky250105b, mesh .csv file for -ezSkyBallCsv and ezSky500
+# ezSky250105a, mesh .csv file study
+# ezSky250104a, mesh .csv file study
+# ezSky250103b, -ezSkyBallCsv for ezSky400
+# ezSky250103a, fixed ballR for -ezSkyBallCsv and ezSky500
+# ezSky250102a, now -ezSkyBallCsv and ezSky500 CSV's ball matches ezSky500
+# ezSky241217a, at least now -ezSkyBallCsv and ezSky500 CSV's a ball
+# ezSky241216d, -ezSkyBallCsv textured ball projection csv files for RinearnGraph3D
+# ezSky241216c, -ezSkyMaskValue for ezSky301 etc, works ?
+# ezSky241216b, -ezSkyMaskValue for ezSky301
+# ezSky241216a, -ezSkyMaskValue, ezSkyArgumentsFile() -ezSkyXYLimL input bug
 # ezSky241201a, ezSky520 .csv file xAxis multiply by -1
 # ezSky241021a, -ezSky400Csv
 # ezSky241019ax, -ezSky500Csv and -ezSky520Csv for 3d plots with https://www.rinearn.com/en-us/
@@ -271,17 +283,20 @@ def printUsage():
     print('    -ezSkyHalfTallDec    9         (almost half height of ezSky301RBPT_  plot traces',
         '(in halfDegrees))')
     print()
-    print('    -ezSkyMaskIn         ezSkyMaskBigDish_-49.7_-90.npz')
-    print()
     print('    -ezSkyMaskOutL       ezSkyMaskBigDish_-49.7_-90    -49.7    -90.0')
-    print('         (Radio sky mask input for ezSky plots, unseen sky as white,')
+    print('         (Radio sky mask input for ezSky plots,')
     print('          from declination -49.6 to -90 degrees to create radio sky mask.')
     print('          Northern hemisphere: south horizon declination = latitude - 90.')
     print('          Written to file "ezSkyMaskBigDish_-49.7_-90.npz".)')
     print()
+    print('    -ezSkyMaskIn         ezSkyMaskBigDish_-49.7_-90.npz')
+    print()
+    print('    -ezSkyMaskValue      1   (ezSkyMask value (default -999. for nan, -998. for np.nanmin()))')
+    print()
     print('    -ezSky400Csv         1   (create CSV file of ezSky400 for 3d plots with rinearn.com/en-us/graph3d)')
     print('    -ezSky500Csv         1   (create CSV file of ezSky500 for 3d plots with rinearn.com/en-us/graph3d)')
     print('    -ezSky520Csv         1   (create CSV file of ezSky520 for 3d plots with rinearn.com/en-us/graph3d)')
+    print('    -ezSkyBallCsv        7.1 (create CSV files for ezSky400 ezSky500 ball 4d plots with RinearnGraph3D)')
     print()
     print('    -ezSkyGalCrossingGLatCenter   1.0')
     print('         (defines center of Galactic crossing  in Galactic Latitude degrees)')
@@ -384,6 +399,7 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
     global ezSky400Csv                      # integer
     global ezSky500Csv                      # integer
     global ezSky520Csv                      # integer
+    global ezSkyBallCsv                     # float
 
     global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLatNear         # float
@@ -392,6 +408,7 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
 
     global ezSkyMaskOutL                    # list of string and floats
     global ezSkyMaskInL                     # list of strings
+    global ezSkyMaskValue                   # float
     global ezSkyXYLimL                      # list of floats
 
     global ezSkyPlotRangeL                  # integer list
@@ -456,6 +473,9 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
             elif fileLineSplit0Lower == '-ezSky520Csv'.lower():
                 ezSky520Csv = int(fileLineSplit[1])
 
+            elif fileLineSplit0Lower == '-ezSkyBallCsv'.lower():
+                ezSkyBallCsv = float(fileLineSplit[1])
+
             elif fileLineSplit0Lower == '-ezSkyGalCrossingGLatCenter'.lower():
                 ezSkyGalCrossingGLatCenter = float(fileLineSplit[1])
 
@@ -486,15 +506,18 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
             elif fileLineSplit0Lower == '-ezSkyMaskIn'.lower():
                 ezSkyMaskInL.append(fileLineSplit[1])
 
+            elif fileLineSplit0Lower == '-ezSkyMaskValue'.lower():
+                ezSkyMaskValue = float(fileLineSplit[1])
+
             elif fileLineSplit0Lower == '-ezSkyXYLimL'.lower():
-                ezSkyMaskOutL = []
-                ezSkyMaskOutL.append(float(fileLineSplit[1]))
-                ezSkyMaskOutL.append(float(fileLineSplit[2]))
-                ezSkyMaskOutL.append(float(fileLineSplit[3]))
-                ezSkyMaskOutL.append(float(fileLineSplit[4]))
-                ezSkyMaskOutL.append(float(fileLineSplit[5]))
-                ezSkyMaskOutL.append(float(fileLineSplit[6]))
-                ezSkyMaskOutL.append(float(fileLineSplit[7]))
+                ezSkyXYLimL = []
+                ezSkyXYLimL.append(float(fileLineSplit[1]))
+                ezSkyXYLimL.append(float(fileLineSplit[2]))
+                ezSkyXYLimL.append(float(fileLineSplit[3]))
+                ezSkyXYLimL.append(float(fileLineSplit[4]))
+                ezSkyXYLimL.append(float(fileLineSplit[5]))
+                ezSkyXYLimL.append(float(fileLineSplit[6]))
+                ezSkyXYLimL.append(float(fileLineSplit[7]))
 
 
             elif 6 <= len(fileLineSplit0Lower) and fileLineSplit0Lower[:6] == '-ezSky'.lower():
@@ -551,6 +574,7 @@ def ezSkyArgumentsCommandLine():
     global ezSky400Csv                      # integer
     global ezSky500Csv                      # integer
     global ezSky520Csv                      # integer
+    global ezSkyBallCsv                     # float
 
     global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLatNear         # float
@@ -559,6 +583,7 @@ def ezSkyArgumentsCommandLine():
 
     global ezSkyMaskOutL                    # list of string and floats
     global ezSkyMaskInL                     # list of strings
+    global ezSkyMaskValue                   # float
     global ezSkyXYLimL                      # list of floats
 
     global ezSkyPlotRangeL                  # integer list
@@ -648,6 +673,9 @@ def ezSkyArgumentsCommandLine():
             elif cmdLineArgLower == 'ezSky520Csv'.lower():
                 ezSky520Csv = int(cmdLineSplit[cmdLineSplitIndex])
 
+            elif cmdLineArgLower == 'ezSkyBallCsv'.lower():
+                ezSkyBallCsv = float(cmdLineSplit[cmdLineSplitIndex])
+
             elif cmdLineArgLower == 'ezSkyGalCrossingGLatCenter'.lower():
                 ezSkyGalCrossingGLatCenter = float(cmdLineSplit[cmdLineSplitIndex])
 
@@ -683,6 +711,9 @@ def ezSkyArgumentsCommandLine():
 
             elif cmdLineArgLower == 'ezSkyMaskIn'.lower():
                 ezSkyMaskInL.append(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezSkyMaskValue'.lower():
+                ezSkyMaskValue = float(cmdLineSplit[cmdLineSplitIndex])
 
             elif cmdLineArgLower == 'ezSkyXYLimL'.lower():
                 ezSkyXYLimL = []
@@ -752,6 +783,7 @@ def ezSkyArguments():
     global ezSky400Csv                      # integer
     global ezSky500Csv                      # integer
     global ezSky520Csv                      # integer
+    global ezSkyBallCsv                     # float
 
     global ezSkyGalCrossingGLatCenter       # float
     global ezSkyGalCrossingGLatNear         # float
@@ -760,6 +792,7 @@ def ezSkyArguments():
 
     global ezSkyMaskOutL                    # list of string and floats
     global ezSkyMaskInL                     # list of strings
+    global ezSkyMaskValue                   # float
     global ezSkyXYLimL                      # list of floats
 
     global radecPower                       # empty list or float 1d array
@@ -786,9 +819,10 @@ def ezSkyArguments():
     # (ezSkyHalfTallDec + 1 + ezSkyHalfTallDec) = thickness of tall plot trace (last drawn wins)
     ezSkyHalfTallDec = 3
 
-    ezSky400Csv = 0     # to disable
-    ezSky500Csv = 0     # to disable
-    ezSky520Csv = 0     # to disable
+    ezSky400Csv  = 0        # to disable
+    ezSky500Csv  = 0        # to disable
+    ezSky520Csv  = 0        # to disable
+    ezSkyBallCsv = -999.    # to disable
 
     ezSkyGalCrossingGLatCenter = 0.
     ezSkyGalCrossingGLatNear   = 0.
@@ -797,11 +831,13 @@ def ezSkyArguments():
     
     ezSkyMaskOutL    = []
     ezSkyMaskInL     = []
+    ezSkyMaskValue   = -999.                # flag for nan
     ezSkyXYLimL      = [999., 999.,   999., 999.,   999., 999.,   0.]
-    radecPower       = []                      # flag as empty
-    radecPowerBox    = []                      # flag as empty
-    galacticPower    = []                      # flag as empty
-    galacticPowerBox = []                      # flag as empty
+    radecPower       = []                   # flag as empty
+    radecPowerBox    = []                   # flag as empty
+    radecCount       = []                   # flag as empty
+    galacticPower    = []                   # flag as empty
+    galacticPowerBox = []                   # flag as empty
 
     ezSkyPlotRangeL = [0, 9999]             # save this range of plots to file
 
@@ -854,9 +890,10 @@ def ezSkyArguments():
     print('   ezSkyHalfTallDec =', ezSkyHalfTallDec)
     print('   ezSkyDispGrid    =', ezSkyDispGrid)
     print('   ezSkyPlotRangeL  =', ezSkyPlotRangeL)
-    print('   ezSky400Csv =', ezSky400Csv)
-    print('   ezSky500Csv =', ezSky500Csv)
-    print('   ezSky520Csv =', ezSky520Csv)
+    print('   ezSky400Csv  =', ezSky400Csv)
+    print('   ezSky500Csv  =', ezSky500Csv)
+    print('   ezSky520Csv  =', ezSky520Csv)
+    print('   ezSkyBallCsv =', ezSkyBallCsv)
     print()
     print('   ezSkyGalCrossingGLatCenter =', ezSkyGalCrossingGLatCenter)
     print('   ezSkyGalCrossingGLatNear   =', ezSkyGalCrossingGLatNear)
@@ -865,6 +902,7 @@ def ezSkyArguments():
     print()
     print('   ezSkyMaskInL     =', ezSkyMaskInL)
     print('   ezSkyMaskOutL    =', ezSkyMaskOutL)
+    print('   ezSkyMaskValue   =', ezSkyMaskValue)
     print('   ezSkyXYLimL      =', ezSkyXYLimL)
 
     # sanity tests
@@ -2276,6 +2314,8 @@ def plotEzSky301RBT():
     global ezSkyBackground1XMax     # integer
     global ezSkyBackground1YMax     # integer
 
+    global ezSkyMaskValue           # float
+
     plotCountdown -= 1
 
     # if plot not wanted, then return
@@ -2305,14 +2345,50 @@ def plotEzSky301RBT():
 
     plt.gca().invert_yaxis()
 
-    # comment next line to remove background
-    img = imgaxes.imshow(backImg, aspect='auto')
-
     ax.set_axis_off()
 
     # map radec to background image
     imgaxesRatioX = ezSkyBackground1XMax / 720
     imgaxesRatioY = ezSkyBackground1YMax / 360
+
+    print()
+    print('                         radecPower.max() =', radecPower.max())
+    print('                         radecPower.min() =', radecPower.min())
+
+    raHalfDegScaledAll  = np.array([])
+    decHalfDegScaledAll = np.array([])
+    radecPowerAll       = np.array([])
+    maskValues          = np.array([])
+    if ezSkyMaskValue == -999.:
+        # comment next line to remove background
+        img = imgaxes.imshow(backImg, aspect='auto')
+    #else:
+    #    # plot mask on all sky as 360 horizontal scaled decHalfDeg lines
+    #    if ezSkyMaskValue == -998.:
+    #        maskValues = np.full(720, np.min(radecPower))
+    #    else:
+    #        maskValues = np.full(720, ezSkyMaskValue)
+    #    print('                         maskValues =', maskValues)
+    #    raHalfDegScaled  = np.array(range(720)) * imgaxesRatioX
+    #    for decHalfDegThis in range(360):
+    #        decHalfDegScaled = np.full(720, decHalfDegThis * imgaxesRatioY)
+    #        pts = plt.scatter(raHalfDegScaled, decHalfDegScaled,
+    #            s=1, marker='|', c=maskValues, cmap=plt.get_cmap('gnuplot'))
+    #
+    else:
+        # plot mask on all sky as 360 horizontal scaled decHalfDeg lines
+        if ezSkyMaskValue == -998.:
+            maskValues = np.full(720, np.min(radecPower))
+        else:
+            maskValues = np.full(720, ezSkyMaskValue)
+        #print('                         maskValues =', maskValues)
+        raHalfDegScaled  = np.array(range(720)) * imgaxesRatioX
+        for decHalfDegThis in range(360):
+            decHalfDegScaled = np.full(720, decHalfDegThis * imgaxesRatioY)
+            raHalfDegScaledAll  = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+            decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+            radecPowerAll       = np.concatenate([radecPowerAll, maskValues])
+
     raHalfDegScaled  = (720 - raHalfDeg ) * imgaxesRatioX
     decHalfDegScaled = (360 - decHalfDeg) * imgaxesRatioY
 
@@ -2330,9 +2406,12 @@ def plotEzSky301RBT():
     #        s=1, marker='|', c=radecPower, cmap=plt.get_cmap('gnuplot'))
 
     # plot center, without offset
-    raHalfDegScaledAll = raHalfDegScaled + 0.
-    decHalfDegScaledAll = decHalfDegScaled + 0.
-    radecPowerAll = radecPower + 0.
+    #raHalfDegScaledAll = raHalfDegScaled + 0.
+    #decHalfDegScaledAll = decHalfDegScaled + 0.
+    #radecPowerAll = radecPower + 0.
+    raHalfDegScaledAll = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+    decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+    radecPowerAll = np.concatenate([radecPowerAll, radecPower])
     # to make tall, plot low scaled offset, then plot high scaled offset, from outside to inside
     for reachTallDec in range(ezSkyHalfTallDec, 0, -1):
         reachTallDecHalfDegScaled = reachTallDec * imgaxesRatioY
@@ -2378,6 +2457,7 @@ def plotEzSky301RBT():
 def plotEzSky309RBTC():
     # radio Sky Radec map with Background, Count Tall
 
+    global radecPower               # float   1d array
     global radecCount               # float   1d array
     global raHalfDeg                # integer 1d array
     global decHalfDeg               # integer 1d array
@@ -2392,6 +2472,8 @@ def plotEzSky309RBTC():
     global ezSkyBackground1         # string
     global ezSkyBackground1XMax     # integer
     global ezSkyBackground1YMax     # integer
+
+    global ezSkyMaskValue           # float
 
     plotCountdown -= 1
 
@@ -2430,17 +2512,42 @@ def plotEzSky309RBTC():
     # map radec to background image
     imgaxesRatioX = ezSkyBackground1XMax / 720
     imgaxesRatioY = ezSkyBackground1YMax / 360
+
+    print()
+    print('                         radecCount.max() =', radecCount.max())
+    print('                         radecCount.min() =', radecCount.min())
+
+    raHalfDegScaledAll  = np.array([])
+    decHalfDegScaledAll = np.array([])
+    radecCountAll       = np.array([])
+    maskValues          = np.array([])
+    if ezSkyMaskValue == -999.:
+        # comment next line to remove background
+        img = imgaxes.imshow(backImg, aspect='auto')
+    else:
+        # plot mask on all sky as 360 horizontal scaled decHalfDeg lines
+        if ezSkyMaskValue == -998.:
+            maskValues = np.full(720, np.min(radecCount))
+        else:
+            maskValues = np.full(720, ezSkyMaskValue)
+        #print('                         maskValues =', maskValues)
+        raHalfDegScaled  = np.array(range(720)) * imgaxesRatioX
+        for decHalfDegThis in range(360):
+            decHalfDegScaled = np.full(720, decHalfDegThis * imgaxesRatioY)
+            raHalfDegScaledAll  = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+            decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+            radecCountAll       = np.concatenate([radecCountAll, maskValues])
+
     raHalfDegScaled  = (720 - raHalfDeg ) * imgaxesRatioX
     decHalfDegScaled = (360 - decHalfDeg) * imgaxesRatioY
 
-    # plot center, without offset
-    raHalfDegScaledAll = raHalfDegScaled + 0.
-    decHalfDegScaledAll = decHalfDegScaled + 0.
-    radecCountAll = radecCount + 0.
+    raHalfDegScaledAll = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+    decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+    radecCountAll = np.concatenate([radecCountAll, radecCount])
     # to make tall, plot low scaled offset, then plot high scaled offset, from outside to inside
     for reachTallDec in range(ezSkyHalfTallDec, 0, -1):
         reachTallDecHalfDegScaled = reachTallDec * imgaxesRatioY
-        # plot each radecPower value as a dot with a radecPower color
+        # plot each radecCount value as a dot with a radecCount color
         raHalfDegScaledAll = np.concatenate([raHalfDegScaledAll,
             raHalfDegScaled, raHalfDegScaled])
         decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll,
@@ -2492,6 +2599,9 @@ def plotEzSky400RI():
     global titleS                   # string
     #global ezSkyDispGrid           # integer
     global ezSky400Csv              # integer
+    global ezSkyBallCsv             # float
+
+    global ezSkyMaskValue           # float
 
     plotCountdown -= 1
 
@@ -2586,13 +2696,28 @@ def plotEzSky400RI():
     xi, yi = np.meshgrid(xi, yi)
 
     zi = griddata((raHalfDeg, decHalfDeg-180.), radecPower, (xi, yi), method='linear')
+    #print('                         zi[0, 0] =', zi[0, 0])
+    #print('                         zi[0, 1] =', zi[0, 1])
+    #print('                         zi[1, 0] =', zi[1, 0])
+
+    print()
+    print('                         before filter np.nanmin(zi) =', np.nanmin(zi))
+    print('                         before filter np.nanmin(zi) =', np.nanmin(zi))
 
     ###zi = gaussian_filter(zi, 9.)
+
+    if ezSkyMaskValue == -999.:
+        pass
+    elif ezSkyMaskValue == -998.:
+        zi[np.isnan(zi)] = np.nanmin(zi)        # nan replaced with np.nanmin(zi)
+    else:
+        zi[np.isnan(zi)] = ezSkyMaskValue       # nan replaced with ezSkyMaskValue
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
     plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
+    # draw small black dots where data was sampled
     ax.scatter(raHalfDeg, decHalfDeg-180., marker='.', s=0.5,
         color='black', linewidths=0)
 
@@ -2616,9 +2741,136 @@ def plotEzSky400RI():
     if ezSky400Csv:
         plotNameCsv = plotName[:-3] + 'csv'
         row_indices, col_indices = np.indices(np.transpose(zi).shape)
-        #ziCsv = np.column_stack((row_indices.ravel()[::-1]/2.-180., col_indices.ravel()/2.-90., np.transpose(zi).ravel()))
         ziCsv = np.column_stack((row_indices.ravel()/2.-180., col_indices.ravel()/2.-90., np.transpose(zi).ravel()))
         np.savetxt(plotNameCsv, ziCsv, delimiter=",")
+
+    if ezSkyBallCsv != -999.:
+        plotNameCsv = plotName[:-4] + 'Ball.csv'
+
+        #'''
+        row_indices, col_indices = np.indices(np.transpose(zi).shape)
+        ballLon     = row_indices.ravel(order='F')/2.-180.
+        ballLat     = col_indices.ravel(order='F')/2.-90.
+        ballTexture = np.transpose(ezSkyBallCsv * (zi - np.nanmean(zi))).ravel(order='F')
+        sphereR     = 1.0
+        ballR       = sphereR + ballTexture
+
+        #In spherical coordinates, a point is defined by its 
+        #radial distance (ρ),     rad      ballR
+        #polar angle (φ),         90-ballDec
+        #azimuthal angle (θ),     ballRA
+
+        #x = ρsin(φ)cos(θ), 
+        #y = ρsin(φ)sin(θ), 
+        #z = ρcos(φ). 
+
+        '''
+        print()
+        print('                         row_indices.ravel() =', row_indices.ravel())
+        #                                                       [  0   0   0 ... 720 720 720]
+        print('                         col_indices.ravel() =', col_indices.ravel())
+        #                                                       [  0   1   2 ... 358 359 360]
+        print()
+        print('                         ezSkyBallCsv =', ezSkyBallCsv)
+        print()
+        print('                         ballRMax =', ballR.max())
+        print('                         ballRMin =', ballR.min())
+        print()
+        print('                         ballLonMax =', ballLon.max())
+        print('                         ballLonMin =', ballLon.min())
+        print()
+        print('                         ballLatMax =', ballLat.max())
+        print('                         ballLatMin =', ballLat.min())
+        '''
+
+        #ballX = ρsin(φ)cos(θ)
+        ballX = ballR * np.cos(-ballLon*np.pi/180.) * np.cos(ballLat*np.pi/180.)
+
+        #ballY = ρsin(φ)sin(θ)
+        ballY = ballR * np.sin(-ballLon*np.pi/180.) * np.cos(ballLat*np.pi/180.)
+
+        #ballZ = ρcos(φ)
+        ballZ = ballR * np.sin(ballLat*np.pi/180.)
+
+        '''
+        print()
+        print()
+        print('                         ballX =', ballX)
+        print('                         ballXMax =', ballX.max())
+        print('                         ballXMin =', ballX.min())
+        print()
+        print('                         ballY =', ballY)
+        print('                         ballYMax =', ballY.max())
+        print('                         ballYMin =', ballY.min())
+        print()
+        print('                         ballZMax =', ballZ.max())
+        print('                         ballZMin =', ballZ.min())
+        '''
+
+        ziCsv = np.column_stack((ballX, ballY, ballZ, np.transpose(zi).ravel(order='F')))
+
+        '''
+        print()
+        print('                         (row_indices[0]*row_indices[1]).shape =', (row_indices[0]*row_indices[1]).shape )
+        print('                         row_indices.shape =', row_indices.shape)
+        print('                         col_indices.shape =', col_indices.shape)
+        print('                         ballZ.shape =', ballZ.shape)
+        print()
+        print('                         len(ballX) =', len(ballX))
+        print('                         len(ballY) =', len(ballY))
+        print('                         len(ballZ) =', len(ballZ))
+        print('                         len(ballR) =', len(ballR))
+        print('                         len(row_indices) =', len(row_indices))
+        print('                         len(col_indices) =', len(col_indices))
+        print('                         ballLon =', ballLon)
+        print('                         len(ballLon) =', len(ballLon))
+        print('                         ballLat =', ballLat)
+        print('                         len(ballLat) =', len(ballLat))
+
+        print()
+        print('                         ziCsv =', ziCsv)
+        '''
+
+        #np.savetxt(plotNameCsv, ziCsv, delimiter=",")
+
+        fileWriteCsv = open(plotNameCsv, 'w')
+        if not (fileWriteCsv.mode == 'w'):
+            print()
+            print()
+            print()
+            print()
+            print()
+            print(' ========== FATAL ERROR:  Can not open ')
+            print(' ' + plotNameCsv)
+            print(' file to write CSV out')
+            print()
+            print()
+            print()
+            print()
+            exit()
+
+        '''
+        print('                         ziCsv[0] =', ziCsv[0])
+        print('                         str(ziCsv[0]) =', str(ziCsv[0]))
+        print('                         len(ziCsv[0]) =', len(ziCsv[0]))
+        print('                         ziCsv[0].shape =', ziCsv[0].shape)
+        '''
+
+        #ziCsv = np.transpose(zi).ravel(order='F')
+        i = 0
+        for j in range(360, -1, -1):
+            print('\r   ', j, i, '  ', end='')
+            for _ in range(721):
+                fileWriteCsv.write(np.array2string(ziCsv[i])[1:-1] + '\n')
+                i += 1
+            fileWriteCsv.write('\n')
+
+        fileWriteCsv.close()
+        print('\r   00', i, '    ')
+
+        ziCsv = None     # free memory
+        del ziCsv
+        #'''
 
 
 
@@ -3067,6 +3319,8 @@ def plotEzSky450RIR():
     global fileNameLast             # string
     global titleS                   # string
 
+    global ezSkyMaskValue           # float
+
     plotCountdown -= 1
 
     # if plot not wanted, then return
@@ -3425,6 +3679,21 @@ def plotEzSky450RIR():
         # a mask needs to be boolean
         zi[mask450]   = np.nan          # True does not plot    ????????????????????????????????????????????????
 
+
+
+
+        print()
+        print('                         before filter np.nanmin(zi) =', np.nanmin(zi))
+        print('                         before filter np.nanmin(zi) =', np.nanmin(zi))
+
+        ###zi = gaussian_filter(zi, 9.)
+
+        if ezSkyMaskValue == -999.:
+            pass
+        elif ezSkyMaskValue == -998.:
+            zi[np.isnan(zi)] = np.nanmin(zi)        # nan replaced with np.nanmin(zi)
+        else:
+            zi[np.isnan(zi)] = ezSkyMaskValue       # nan replaced with ezSkyMaskValue
 
 
     if 0:
@@ -3852,7 +4121,10 @@ def plotEzSky500GMI():
     global galacticGLonHalfDeg              # integer 1d array
 
     global maskGalactic                     # integer 2d array
+    global ezSkyMaskValue                   # float
     global ezSky500Csv                      # integer
+    global ezSkyBallCsv                     # float
+
     #global ezSkyGalCrossingGLatCenter       # float
     #global ezSkyGalCrossingGLatNear         # float
     #global ezSkyGalCrossingGLonCenter       # float
@@ -3941,11 +4213,34 @@ def plotEzSky500GMI():
     zi = griddata((galacticGLonHalfDeg, galacticGLatHalfDeg), galacticPower, (xi, yi), method='nearest')
     #print(np.shape(zi))     # says (361, 721)
 
+    ziBeforeMax = np.nanmax(zi)
+    ziBeforeMin = np.nanmin(zi)
+    print()
+    print('                         before filter zi.max() =', ziBeforeMax)
+    print('                         before filter zi.min() =', ziBeforeMin)
+
     zi = gaussian_filter(zi, 9.)
+
+    ziAfterMax = np.nanmax(zi)
+    ziAfterMin = np.nanmin(zi)
+    print()
+    print('                         after filter zi.max() =', ziAfterMax)
+    print('                         after filter zi.min() =', ziAfterMin)
 
     if len(maskGalactic):                           # if maskGalactic available
         # a mask needs to be boolean
-        zi[maskGalactic != 0] = np.nan              # True gets np.nan
+        #zi[maskGalactic != 0] = np.nan              # True gets np.nan
+        if ezSkyMaskValue == -999.:
+            zi[maskGalactic != 0] = np.nan          # True gets np.nan
+        elif ezSkyMaskValue == -998.:
+            #zi[maskGalactic != 0] = np.nanmin(zi)   # True gets np.nanmin(zi)
+            zi[maskGalactic != 0] = ziAfterMin      # True gets ziAfterMin
+        else:
+            zi[maskGalactic != 0] = ezSkyMaskValue  # True gets ezSkyMaskValue
+
+
+
+
 
     #zi[np.isnan(zi)] = galacticPower.min()
 
@@ -3981,9 +4276,136 @@ def plotEzSky500GMI():
     if ezSky500Csv:
         plotNameCsv = plotName[:-3] + 'csv'
         row_indices, col_indices = np.indices(np.transpose(zi).shape)
-        #ziCsv = np.column_stack((row_indices.ravel()[::-1], col_indices.ravel(), np.transpose(zi).ravel()))
         ziCsv = np.column_stack((row_indices.ravel()/2.-180., col_indices.ravel()/2.-90., np.transpose(zi).ravel()))
         np.savetxt(plotNameCsv, ziCsv, delimiter=",")
+
+    if ezSkyBallCsv != -999.:
+        plotNameCsv = plotName[:-4] + 'Ball.csv'
+
+        #'''
+        row_indices, col_indices = np.indices(np.transpose(zi).shape)
+        ballLon     = row_indices.ravel(order='F')/2.-180.
+        ballLat     = col_indices.ravel(order='F')/2.-90.
+        ballTexture = np.transpose(ezSkyBallCsv * (zi - np.nanmean(zi))).ravel(order='F')
+        sphereR     = 1.0
+        ballR       = sphereR + ballTexture
+
+        #In spherical coordinates, a point is defined by its 
+        #radial distance (ρ),     rad      ballR
+        #polar angle (φ),         90-ballDec
+        #azimuthal angle (θ),     ballRA
+
+        #x = ρsin(φ)cos(θ), 
+        #y = ρsin(φ)sin(θ), 
+        #z = ρcos(φ). 
+
+        '''
+        print()
+        print('                         row_indices.ravel() =', row_indices.ravel())
+        #                                                       [  0   0   0 ... 720 720 720]
+        print('                         col_indices.ravel() =', col_indices.ravel())
+        #                                                       [  0   1   2 ... 358 359 360]
+        print()
+        print('                         ezSkyBallCsv =', ezSkyBallCsv)
+        print()
+        print('                         ballRMax =', ballR.max())
+        print('                         ballRMin =', ballR.min())
+        print()
+        print('                         ballLonMax =', ballLon.max())
+        print('                         ballLonMin =', ballLon.min())
+        print()
+        print('                         ballLatMax =', ballLat.max())
+        print('                         ballLatMin =', ballLat.min())
+        '''
+
+        #ballX = ρsin(φ)cos(θ)
+        ballX = ballR * np.cos(-ballLon*np.pi/180.) * np.cos(ballLat*np.pi/180.)
+
+        #ballY = ρsin(φ)sin(θ)
+        ballY = ballR * np.sin(-ballLon*np.pi/180.) * np.cos(ballLat*np.pi/180.)
+
+        #ballZ = ρcos(φ)
+        ballZ = ballR * np.sin(ballLat*np.pi/180.)
+
+        '''
+        print()
+        print()
+        print('                         ballX =', ballX)
+        print('                         ballXMax =', ballX.max())
+        print('                         ballXMin =', ballX.min())
+        print()
+        print('                         ballY =', ballY)
+        print('                         ballYMax =', ballY.max())
+        print('                         ballYMin =', ballY.min())
+        print()
+        print('                         ballZMax =', ballZ.max())
+        print('                         ballZMin =', ballZ.min())
+        '''
+
+        ziCsv = np.column_stack((ballX, ballY, ballZ, np.transpose(zi).ravel(order='F')))
+
+        '''
+        print()
+        print('                         (row_indices[0]*row_indices[1]).shape =', (row_indices[0]*row_indices[1]).shape )
+        print('                         row_indices.shape =', row_indices.shape)
+        print('                         col_indices.shape =', col_indices.shape)
+        print('                         ballZ.shape =', ballZ.shape)
+        print()
+        print('                         len(ballX) =', len(ballX))
+        print('                         len(ballY) =', len(ballY))
+        print('                         len(ballZ) =', len(ballZ))
+        print('                         len(ballR) =', len(ballR))
+        print('                         len(row_indices) =', len(row_indices))
+        print('                         len(col_indices) =', len(col_indices))
+        print('                         ballLon =', ballLon)
+        print('                         len(ballLon) =', len(ballLon))
+        print('                         ballLat =', ballLat)
+        print('                         len(ballLat) =', len(ballLat))
+
+        print()
+        print('                         ziCsv =', ziCsv)
+        '''
+
+        #np.savetxt(plotNameCsv, ziCsv, delimiter=",")
+
+        fileWriteCsv = open(plotNameCsv, 'w')
+        if not (fileWriteCsv.mode == 'w'):
+            print()
+            print()
+            print()
+            print()
+            print()
+            print(' ========== FATAL ERROR:  Can not open ')
+            print(' ' + plotNameCsv)
+            print(' file to write CSV out')
+            print()
+            print()
+            print()
+            print()
+            exit()
+
+        '''
+        print('                         ziCsv[0] =', ziCsv[0])
+        print('                         str(ziCsv[0]) =', str(ziCsv[0]))
+        print('                         len(ziCsv[0]) =', len(ziCsv[0]))
+        print('                         ziCsv[0].shape =', ziCsv[0].shape)
+        '''
+
+        #ziCsv = np.transpose(zi).ravel(order='F')
+        i = 0
+        for j in range(360, -1, -1):
+            print('\r   ', j, i, '  ', end='')
+            for _ in range(721):
+                fileWriteCsv.write(np.array2string(ziCsv[i])[1:-1] + '\n')
+                i += 1
+            fileWriteCsv.write('\n')
+
+        fileWriteCsv.close()
+        print('\r   00', i, '    ')
+
+        ziCsv = None     # free memory
+        del ziCsv
+        #'''
 
 
 
@@ -4165,6 +4587,7 @@ def plotEzSky510GSI():
     global galacticGLonHalfDeg              # integer 1d array
 
     global maskGalactic                     # integer 2d array
+    global ezSkyMaskValue                   # float
     #global ezSkyGalCrossingGLatCenter       # float
     #global ezSkyGalCrossingGLatNear         # float
     #global ezSkyGalCrossingGLonCenter       # float
@@ -4254,11 +4677,30 @@ def plotEzSky510GSI():
     zi = griddata((galacticGLonHalfDeg, galacticGLatHalfDeg), galacticPower, (xi, yi), method='nearest')
     #print(np.shape(zi))     # says (361, 721)
 
+    ziBeforeMax = np.nanmax(zi)
+    ziBeforeMin = np.nanmin(zi)
+    print()
+    print('                         before filter zi.max() =', ziBeforeMax)
+    print('                         before filter zi.min() =', ziBeforeMin)
+
     zi = gaussian_filter(zi, 9.)
+
+    ziAfterMax = np.nanmax(zi)
+    ziAfterMin = np.nanmin(zi)
+    print()
+    print('                         after filter zi.max() =', ziAfterMax)
+    print('                         after filter zi.min() =', ziAfterMin)
 
     if len(maskGalactic):                           # if maskGalactic available
         # a mask needs to be boolean
-        zi[maskGalactic != 0] = np.nan              # True gets np.nan
+        #zi[maskGalactic != 0] = np.nan              # True gets np.nan
+        if ezSkyMaskValue == -999.:
+            zi[maskGalactic != 0] = np.nan          # True gets np.nan
+        elif ezSkyMaskValue == -998.:
+            #zi[maskGalactic != 0] = np.nanmin(zi)   # True gets np.nanmin(zi)
+            zi[maskGalactic != 0] = ziAfterMin      # True gets ziAfterMin
+        else:
+            zi[maskGalactic != 0] = ezSkyMaskValue  # True gets ezSkyMaskValue
 
     #zi[np.isnan(zi)] = galacticPower.min()
 
@@ -4330,6 +4772,7 @@ def plotEzSkyMollweide(plotNumber):
 
     global ezSkyInputS                      # string
     global maskGalactic                     # integer 2d array
+    global ezSkyMaskValue                   # float
     global ezSky520Csv                      # integer
 
     global ezSkyGalCrossingGLatCenter       # float
@@ -4507,11 +4950,30 @@ def plotEzSkyMollweide(plotNumber):
         zi = griddata((galacticGLonHalfDeg, galacticGLatHalfDeg), galacticPower, (xi, yi), method='nearest')
         #print(np.shape(zi))     # says (361, 721)
 
+        ziBeforeMax = np.nanmax(zi)
+        ziBeforeMin = np.nanmin(zi)
+        print()
+        print('                         before filter zi.max() =', ziBeforeMax)
+        print('                         before filter zi.min() =', ziBeforeMin)
+
         zi = gaussian_filter(zi, 9.)
+
+        ziAfterMax = np.nanmax(zi)
+        ziAfterMin = np.nanmin(zi)
+        print()
+        print('                         after filter zi.max() =', ziAfterMax)
+        print('                         after filter zi.min() =', ziAfterMin)
 
         if len(maskGalactic):                           # if maskGalactic available
             # a mask needs to be boolean
-            zi[maskGalactic != 0] = np.nan              # True gets np.nan
+            #zi[maskGalactic != 0] = np.nan              # True gets np.nan
+            if ezSkyMaskValue == -999.:
+                zi[maskGalactic != 0] = np.nan          # True gets np.nan
+            elif ezSkyMaskValue == -998.:
+                #zi[maskGalactic != 0] = np.nanmin(zi)   # True gets np.nanmin(zi)
+                zi[maskGalactic != 0] = ziAfterMin      # True gets ziAfterMin
+            else:
+                zi[maskGalactic != 0] = ezSkyMaskValue  # True gets ezSkyMaskValue
 
         #zi[np.isnan(zi)] = galacticPower.min()
 
@@ -4889,4 +5351,21 @@ if __name__== '__main__':
 # mv graph3d.png ezSky520GOI_18AntBTVTAvgCsv.png
 
 # python3 ../ezRA/ezSky241201a.py -ezSkyInput 18  . -ezSkyMaskIn ../ezRA/ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 520 520 -ezSky400Csv 1 -ezSky500Csv 1 -ezSky520Csv 1
+
+# python3 ../ezRA/ezSky241216a.py -ezSkyInput 14  .  -ezRAObsName LTO16h  -ezSkyMaskIn ../ezRA/ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 520 520  -ezSkyMaskValue -998.
+
+# a@u22-221222a:~/ezRABase/lto16h$ 
+# python3 ../ezRA/ezSky241216a.py -ezSkyInput 14  .  -ezRAObsName LTO16h  -ezSkyMaskIn ../ezRA/ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 520 520  -ezSkyMaskValue 1.23
+
+# python3 ../../ezRA/ezSky241216d.py -ezSkyInput 14  ..  -ezRAObsName LTO16h  -ezSkyMaskIn ../../ezRA/ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 500 500   -ezSkyMaskValue -998  -ezSkyBallCsv 0
+
+
+
+# a@u22-221222a:~/ezRABase/lto16h/zzzzzz$
+# python3 ../../ezRA/ezSky250102a.py -ezSkyInput 14  ..  -ezRAObsName LTO16h  -ezSkyMaskIn ../../ezRA/ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 500 500   -ezSkyMaskValue -998.  -ezSkyBallCsv 0
+# ring3d  ezSky500GMI_14AntBAvgBall.csv 
+
+
+# py ..\..\ezRA\ezSky250105a.py -ezSkyInput 14  ..  -ezRAObsName LTO16h  -ezSkyMaskIn ..\..\ezRA\ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 500 500   -ezSkyMaskValue -998.  -ezSkyBallCsv 0
+
 

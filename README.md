@@ -39,7 +39,7 @@ Or perhaps start with these 2 introductory videos (from the longer list of video
 
 * ezCol - COLlect radio signals into integrated frequency spectrum ezRA .txt data files.
 
-  * Or convert previous radio data with ezColBAA, ezColHay, ezColIFAvg, ezColSc, etc.
+  * Or convert previous radio data with ezColBAA, ezColDSPIRA, ezColHay, ezColIFAvg, ezColSc, etc.
 
   * ezFix - remove or separate samples, combine, edit, and split frequency spectrum ezRA .txt data files.
 
@@ -77,6 +77,22 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
   * [ezRA Analysis 6 - ezSky](https://youtu.be/dj3_jikH59Y)<br>
   * [ezRA Analysis 7 - AntXTVT and VLSR](https://youtu.be/038Apm0yAjY)<br>
   * [ezRA Analysis 8 - ezGal](https://youtu.be/YXuPDJVRbd0)
+<br>
+
+  * [3D Plots - Nov-03-2024 - RinearnGraph3D](https://youtu.be/mcy7k7vKk2Y)<br>
+  * [3D Plots - Dec-15-2024 - Galaxy Movie](https://youtu.be/T9zX1qIWgFI)<br>
+  * [3D Plots - Galaxy Rotation Movie](https://youtu.be/8qk0QFxbPO8)<br>
+  * [3D Plots - Jan-05-2025 - -ezSkyBallCsv](https://youtu.be/1lmdAq6ysts)
+<br>
+
+  Right click on video and click on "Loop":<br>
+  * [Cross-eyed Stereo Movie - ezCon087 Rotation](https://youtu.be/JkuVU5My6TU)<br>
+  * [Cross-eyed Stereo Movie - ezSky470 Ball](https://youtu.be/aoxii04BMBE)<br>
+  * [Cross-eyed Stereo Movie - ezSky500 Bumpy Ball](https://youtu.be/iCq5x3KP23A)<br>
+  * [Cross-eyed Stereo Movie - Galaxy Rotation](https://youtu.be/IbusWJG7_Lg)
+<br>
+
+  * [SHOOS Amateur Data Sharing](https://youtu.be/rrraZdyZoJk)
 
 Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
@@ -118,6 +134,7 @@ The experiment has completed successfully, ezColX is now named ezCol, and the na
 These data converter programs need lots of cleanup, but should work or be helpful:
 
   * ezColBAA.py
+  * ezColDSPIRA.py
   * ezColHay.py
   * ezColIFAvg.py
   * ezColSc.py
@@ -127,6 +144,7 @@ Always need more documentation.
 --
 
 Did ezRA work for you ?
+Email me your news.
 
 <p align="center">
   <img src="/ezRA/doc/ezRA_users241207.png?raw=true" alt="ezRA_users241207"/>
@@ -140,7 +158,7 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Dec-7-2024
+Jan-18-2025
 
 (World Map by juicy_fish on Freepik.com)
 
