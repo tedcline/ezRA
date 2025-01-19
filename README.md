@@ -85,7 +85,7 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
   * [3D Plots - Jan-05-2025 - -ezSkyBallCsv](https://youtu.be/1lmdAq6ysts)
 <br>
 
-  Right click on video and click on "Loop":<br>
+  Open video, right click on face of video, and click on "Loop":<br>
   * [Cross-eyed Stereo Movie - ezCon087 Rotation](https://youtu.be/JkuVU5My6TU)<br>
   * [Cross-eyed Stereo Movie - ezSky470 Ball](https://youtu.be/aoxii04BMBE)<br>
   * [Cross-eyed Stereo Movie - ezSky500 Bumpy Ball](https://youtu.be/iCq5x3KP23A)<br>
