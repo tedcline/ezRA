@@ -143,7 +143,7 @@ Always need more documentation.
 
 --
 
-Did ezRA work for you ?
+Did ezRA work for you ?<br>
 Email me your news.
 
 <p align="center">
