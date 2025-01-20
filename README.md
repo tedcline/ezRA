@@ -95,10 +95,12 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
   * [Cross-eyed Stereo Movie - Galaxy Rotation](https://youtu.be/IbusWJG7_Lg)
 <br>
 
+Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
+
+## SHOOS Amateur Data Sharing:
+
   * [SHOOS Amateur Data Sharing video](https://youtu.be/rrraZdyZoJk)<br>
   * [SHOOS Amateur Data Sharing page](https://www.astronomy.me.uk/SHOOS/shoos.htm)
-
-Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
 ## Documentation for ezRA, in the ezRA/doc directory, will eventually include:
 
