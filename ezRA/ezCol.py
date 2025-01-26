@@ -1,4 +1,4 @@
-programName = 'ezCol240716a.py'
+programName = 'exCol250127a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCol Data COLlector program,
@@ -26,7 +26,7 @@ programRevision = programName
 # Thanks to Todd Ullery, ezColX.py was an experimental multiple process version of ezCol.py ,
 # to improve graphic dashboard responsiveness, 221130 and 221202.
 
-
+# exCol250127a, adding max_time parameter
 # ezCol240716a, helpful config comments for ezSerRelay.py
 # ezCol240715b, swapped locations of 'To File' and 'Off' RadioButtons
 # ezCol240715a, Python3.12+ SyntaxWarnings
@@ -216,6 +216,7 @@ def printUsage():
     print('              -ezRAObsAmsl 1524.0           (Observatory Above Mean Sea Level (meters))')
     print('              -ezRAObsName bigDish8         (Observatory Name)')
     print('              -ezColFileNamePrefix bigDish8 (Data File Name Prefix)')
+    print('              -ezColMaxTime 0               (Max Time in Seconds to collect data, default=infinite)')
     print()
     print('              -ezColCenterFreqAnt 1420.405  (Signal          Frequency (MHz))')
     print('              -ezColCenterFreqRef 1423.405  (Dicke Reference Frequency (MHz))')
@@ -298,6 +299,7 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
     global ezRAObsLon                       # float
     global ezRAObsAmsl                      # float
     global ezRAObsName                      # string
+    global ezMaxTime                        # integer
     global ezColFileNamePrefix              # string
 
     global ezColCenterFreqAnt               # float
@@ -369,6 +371,9 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
 
             elif thisLine0Lower == '-ezRAObsAmsl'.lower():
                 ezRAObsAmsl = float(thisLineSplit[1])
+
+            elif thisLine0Lower == '-ezColMaxTime'.lower():
+                ezMaxTime = int(thisLineSplit[1])
 
             elif thisLine0Lower == '-ezColFileNamePrefix'.lower():
                 ezColFileNamePrefix = thisLineSplit[1]
@@ -484,6 +489,7 @@ def ezColArgumentsCommandLine():
     global ezRAObsLon                       # float
     global ezRAObsAmsl                      # float
     global ezRAObsName                      # string
+    global ezMaxTime                        # integer
     global ezColFileNamePrefix              # string
 
     global ezColCenterFreqAnt               # float
@@ -567,6 +573,10 @@ def ezColArgumentsCommandLine():
             elif cmdLineArgLower == '-ezRAObsName'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezRAObsName = cmdLineSplit[cmdLineSplitIndex]   # cmd line allows only one ezRAObsName word
+
+            elif cmdLineArgLower == '-ezColMaxTime'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezMaxTime = int(cmdLineSplit[cmdLineSplitIndex])   # cmd line allows only one ezRAObsName word
 
             elif cmdLineArgLower == '-ezColFileNamePrefix'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -715,6 +725,7 @@ def ezColArguments():
     global ezRAObsLon                       # float
     global ezRAObsAmsl                      # float
     global ezRAObsName                      # string
+    global ezMaxTime                        # integer
     global ezColFileNamePrefix              # string
 
     global ezColCenterFreqAnt               # float
@@ -757,6 +768,7 @@ def ezColArguments():
         ezRAObsLat  =  39.8282              # Observatory Latitude  (degrees)
         ezRAObsLon  = -98.5696              # Observatory Longitude (degrees)
         ezRAObsAmsl = 563.88                # Observatory Above Mean Sea Level (meters)
+        ezMaxTime   = 0                     # Observation Time infinite
         ezColFileNamePrefix = ''
 
         ezColCenterFreqAnt = 1420.405       # Center Frequency for Antenna signal measurements
@@ -889,6 +901,7 @@ def ezColArguments():
     print('   ezRAObsLat  =', ezRAObsLat)
     print('   ezRAObsLon  =', ezRAObsLon)
     print('   ezRAObsAmsl =', ezRAObsAmsl)
+    print('   ezMaxTime   =', ezMaxTime)
     print('   ezColFileNamePrefix =', ezColFileNamePrefix)
     print()
     print('   ezColCenterFreqRef  =', ezColCenterFreqRef)
@@ -927,6 +940,7 @@ def main():
     global ezRAObsLon                       # float
     global ezRAObsAmsl                      # float
     global ezRAObsName                      # string
+    global ezMaxTime                        # integer
     global ezColFileNamePrefix              # string
 
     global ezColCenterFreqAnt               # float
@@ -985,7 +999,7 @@ def main():
     import matplotlib.pyplot as plt
     # ModuleNotFoundError: No module name 'tkinter'
     #   sudo apt-get install python3-tk
-    #   sudo apt-get install python3-pil python3-pil.imagetk 
+    #   sudo apt-get install python3-pil python3-pil.imagetk
     from matplotlib.widgets import Button, RadioButtons, TextBox
 
     print('\n matplotlib.__version__ =', matplotlib.__version__)
@@ -1052,7 +1066,7 @@ def main():
     bandWidthHz = ezColBandWidth * 1e6                          # in float Hz
 
     programState = 0                # 0: "To File", 1: Idle, 2: Exit, in case no ezColDashboard
-    
+
     if ezColUsbRelay:
         ezColUsbRelayS = ' Relay'
     else:
@@ -1166,7 +1180,7 @@ def main():
             if label == 'To File':
                 programState = 0
                 programStateQueue.put(programState)
-            elif label == 'Idle': 
+            elif label == 'Idle':
                 programState = 1
                 programStateQueue.put(programState)
             else:
@@ -1277,8 +1291,18 @@ def main():
         '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '0']
     firstDraw = 1           # flag to draw the plot the first time without data
     ###mainLoop = 0
+    mainLoopStartTime = time.time()
+
     while 1:
         ###print(' =========== mainLoop =', mainLoop)
+
+        # MaxTime elapsed?
+        if ezMaxTime > 0:
+            if (time.time() - mainLoopStartTime) > ezMaxTime:
+                programState = 2
+                programStateQueue.put(programState)
+                sdrProcess.join()
+                exit(0)
 
         # exit ezCol ?
         if ezColSampleMax <= sampleNumber:
@@ -1400,6 +1424,7 @@ def main():
                         + f'lat {ezRAObsLat:g} ' \
                         + f'long {ezRAObsLon:g} ' \
                         + f'amsl {str(ezRAObsAmsl)} ' \
+                        + f'maxTime {ezMaxTime} ' \
                         + f'name {ezRAObsName}\n' \
                         + f'freqMin {freqMinAnt:g} ' \
                         + f'freqMax {freqMaxAnt:g} ' \
@@ -1435,6 +1460,7 @@ def main():
                     print(f'  Latitude    {ezRAObsLat:0.1f}')
                     print(f'  Longitude   {ezRAObsLon:0.1f}')
                     print(f'  Amsl        {ezRAObsAmsl:0.0f}')
+                    print(f'  MaxTime     {ezMaxTime:d}')
                     if coordType == 0:              # AzEl
                         print(f'  AzDeg       {coord0:0.1f}')
                         print(f'  ElDeg       {coord1:0.1f}')
@@ -1572,7 +1598,7 @@ def main():
                 lmstThisInt = int(lmstThis)
                 powerTime_ax3XB.set(xlim=[lmstThis - 24., lmstThis], \
                     xticks=[lmstThisInt - x for x in [23, 22, 21, 20,
-                        19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 
+                        19, 18, 17, 16, 15, 14, 13, 12, 11, 10,
                         9, 8, 7, 6, 5, 4, 3, 2, 1, 0]],
                     xticklabels=lmstLabels1to0to0[lmstThisInt:lmstThisInt + 24], \
                     xlabel = "Local Mean Sidereal Time (LMST) Hours = south's Right Ascension")
@@ -1759,7 +1785,7 @@ def sdrTask(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz,
                 # Assumes hidusb-relay-cmd.exe program is in the same directory as this ezCol program.
                 # define relay command strings
                 # the command prompt command line
-                #      ..\ezRA\hidusb-relay-cmd.exe enum 
+                #      ..\ezRA\hidusb-relay-cmd.exe enum
                 # returned
                 #      Board ID=[HW348] State: R1=OFF
                 # because of the "R1" on that last line, I use:
@@ -1797,7 +1823,7 @@ def sdrTask(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz,
                 # Assumes hidusb-relay-cmd.exe program is in the same directory as this ezCol program.
                 # define relay command strings
                 # the command prompt command line
-                #      ..\ezRA\hidusb-relay-cmd.exe enum 
+                #      ..\ezRA\hidusb-relay-cmd.exe enum
                 # returned
                 #      Board ID=[BITFT] State: R1=OFF R2=OFF
                 # because of the "R1" and "R2" on that last line, I use:
@@ -1815,7 +1841,7 @@ def sdrTask(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz,
                 # Assumes hidusb-relay-cmd.exe program is in the same directory as this ezCol program.
                 # define relay command strings
                 # the command prompt command line
-                #      ..\ezRA\hidusb-relay-cmd.exe enum 
+                #      ..\ezRA\hidusb-relay-cmd.exe enum
                 # returned
                 #      Board ID=[BITFT] State: R1=OFF R2=OFF
                 # because of the "R1" and "R2" on that last line, I use:
@@ -1833,7 +1859,7 @@ def sdrTask(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz,
                 # Assumes hidusb-relay-cmd.exe program is in the same directory as this ezCol program.
                 # define relay command strings
                 # the command prompt command line
-                #      ..\ezRA\hidusb-relay-cmd.exe enum 
+                #      ..\ezRA\hidusb-relay-cmd.exe enum
                 # returned
                 #      Board ID=[BITFT] State: R1=OFF R2=OFF
                 # because of the "R1" and "R2" on that last line, I use:
@@ -1925,7 +1951,7 @@ def sdrTask(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz,
                 #      Device Found
                 #        type: 16c0 05df
                 #        path: /dev/hidraw3
-                #        serial_number: 
+                #        serial_number:
                 #        Manufacturer: www.dcttech.com
                 #        Product:      USBRelay1
                 #        Release:      100
@@ -1952,12 +1978,12 @@ def sdrTask(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz,
                 # Put the user in the dialout group for Serial,
                 #   and also in the plugdev group for USB:
                 #     sudo usermod -a -G dialout,plugdev <username>
-                #   
+                #
                 # See the group for serial:
                 #   ls -l /dev/ttyUSB0
                 # gives
                 #   crw-rw---- 1 root dialout 188, 0 15 juil. 14:12 /dev/ttyUSB0
-                #   
+                #
                 # See the group for USB:
                 #   ls -l /dev/hidraw1
                 # gives
@@ -1994,7 +2020,7 @@ def sdrTask(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz,
                 #      Device Found
                 #        type: 16c0 05df
                 #        path: /dev/hidraw3
-                #        serial_number: 
+                #        serial_number:
                 #        Manufacturer: www.dcttech.com
                 #        Product:      USBRelay2
                 #        Release:      100
@@ -2039,7 +2065,7 @@ def sdrTask(bandWidthHz, ezColGain, ezColBiasTeeOn, freqBinQty, centerFreqAntHz,
             sdr.close()
             exit(0)
 
-        else: 
+        else:
             # take ezColIntegQty readings and create a sample
 
             if not ezColIntegQtyQueue.empty():
