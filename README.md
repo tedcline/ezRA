@@ -82,7 +82,8 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
   * [3D Plots - Nov-03-2024 - RinearnGraph3D](https://youtu.be/mcy7k7vKk2Y)<br>
   * [3D Plots - Dec-15-2024 - Galaxy Movie](https://youtu.be/T9zX1qIWgFI)<br>
   * [3D Plots - Jan-05-2025 - -ezSkyBallCsv](https://youtu.be/1lmdAq6ysts)<br>
-  * [3D Plots - Jan-19-2025 - Stereo](https://youtu.be/JqMUdApmlNU)
+  * [3D Plots - Jan-19-2025 - Stereo](https://youtu.be/JqMUdApmlNU)<br>
+  * [3D Plots - Feb-02-2025 - Stereo Island Movie](https://youtu.be/Pgy-QV9_SfA)
 <br>
 
   Very Shorts:<br>
@@ -92,7 +93,8 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
   * [Cross-eyed Stereo Movie - ezCon087 Rotation](https://youtu.be/JkuVU5My6TU)<br>
   * [Cross-eyed Stereo Movie - ezSky470 Ball](https://youtu.be/aoxii04BMBE)<br>
   * [Cross-eyed Stereo Movie - ezSky500 Bumpy Ball](https://youtu.be/iCq5x3KP23A)<br>
-  * [Cross-eyed Stereo Movie - Galaxy Rotation](https://youtu.be/IbusWJG7_Lg)
+  * [Cross-eyed Stereo Movie - Galaxy Rotation](https://youtu.be/IbusWJG7_Lg)<br>
+  * [Cross-eyed Stereo Movie - Island Rotation](https://youtu.be/QgsPwkhn-_c)
 <br>
 
 Society of Amateur Radio Astronomers (SARA) [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
@@ -164,7 +166,7 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Jan-20-2025
+Feb-04-2025
 
 (World Map by juicy_fish on Freepik.com)
 
