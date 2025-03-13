@@ -1,4 +1,4 @@
-programName = 'ezCon241024a.py'
+programName = 'ezCon250312a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
@@ -6,7 +6,7 @@ programRevision = programName
 #   one .ezb text data file, and perhaps GALaxy *Gal.npz and *GLon.npz data files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2025, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,19 @@ programRevision = programName
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
 
+# ezCon250312a, if ezCon087Csv is 2 then downsample antXTVTCsv before ifAvg format files
+# ezCon250303a, writeFileGalRaDecNear() remember gLon in RGal.npz,
+#   ring bell upon error exit (to alert operator during batch file runs)
+# ezCon250302a, -ezConGalRaDecNearNearL for M31 extragalactic study, creates RGal.npz
+# ezCon250124b, ezCon087Csv swap X and Y
+# ezCon250124a, -ezConAntXTVTSmooth
+# ezCon250123b, ezConAntXTVTSmoothDo()
+# ezCon250123a, ezConAntXTVTSmoothDo()
+# ezCon250122d, -ezCon087Csv 1 ezCon087antRBTVTMsh.csv
+# ezCon250122c, -ezCon087Csv 1 ezCon087antRBTVTMsh.csv
+# ezCon250122b, -ezCon087Csv 2 dirOut = plotName
+# ezCon250122a, average into fewer ifAvg format files
+# ezCon250121a, -ezCon087Csv 2 to also write out ezCon087 as one directory of ifAvg format files
 # ezCon241024a, writeFileGLon() to before del antXTVT
 # ezCon241021a, -ezCon087Csv plot scales
 # ezCon241019ax, -ezCon087Csv
@@ -431,10 +444,14 @@ def printUsage():
     print('    -ezConAntXTVTAvgPluckValL  .01   .03')
     print('         (Pluck (ignore) AntXTVT    samples with Values below .01 or above .03)')
     print()
-    print('    -ezConAntXTVTPluck         33')
+    print('    -ezConAntXTVTPluck          33')
     print('         (Pluck (ignore) AntXTVTMax and AntXTVT sample 33)')
     print()
+    print('    -ezConAntXTVTSmooth         2')
+    print('         (smooth antXTVT heatmap data as an image, with choice of filters)')
+    print()
     print('    -ezCon087Csv         1           (create CSV file of ezCon087 for 3d plots with rinearn.com/en-us/graph3d)')
+    print('    -ezCon087Csv         2           (... and also write out ezCon087 as one directory of ifAvg format files)')
     print()
     print('    -ezConPlotRangeL     0  300      (save only this range of ezCon plots to file, to save time)')
     print('    -ezConRawDispIndex   1           (also Display the Raw sample Index on x axis)')
@@ -453,18 +470,21 @@ def printUsage():
     #print('         (velGLon level for plotEzCon430velGLonEdges, if 0 then use only ezConVelGLonEdgeFrac)')
     print()
     print('    -ezConGalCrossingGLatCenter   2.4')
-    print('         (adds center  of GLat crossing  in Galactic Latitude degrees)')
+    print('         (add spectra to Gal.npz, the center of GLat crossing, in Galactic Latitude degrees)')
     print('    -ezConGalCrossingGLatCenterL  -5.2  6.3  11')
     print('         (adds centers of GLat crossings in Galactic Latitude degrees, as np.linspace(-5.2, 6.3, num=11))')
     print('    -ezConGalCrossingGLatNear     2.3')
     print('         (defines "close to GLat crossing" in Galactic Latitude degrees)')
     print()
     print('    -ezConGalCrossingGLonCenter   72.4')
-    print('         (adds center  of GLon crossing  in Galactic Longitude degrees)')
+    print('         (add spectra to GLon.npz, the center of GLon crossing, in Galactic Longitude degrees)')
     print('    -ezConGalCrossingGLonCenterL  69.6  82.4  13')
     print('         (adds centers of GLon crossings in Galactic Longitude degrees, as np.linspace(69.6,  82.4, num=13))')
     print('    -ezConGalCrossingGLonNear     2.7')
     print('         (defines "close to GLon crossing" in Galactic Longitude degrees)')
+    print()
+    print('    -ezConGalRaDecNearNearL       0.8  41.3  0.1  0.2')
+    print('         (add spectra to RGal.npz, from RaDec span 0.8 +/-0.1 hours, 41.3 +/-0.2 degrees)')
     print()
     print('    -ezCon399SignalSampleByFreqBinL     18  1423')
     print('         (plot antenna sample 1423 spectrum By FreqBin of signal 18 (of ezbMenu columns 10, 12, 14, 16, 18))')
@@ -556,6 +576,7 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConAntXTVTAvgPluckQtyL         # integer list
     global ezConAntXTVTAvgPluckValL         # float list
     global ezConAntXTVTPluckL               # integer list
+    global ezConAntXTVTSmooth               # integer
     global ezCon087Csv                      # integer
     global ezConAntXTVTLevelL               # float list
 
@@ -576,6 +597,7 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
     global ezConGalCrossingGLatNear         # float
     global ezConGalCrossingGLonCenterL      # float list
     global ezConGalCrossingGLonNear         # float
+    global ezConGalRaDecNearNearL           # float list
 
     print()
     print('   ezConArgumentsFile(' + ezDefaultsFileNameInput + ') ===============')
@@ -763,6 +785,9 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezConAntXTVTPluck'.lower():
                 ezConAntXTVTPluckL.append(int(thisLine[1]))
 
+            elif thisLine0Lower == '-ezConAntXTVTSmooth'.lower():
+                ezConAntXTVTSmooth = int(thisLine[1])
+
             elif thisLine0Lower == '-ezCon087Csv'.lower():
                 ezCon087Csv = int(thisLine[1])
 
@@ -786,6 +811,13 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
                 #ezConPlotRangeL.append(range(ezConPlotRangeL0, ezConPlotRangeL1 + 1))
                 ezConPlotRangeL += [int(thisLine[1]), int(thisLine[2])]
 
+            elif thisLine0Lower == '-ezConGalRaDecNearNearL'.lower():
+                ezConGalRaDecNearNearL = []
+                ezConGalRaDecNearNearL.append(float(thisLine[1]))
+                ezConGalRaDecNearNearL.append(float(thisLine[2]))
+                ezConGalRaDecNearNearL.append(float(thisLine[3]))
+                ezConGalRaDecNearNearL.append(float(thisLine[4]))
+
 
             elif thisLine0Lower[:5] == '-ezCon'.lower():
                 print()
@@ -800,6 +832,7 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
                 print()
                 print()
                 print()
+                print('\a')     # ring bell
                 exit()
 
             else:
@@ -856,6 +889,7 @@ def ezConArgumentsCommandLine():
     global ezConAntXTVTAvgPluckQtyL         # integer list
     global ezConAntXTVTAvgPluckValL         # float list
     global ezConAntXTVTPluckL               # integer list
+    global ezConAntXTVTSmooth               # integer
     global ezCon087Csv                      # integer
     global ezConAntXTVTLevelL               # float list
 
@@ -876,6 +910,7 @@ def ezConArgumentsCommandLine():
     global ezConGalCrossingGLatNear         # float
     global ezConGalCrossingGLonCenterL      # float list
     global ezConGalCrossingGLonNear         # float
+    global ezConGalRaDecNearNearL           # float list
 
     global cmdDirectoryS                    # string            creation
 
@@ -1148,6 +1183,10 @@ def ezConArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezConAntXTVTPluckL.append(int(cmdLineSplit[cmdLineSplitIndex]))
 
+            elif cmdLineArgLower == '-ezConAntXTVTSmooth'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConAntXTVTSmooth = int(cmdLineSplit[cmdLineSplitIndex])
+
             elif cmdLineArgLower == '-ezCon087Csv'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezCon087Csv = int(cmdLineSplit[cmdLineSplitIndex])
@@ -1181,6 +1220,17 @@ def ezConArgumentsCommandLine():
                 #ezConPlotRangeL.append(range(ezConPlotRangeL0, ezConPlotRangeL1 + 1))
                 ezConPlotRangeL += [ezConPlotRangeL0, ezConPlotRangeL1]
 
+            elif cmdLineArgLower == '-ezConGalRaDecNearNearL'.lower():
+                ezConGalRaDecNearNearL = []
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezConGalRaDecNearNearL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezConGalRaDecNearNearL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezConGalRaDecNearNearL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezConGalRaDecNearNearL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+
             elif cmdLineArgLower == '-ezDefaultsFile'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezConArgumentsFile(cmdLineSplit[cmdLineSplitIndex])
@@ -1209,6 +1259,7 @@ def ezConArgumentsCommandLine():
                 print()
                 print()
                 print()
+                print('\a')     # ring bell
                 exit()
 
             else:
@@ -1266,6 +1317,7 @@ def ezConArguments():
     global ezConAntXTVTAvgPluckQtyL         # integer list
     global ezConAntXTVTAvgPluckValL         # float list
     global ezConAntXTVTPluckL               # integer list
+    global ezConAntXTVTSmooth               # integer
     global ezCon087Csv                      # integer
     global ezConAntXTVTLevelL               # float list
 
@@ -1292,6 +1344,7 @@ def ezConArguments():
     global ezConGalCrossingGLatNear         # float
     global ezConGalCrossingGLonCenterL      # float list
     global ezConGalCrossingGLonNear         # float
+    global ezConGalRaDecNearNearL           # float list
 
     # defaults
     if 1:
@@ -1343,6 +1396,7 @@ def ezConArguments():
         ezConAntXTVTAvgPluckQtyL = []       # empty to disable
         ezConAntXTVTAvgPluckValL = []       # empty to disable
         ezConAntXTVTPluckL       = []       # empty to disable
+        ezConAntXTVTSmooth       = 0        # to disable
         ezCon087Csv              = 0        # to disable
         ezConAntXTVTLevelL = [1., 0.]       # to disable
 
@@ -1354,18 +1408,20 @@ def ezConArguments():
         ezConDispGrid    = 0
         ezConDispFreqBin = 0
 
-        #ezConAstroMath = 2              # 2 = astropy math = slow but authoritative
-        ezConAstroMath = 1              # 1 = math from MIT Haystack SRT
+        #ezConAstroMath = 2                  # 2 = astropy math = slow but authoritative
+        ezConAstroMath = 1                  # 1 = math from MIT Haystack SRT
 
         ezConRefMode = 10
 
-        ezConGalCrossingGLatCenterL = []
+        ezConGalCrossingGLatCenterL = []    # empty for default Galactic plane
         # defines 'close to GLat crossing" in Galactic Latitude degrees
         ezConGalCrossingGLatNear    = 5.
 
-        ezConGalCrossingGLonCenterL = []
+        ezConGalCrossingGLonCenterL = []    # empty to disable
         # defines 'close to GLon crossing" in Galactic Longitude degrees
         ezConGalCrossingGLonNear    = 0.5
+
+        ezConGalRaDecNearNearL = []         # empty to disable
 
         ezConVelGLonEdgeFrac =  0.5     # velGLon level fraction for plotEzCon430velGLonEdges()
         ezConVelGLonEdgeLevel = 0.      # velGLon level for plotEzCon430velGLonEdges(), if not 0 then
@@ -1409,6 +1465,7 @@ def ezConArguments():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
     if ezCon399SignalSampleByFreqBinL[0] not in [10, 12, 14, 16, 18]:
@@ -1423,6 +1480,7 @@ def ezConArguments():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
     if ezConGalCrossingGLatCenterL == []:
@@ -1498,6 +1556,7 @@ def ezConArguments():
         print('   ezConAntXTVTAvgPluckQtyL        =', ezConAntXTVTAvgPluckQtyL)
         print('   ezConAntXTVTAvgPluckValL        =', ezConAntXTVTAvgPluckValL)
         print('   ezConAntXTVTPluckL              =', ezConAntXTVTPluckL)
+        print('   ezConAntXTVTSmooth              =', ezConAntXTVTSmooth)
         print('   ezCon087Csv                     =', ezCon087Csv)
         print()
         print('   ezCon399SignalSampleByFreqBinL  =', ezCon399SignalSampleByFreqBinL)
@@ -1514,6 +1573,8 @@ def ezConArguments():
         print()
         print('   ezConGalCrossingGLonCenterL =', ezConGalCrossingGLonCenterL)
         print('   ezConGalCrossingGLonNear    =', ezConGalCrossingGLonNear)
+        print()
+        print('   ezConGalRaDecNearNearL      =', ezConGalRaDecNearNearL)
         print()
         print('   ezConVelGLonEdgeFrac  =', ezConVelGLonEdgeFrac)
         print('   ezConVelGLonEdgeLevel =', ezConVelGLonEdgeLevel)
@@ -1884,6 +1945,7 @@ def readDataDir():
                                             print()
                                             print()
                                             print()
+                                            print('\a')     # ring bell
                                             exit()
                                         #elif ezConAstroMath == 2:
                                         if 1:
@@ -1929,6 +1991,7 @@ def readDataDir():
                                             print()
                                             print()
                                             print()
+                                            print('\a')     # ring bell
                                             exit()
                                         #elif ezConAstroMath == 2:
                                         if 1:
@@ -2044,6 +2107,7 @@ def readDataDir():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
     ###################################################################################
@@ -2082,6 +2146,7 @@ def readDataDir():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
     if ezRAObsLon < -180 or 180 < ezRAObsLon:
@@ -2093,6 +2158,7 @@ def readDataDir():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
     if ezConAzimuth != -999:                            # if not silly program default
@@ -2164,6 +2230,7 @@ def openFileSdre():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
 
@@ -2198,6 +2265,7 @@ def openFileEzb():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
 
@@ -2233,6 +2301,7 @@ def openFileStudy():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
         
     fileWriteStudy.write(studyOutString)        # finally have file to write to
@@ -3128,6 +3197,7 @@ def createRef20refPulser():
         print()
         print('  *** FATAL ERROR:    recentLen = 0')
         print()
+        print('\a')     # ring bell
         exit()
     print('recentLen =', recentLen)
 
@@ -3624,6 +3694,7 @@ def createRef():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
 
@@ -3961,6 +4032,7 @@ def ezConAntPluckLDo():
             print()
             print()
             print()
+            print('\a')     # ring bell
             exit()
         else:
             antPluckKeepMask[ezConAntPluckThis] = False
@@ -4192,6 +4264,7 @@ def ezConAntXTVTPluckDo():
             print()
             print()
             print()
+            print('\a')     # ring bell
             exit()
         else:
             antXTVTPluckKeepMask[ezConAntXTVTPluckThis] = False
@@ -4216,6 +4289,76 @@ def ezConAntXTVTPluckDo():
     print(f'   antLen = {antLen:,}')
     #print(f'   refLen = {refLen:,}')
     xTickLocsAnt = []               # probably just changed antLen, force new xTickLocsAnt
+
+
+
+def ezConAntXTVTSmoothDo():
+    # smooth antXTVT heatmap image
+
+    global antXTVT                  # float 2d array
+
+    print()
+    print('   ezConAntXTVTSmoothDo ===============')
+
+    #print('   antXTVT =', antXTVT)
+    print('                         np.shape(antXTVT)[0] =', np.shape(antXTVT)[0])
+    print('                         np.shape(antXTVT)[1] =', np.shape(antXTVT)[1])
+    print()
+
+    # Ubuntu22 cv2 install:
+    #   sudo apt-get install python3-opencv
+    # Windows10 cv2 install (may work but not tried):
+    #   https://docs.opencv.org/4.x/d5/de5/tutorial_py_setup_in_windows.html
+    #       https://github.com/opencv/opencv/releases
+    #           opencv-4.11.0-windows.exe
+    # Windows10 cv2 install (provided too much):
+    #   https://docs.opencv.org/4.x/d3/d52/tutorial_windows_install.html
+    #       https://sourceforge.net/projects/opencvlibrary/files/
+    #       https://sourceforge.net/projects/opencvlibrary/files/4.11.0/
+    #       https://sourceforge.net/projects/opencvlibrary/files/latest/download
+    #           ran that opencv-4.11.0-windows.exe
+    # Windows10 cv2 install (worked on Win10):
+    #   https://github.com/opencv/opencv-python?tab=readme-ov-file#supported-python-versions
+    #       py -m pip install opencv-python
+    #
+    # https://opencv24-python-tutorials.readthedocs.io/en/latest/py_tutorials/py_imgproc/py_filtering/py_filtering.html
+
+    #img = cv2.imread('opencv_logo.png')
+
+    if ezConAntXTVTSmooth == 1:
+        import cv2
+        #from cv2 import blur
+        antXTVT = cv2.blur(antXTVT,(5,5))
+
+    elif ezConAntXTVTSmooth == 2:
+        import cv2
+        antXTVT = cv2.GaussianBlur(antXTVT,(5,5),0)
+
+    elif ezConAntXTVTSmooth == 11:
+        import cv2
+        antXTVT = cv2.blur(antXTVT,(5,5))
+        antXTVT = cv2.blur(antXTVT,(5,5))
+
+    elif ezConAntXTVTSmooth == 22:
+        import cv2
+        antXTVT = cv2.GaussianBlur(antXTVT,(5,5),0)
+        antXTVT = cv2.GaussianBlur(antXTVT,(5,5),0)
+
+    elif ezConAntXTVTSmooth == 111:
+        import cv2
+        antXTVT = cv2.blur(antXTVT,(5,5))
+        antXTVT = cv2.blur(antXTVT,(5,5))
+        antXTVT = cv2.blur(antXTVT,(5,5))
+
+    elif ezConAntXTVTSmooth == 222:
+        import cv2
+        antXTVT = cv2.GaussianBlur(antXTVT,(5,5),0)
+        antXTVT = cv2.GaussianBlur(antXTVT,(5,5),0)
+        antXTVT = cv2.GaussianBlur(antXTVT,(5,5),0)
+
+    #antXTVT = cv2.medianBlur(antXTVT,5)             # Median Filtering 1 === "Unsupported format"
+
+    #antXTVT = cv2.bilateralFilter(antXTVT,9,75,75)  # Bilateral Filtering 1 === "only 8u and 32f images"
 
 
 
@@ -5068,7 +5211,7 @@ def writeFileStudy():
 
 
 def writeFileGal():
-    # write velocity data arrays to file
+    # write velocity data arrays to Gal.npz file
 
     global antXNameL                    # list of strings
     global antXTVT                      # float 2d array
@@ -5200,8 +5343,159 @@ def writeFileGal():
 
 
 
+def writeFileGalRaDecNear():
+    # write velocity data array to Gal.npz file
+    # Just like writeFileGal(), but different qualifier question for the samples,
+    # and only gLonP180 = 0 is used.
+
+    global antXNameL                    # list of strings
+    global antXTVT                      # float 2d array
+    global antLen                       # integer
+    global velGLonP180                  # float 2d array     creation
+    global velGLonP180Count             # integer array      creation
+    global velGLonP180CountSum          # integer            creation
+    global galDecP90GLonP180Count       # integer array      creation
+
+    global fileFreqMin                  # float
+    global fileFreqMax                  # float
+    global fileFreqBinQty               # integer
+    #global ezConGalCrossingGLatCenterL  # float list
+    #global ezConGalCrossingGLatNear     # float
+    global ezConGalRaDecNearNearL       # float list
+    global fileNameLast                 # string
+
+    # if ezConGalRaDecNearNearL not filled, then return
+    if not ezConGalRaDecNearNearL:
+        return(1)
+
+    print()
+    print('   writeFileGalRaDecNear ===============')
+
+    # Velocity by Galactic Longitude (gLon) grid.
+    # gLon is -180thru+180, adding 180, gives gLonP180 as 0thru360 which is more convenient.
+    velGLonP180 = np.zeros([fileFreqBinQty, 361], dtype = float)    # fileFreqBinQty by 0thru360 gLonP180
+    velGLonP180Count = np.zeros([361], dtype = int)                 # count of saved spectrums in velGLonP180
+    # Declination (dec) is -90thru+90, adding 90, gives decP90 as 0thru180 which is more convenient.
+    # galDecP90GLonP180Count is floats to allow mask replacement with np.nan later.
+    galDecP90GLonP180Count = np.zeros([181, 361], dtype = int)      # 0thru180 decP90 by 0thru360 gLonP180
+
+    # define RaDec span
+    spanRaHMin    = ezConGalRaDecNearNearL[0] - ezConGalRaDecNearNearL[2]
+    spanRaHMax    = ezConGalRaDecNearNearL[0] + ezConGalRaDecNearNearL[2]
+    spanDecDegMin = ezConGalRaDecNearNearL[1] - ezConGalRaDecNearNearL[3]
+    spanDecDegMax = ezConGalRaDecNearNearL[1] + ezConGalRaDecNearNearL[3]
+
+    for n in range(antLen):
+        RaHThis    = ezConOut[n, 1]         # RaH is 0. thru 24.
+        DecDegThis = ezConOut[n, 2]         # DecDeg is -90. thru +90.
+
+        # if n is within RaDec span, use spectrum
+        if spanRaHMin <= RaHThis and RaHThis <= spanRaHMax \
+            and spanDecDegMin <= DecDegThis and DecDegThis <= spanDecDegMax:
+                gLonP180 = int(ezConOut[n, 4]) + 180            # gLonP180 is RtoL from 0 thru 360
+                #gLonP180 = 0        # wasteful, but RGal.npz file size is only 6.0K
+
+                # sum the current antXTVT spectrum to the grid column, and increment the column count
+                # but reverse the freqBin elements,
+                #   because highest freqBin = highest freq = approaching fastest = most negative "velocity"
+                #velGLonP180[:, gLonP180] += antXTV[:, n][::-1]
+                velGLonP180[:, gLonP180] += antXTVT[:, n][::-1]
+                velGLonP180Count[gLonP180] += 1
+
+                # For each declination, several gLat may be 'close enough' to count as a crossing.
+                # Increment at each crossing's dec and gLon.
+                #galDecP90GLonP180Count[int(ezConOut[n, 2] + 90), gLonP180] += 1     # declination + 90
+                galDecP90GLonP180Count[0, gLonP180] += 1
+
+    #print('velGLonP180 = ')
+    #print(velGLonP180)
+    #print(velGLonP180.shape)
+    #print()
+
+    #print('velGLonP180Count = ')
+    #print(velGLonP180Count)
+    #print(velGLonP180Count.shape)
+    #print()
+
+    print()
+    #print(f' ezConGalCrossingGLatCenter = {ezConGalCrossingGLatCenter:04.1f}')
+    #print(' ezConGalCrossingGLatCenter =', ezConGalCrossingGLatCenter)
+    velGLonP180CountSum = velGLonP180Count.sum()
+    print(' velGLonP180CountSum =', velGLonP180CountSum)
+
+    if velGLonP180CountSum:       # if anything in velGLonP180 to save or plot
+        # for fileNameLast of  data/2021_333_00.rad.txt  create fileGalWriteName as  data/2021_333_00.radGal.npz
+        #fileGalWriteName = fileNameLast.split(os.path.sep)[-1].split('.')[-2] + 'Gal.npz'
+        #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] + 'Gal.npz'
+        #if ezConGalCrossingGLatCenter < 0:
+        #    # output filenames *Nxx.xGal.npz (N for Negative)
+        #    fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+        #        + f'N{-ezConGalCrossingGLatCenter:04.1f}Gal.npz'
+        #    # output filenames *Gal.npz (N for Negative)
+        #    #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+        #    #    + f'N{-ezConGalCrossingGLatCenter:02d}Gal.npz'
+        #else:
+        #    # output filenames *Pxx.xGal.npz (P for Negative)
+        #    fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+        #        + f'P{ezConGalCrossingGLatCenter:04.1f}Gal.npz'
+        #    # output filenames *PxxGal.npz (P for Positive)
+        #    #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+        #    #    + f'P{ezConGalCrossingGLatCenter:02d}Gal.npz'
+
+        # output filename, 2025_061_00.rad_0.8_41.3_0.1_0.1RGal.npz
+        fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
+            + f'_{ezConGalRaDecNearNearL[0]:02.1f}_{ezConGalRaDecNearNearL[1]:02.1f}' \
+            + f'_{ezConGalRaDecNearNearL[2]:02.1f}_{ezConGalRaDecNearNearL[3]:02.1f}RGal.npz'
+
+        print('   ezRAObsName = ', ezRAObsName)
+        ezConGalCrossingGLatCenter = 999.   # silly flag for ezConGalRaDecNear
+        ezConGalCrossingGLatNear   = 0.
+        np.savez_compressed(fileGalWriteName,
+            fileObsName=np.array(ezRAObsName),
+            fileFreqMin=np.array(fileFreqMin), 
+            fileFreqMax=np.array(fileFreqMax),
+            fileFreqBinQty=np.array(fileFreqBinQty),
+            velGLonP180=velGLonP180,
+            velGLonP180Count=velGLonP180Count,
+            galDecP90GLonP180Count=galDecP90GLonP180Count,
+            antXTVTName=antXNameL[1]+'TVT',
+            ezConGalCrossingGLatCenter=ezConGalCrossingGLatCenter,
+            ezConGalCrossingGLatNear=ezConGalCrossingGLatNear)
+        # antXTVTName was added to file definition later, on 230401
+        # ezConGalCrossingGLatCenter was added to file definition later, on 230623
+        # ezConGalCrossingGLatNear was added to file definition later, on 230625
+
+        #npzfile = np.load(directory + os.path.sep + fileReadName)
+        #ezRAObsName = npzfile['ezRAObsName'] 
+        #fileFreqMin    = npzfile['fileFreqMin'] 
+        #fileFreqMax    = npzfile['fileFreqMax']
+        #fileFreqBinQty = npzfile['fileFreqBinQty'] 
+        #velGLonP180      = npzfile['velGLonP180']
+        #velGLonP180Count = npzfile['velGLonP180Count']
+        #galDecP90GLonP180Count = npzfile['galDecP90GLonP180Count']
+
+
+        # Prepare velGLonP180 for later ezCon plots.
+        # velGLonP180 has been filled with sums of samples.
+        #   Now for each column, convert to sum's average.
+        for gLonP180 in range(361):
+            if velGLonP180Count[gLonP180]:
+                velGLonP180[:, gLonP180] /= velGLonP180Count[gLonP180]
+
+        if 1:
+            # mask low values with Not-A-Number (np.nan) to not plot
+            #maskOffBelowThis = 0.975    # N0RQVHC
+            #maskOffBelowThis = 0.9      # WA6RSV
+            maskOffBelowThis = 1.0      # LTO15HC
+            print(' maskOffBelowThis = ', maskOffBelowThis)
+            maskThisOff = (velGLonP180 < maskOffBelowThis)
+            #velGLonP180[maskThisOff] = np.nan                   # maskOffBelowThis is the do not plot
+            velGLonP180[maskThisOff] = maskOffBelowThis         # maskOffBelowThis is the minumum everywhere
+
+
+
 def writeFileGLon():
-    # write velocity data arrays to file
+    # write velocity data arrays to GLon.npz file
 
     global antXNameL                    # list of strings
     global antXTVT                      # float 2d array
@@ -5439,6 +5733,7 @@ def printGoodbye(startTime):
         print('   ezConAntXTVTAvgPluckQtyL        =', ezConAntXTVTAvgPluckQtyL)
         print('   ezConAntXTVTAvgPluckValL        =', ezConAntXTVTAvgPluckValL)
         print('   ezConAntXTVTPluckL              =', ezConAntXTVTPluckL)
+        print('   ezConAntXTVTSmooth              =', ezConAntXTVTSmooth)
         print('   ezCon087Csv                     =', ezCon087Csv)
         print()
         print('   ezCon399SignalSampleByFreqBinL  =', ezCon399SignalSampleByFreqBinL)
@@ -6404,6 +6699,9 @@ def plotEzCon087antXTVT():
     global fileFreqBinQty                       # integer
     global ezCon087Csv                          # integer
     global dopplerSpanD2                        # float
+    global fileFreqMin                          # float
+    global fileFreqMax                          # float
+    global titleS                               # string
 
     #plotName = 'ezCon087antXTVT.png'
     plotName = 'ezCon087' + antXNameL[0] + 'TVT.png'
@@ -6421,15 +6719,209 @@ def plotEzCon087antXTVT():
     plotEzCon2dSamples(plotName, antXTVT, 'Ant', antLenM1, antXNameL[1]+f'TVT:  Doppler MHz from {freqCenter:.3f} MHz', 0)
 
     if ezCon087Csv:
-        plotNameCsv = plotName[:-3] + 'csv'
-        row_indices, col_indices = np.indices(np.transpose(antXTVT).shape)
-        #antXTVTCsv = np.column_stack((row_indices.ravel(), col_indices.ravel(), np.transpose(antXTVT).ravel()))
-        fileFreqBinQtyD2 = fileFreqBinQty / 2.
-        antXTVTCsv = np.column_stack(( \
-            row_indices.ravel(),
-            (col_indices.ravel()-fileFreqBinQtyD2) * dopplerSpanD2 / fileFreqBinQtyD2,
-            np.transpose(antXTVT).ravel() ))
-        np.savetxt(plotNameCsv, antXTVTCsv, delimiter=",")
+
+        # create independent antXTVTCsv to allow downsampling for smaller CSV files
+        antXTVTCsv = antXTVT + 0.
+
+        if 0:
+            # create antXTVTCsv to allow small study data
+            antXTVTCsv = np.array([
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                [0, 1, 2, 10, 4, 5, 6, 7, 8, 9],
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                [0, 1, 2, 3, 4, 5, 6, 3, 8, 9],
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] ])
+            print(' ================== antXTVTCsv =', antXTVT)
+            print(' ================== antXTVTCsv.shape =', antXTVT.shape)
+
+        if 0:
+            # downsample antXTVTCsv ?
+            antXTVTCsvLenMax = 500      #######################################################
+            if antXTVTCsvLenMax < antLen:
+                # downsample antXTVTCsv by averaging groupLen samples together
+                #   1999 // 500 = 3, so want groupLen as 4
+                #   2000 // 500 = 4, so want groupLen as 5
+                #   2001 // 500 = 4, so want groupLen as 5
+                groupLen = antLen // antXTVTCsvLenMax + 1
+                print(' ================== groupLen =', groupLen)
+                antXTVTCsvIdx = 0
+                for n in range(0, antLen, groupLen):
+                    # downsample antXTVTCsv group by averaging groupLen samples together
+                    antXTVTCsv[:,antXTVTCsvIdx] = np.mean(antXTVTCsv[:,n:n+groupLen], axis=1)
+                    antXTVTCsvIdx += 1
+                # downsample antXTVTCsv remaining group by averaging the samples together
+                antXTVTCsv[:,antXTVTCsvIdx] = np.mean(antXTVTCsv[:,n:], axis=1)
+                antXTVTCsv = antXTVTCsv[:,:antXTVTCsvIdx+1]     # trim off excess samples
+
+        _, antXTVTCsvLen = antXTVTCsv.shape   # number of samples
+        print(' ================== antXTVTCsvLen =', antXTVTCsvLen)
+        
+            
+            
+            
+            
+
+        if 0:
+            # write 3 column CSV with file name like ezCon087antRBTVT.csv
+            plotNameCsv = plotName[:-3] + 'csv'
+            row_indices, col_indices = np.indices(np.transpose(antXTVTCsv).shape)
+            #antXTVTCsv = np.column_stack((row_indices.ravel(), col_indices.ravel(), np.transpose(antXTVT).ravel()))
+            fileFreqBinQtyD2 = fileFreqBinQty / 2.
+            antXTVTCsv = np.column_stack(( \
+                row_indices.ravel(),
+                (col_indices.ravel()-fileFreqBinQtyD2) * dopplerSpanD2 / fileFreqBinQtyD2,
+                np.transpose(antXTVTCsv).ravel() ))
+            np.savetxt(plotNameCsv, antXTVTCsv, delimiter=",")
+
+            # free antXTVTCsv memory
+            antXTVTCsv = []
+            antXTVTCsv = None
+            del antXTVTCsv
+
+            # free col_indices memory
+            col_indices = []
+            col_indices = None
+            del col_indices
+
+
+
+
+        # write mesh CSV with file name like ezCon087antRBTVTMsh.csv
+        plotNameCsv = plotName[:-4] + 'Msh.csv'
+        print(' ================== writing    ', plotNameCsv)
+        fileWrite = open(plotNameCsv, 'w')
+
+        #row_indices, _ = np.indices(np.transpose(antXTVTCsv).shape)
+        row_indices, _ = np.indices(antXTVTCsv.shape)
+        print(' ================== row_indices.shape =', row_indices.shape)
+        # row_indices.shape = (908, 256)
+
+        # write top line of sample number coordinates (X)
+        fileOutS = ',' + np.array2string(row_indices[:,0], separator=',',max_line_width=1e9)[1:-1].replace(' ', '')
+        #print(' ================== fileOutS =', fileOutS, '=')
+        fileWrite.write(fileOutS + '\n')
+
+        # free row_indices memory
+        row_indices = []
+        row_indices = None
+        del row_indices
+
+        #print(' ================== col_indices.shape =', col_indices.shape)
+        # col_indices.shape = (908, 256)
+        #print(' ================== col_indices[:,0] =', col_indices[:,0])
+        #print(' ================== col_indices[0,:] =', col_indices[0,:])
+
+        #freqBin = 0
+        #for n in range(antLen):
+        #for freqBin in range(4):
+        print(' ================== fileFreqBinQty =', fileFreqBinQty)
+        # write each line of freqBin coordinate (Y) and all values for each freqBin
+        #for freqBin in range(fileFreqBinQty):
+        _, xLen = antXTVTCsv.shape
+        for n in range(xLen):
+            #fileOutS = str(col_indices[n,0]) + ',' + np.array2string(antXTVTCsv[:,n], separator=',',max_line_width=1e9)[1:-1].replace(' ', '')
+            fileOutS = str(n) + '.,' + np.array2string(antXTVTCsv[:,n],separator=',',max_line_width=1e9)[1:-1].replace(' ', '')
+            #print(' ================== fileOutS =', fileOutS, '=')
+            fileWrite.write(fileOutS + '\n')
+        fileWrite.write('\n')
+        fileWrite.close()
+
+        # free fileOutS memory
+        fileOutS = []
+        fileOutS = None
+        del fileOutS
+
+        if 1 < ezCon087Csv:
+            # for each sample, write one file into the output directory, each with fileFreqBinQty+2 lines
+            fileOutFreqs = np.linspace(fileFreqMin, fileFreqMax, num=fileFreqBinQty, endpoint=True)
+            az_el_S = f'{int(ezConOut[0, 7] * 10.):04d}_{int(ezConOut[0, 8] * 10.):04d}_'
+
+            # create antXTVTCsv
+            antXTVTCsv = antXTVT + 0.
+
+            #if 1:
+            if 2 < ezCon087Csv:
+                # downsample antXTVTCsv ?
+                antXTVTCsvLenMax = 500
+                if antXTVTCsvLenMax < antLen:
+                    # downsample antXTVTCsv by averaging groupLen samples together
+                    #   1999 // 500 = 3, so want groupLen as 4
+                    #   2000 // 500 = 4, so want groupLen as 5
+                    #   2001 // 500 = 4, so want groupLen as 5
+                    groupLen = antLen // antXTVTCsvLenMax + 1
+                    print(' ================== groupLen =', groupLen)
+                    antXTVTCsvIdx = 0
+                    for n in range(0, antLen, groupLen):
+                        # downsample antXTVTCsv group by averaging groupLen samples together
+                        antXTVTCsv[:,antXTVTCsvIdx] = np.mean(antXTVTCsv[:,n:n+groupLen], axis=1)
+                        antXTVTCsvIdx += 1
+                    # downsample antXTVTCsv remaining group by averaging the samples together
+                    antXTVTCsv[:,antXTVTCsvIdx] = np.mean(antXTVTCsv[:,n:], axis=1)
+                    antXTVTCsv = antXTVTCsv[:,:antXTVTCsvIdx+1]     # trim off excess samples
+
+            _, antXTVTCsvLen = antXTVTCsv.shape   # number of samples
+            print(' ================== antXTVTCsvLen =', antXTVTCsvLen)
+            for n in range(antXTVTCsvLen):
+                #dataTimeUtcStrThis = ezConOut[n, 0].iso
+                dataTimeUtcStrThis = Time(ezConOut[n, 0], format='mjd', scale='utc').iso
+                #print(' ================== dataTimeUtcStrThis =', dataTimeUtcStrThis)
+                # '2023-02-09 00:01:20.000'
+                # '01234567890123456789
+                yymmdd_ = dataTimeUtcStrThis[2:4] + dataTimeUtcStrThis[5:7] + dataTimeUtcStrThis[8:10] + '_'
+                hhmmss  = dataTimeUtcStrThis[11:13] + dataTimeUtcStrThis[14:16] + dataTimeUtcStrThis[17:19]
+
+                if not n:
+                    # use filenameOutBase from first sample to create output directory name
+                    filenameOutBase = az_el_S + yymmdd_
+                    # use yymmdd_hhmmss from first sample to create output directory name,
+                    #   Aaaa_Eeee_YYMMDD_HHMMSS
+                    #dirOut = filenameOutBase + hhmmss
+                    dirOut = titleS.split()[0][:-4]
+                    # if does not exist - create new dirOut directory
+                    print('\n   dirOut =', dirOut)
+                    if not os.path.exists(dirOut):
+                        os.makedirs(dirOut)
+                        print('   Created new   ', dirOut, '   output directory')
+                    print()
+
+                # for each sample, write one file into the output directory, each with fileFreqBinQty+2 lines
+                #   Aaaa_Eeee_YYMMDD_HHMMSS/Aaaa_Eeee_YYMMDD_Nnnn.txt
+                # output all freqBin of current sample
+                fileWriteName = dirOut + os.path.sep + filenameOutBase + f'{n:04d}.txt'
+                print(' ================== writing    ', plotNameCsv)
+                fileWrite = open(fileWriteName, 'w')
+
+                # The "IF Average Plugin" .txt output radio spectrum data file looks like,
+                #   4/28/2021 6:43:57 AM  Counts:451000
+                #   1419.205000000  0.322551440
+                #   1419.207343750  0.320824318
+                #   1419.209687500  0.318060119
+                #   ...
+                ######## 123456789    123456789
+
+                # assemble and write out fileOutLineTop first line
+                #   5/3/2020 0:00:05 AM  Counts:451000
+                # yymmdd_       hhmmss
+                # 01234567      0123456
+                fileOutLineTop = f'{int(yymmdd_[2:4]):d}/{int(yymmdd_[4:6]):d}/{dataTimeUtcStrThis[0:4]}' \
+                    + f' {int(hhmmss[0:2]):d}:{hhmmss[2:4]}:{hhmmss[4:6]}'
+                if int(hhmmss[0:2]) <= 12:
+                    fileOutLineTop += ' AM  Counts:451000\n'
+                else:
+                    fileOutLineTop += ' PM  Counts:451000\n'
+                fileWrite.write(fileOutLineTop)
+
+                # output all freqBin of current sample
+                for freqBin in range(fileFreqBinQty):
+                    #fileWrite.write(f'{fileOutFreqs[freqBin]:0.9f}  {float(fileOutPowersS[freqBin])/1e7:0.9f}\n')
+                    fileWrite.write(f'{fileOutFreqs[freqBin]:0.9f}  {antXTVTCsv[freqBin, n]/1e7:0.9f}\n')
+                fileWrite.write('\n')
+                fileWrite.close()
+
+
 
 def plotEzCon088antBTVTByFreqBinAvgFall():
 
@@ -10001,6 +10493,7 @@ def plotEzCon519velGLonCount():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
 
@@ -10632,6 +11125,7 @@ def main():
     global ezConAntXTVTAvgPluckQtyL         # integer list
     global ezConAntXTVTAvgPluckValL         # float list
     global ezConAntXTVTPluckL               # integer list
+    global ezConAntXTVTSmooth               # integer
     global ezCon087Csv                      # integer
 
     global xTickLabelsHeatAntL      # string list
@@ -11108,6 +11602,9 @@ def main():
     plotEzCon383antXTVByFreqBinAvg()
     plotEzCon393antXTVByFreqBinMax()
 
+    if ezConAntXTVTSmooth:
+        ezConAntXTVTSmoothDo()          # smooth antXTVT heatmap image
+
     plotEzCon087antXTVT()
     plotEzCon088antBTVTByFreqBinAvgFall()
     plotEzCon287antXTVTAvg()            # creates antXTVTAvg into ezConOut[:, 18]
@@ -11164,10 +11661,15 @@ def main():
 
     # Global arrays remaining: dataTimeUtc, antXTV, ezConOut
 
-    # Galaxy crossing plots
-    writeFileGal()                      # creates fileGalWriteName like 2021_333_00.radGal.npz, velGLonP180,
-                                        #   velGLonP180Count, velGLonP180CountSum, galDecP90GLonP180Count
-    writeFileGLon()
+    # save frequency spectrum of each qualifing sample
+    writeFileGal()      # save qualifing frequency spectra to Gal.npz (parallel to Galactic plane)
+                        # creates fileGalWriteName like 2021_333_00.radGal.npz, velGLonP180,
+                        #   velGLonP180Count, velGLonP180CountSum, galDecP90GLonP180Count
+
+    writeFileGLon()     # save qualifing frequency spectra to GLon.npz (perpendicular to Galactic plane)
+
+    writeFileGalRaDecNear() # save qualifing frequency spectra to RGal.npz (inside RaDecNearNearL span)
+
     # free antXTVT memory
     antXTVT = []
     antXTVT = None
@@ -11209,4 +11711,36 @@ if __name__== '__main__':
 # python3 ../ezRA/ezCon241021a.py  data/2021_200_00.rad.txt  -ezConPlotRangeL 87 87 -ezCon087Csv 1
 # ring3d ezCon087antBTVT.csv
 # mv graph3d.png ezCon087antBTVTCsv.png
+
+# a@u22-221222a:~/ezRABase/ifAvgEzCon087csv$
+# python3  ../ezRA/ezCon250121a.py  data/2020_124_00.rad.txt  -ezConPlotRangeL 87 87  -ezCon087Csv 2
+#  rawLen = 4,546
+#  antLen = 2,273
+#  refQty = 2,273
+#  took 19 seconds = 0.3 minutes
+
+
+
+# S:\D5\C\Users\B\Documents\Astronomy\Astronomy Radio\SARA\SARA ezRA\_ezRABase\h1SW>
+# py  ..\..\ezCon250121a.py  "LRO-H1(Ptarmigan)_ezCol_SAWB_241003_00_El_54-4_Az_163.txt"  -ezConPlotRangeL 87 87  -ezCon087Csv 2  -ezConUseVlsr 0
+
+# a@u22-221222a:~/ezRABase/hL3d$
+# python3  ../ezRA/ezCon250123a.py  data/N0RQV-8230209_00.txt  -ezConAntXTFreqBinsFracL 0 1  -ezConUseVlsr 0  -ezConAntXTVTFreqBinsFracL 0 1  -ezConPlotRangeL 87 87  -ezCon087Csv 1
+# ring3d  ezCon087antRBTVTMsh.csv
+
+
+# S:\D5\C\Users\B\Documents\Astronomy\Astronomy Radio\SARA\SARA ezRA\_ezRABase\hL3d>
+# CALL C:\Users\b\Downloads\rinearn_graph_3d_5_6_36b_en\rinearn_graph_3d_5_6_36b_en\bin\ring3d.bat  --config rot.ini  --overwrite  --saveimg rot%~1%.png  --quit  ezGLonAll580.csv
+
+# CALL C:\Users\b\Downloads\rinearn_graph_3d_5_6_36b_en\rinearn_graph_3d_5_6_36b_en\bin\ring3d.bat  ezCon087antRBTVTMsh.csv
+
+# py  ..\..\ezCon250124b.py  data\N0RQV-8230209_00.txt  -ezConUseVlsr 0  -exzConAntXTVTFreqBinsFracL01  -ezConAntXTVTSmooth 1  -ezConPlotRangeL 87 87  -ezCon087Csv 1
+
+# CALL C:\Users\b\Downloads\rinearn_graph_3d_5_6_36b_en\rinearn_graph_3d_5_6_36b_en\bin\ring3d.bat  ezCon087antRBTVTMsh.csv  --config RinearnGraph3DSetting.ini
+
+# python3  ../ezRA/ezCon250302a.py  data/2025_061_00.rad.txt -ezConAntXTFreqBinsFracL 0 1  -ezConAntXTVTFreqBinsFracL 0 1  -ezConPlotRangeL 382 999  -ezConGalRaDecNearNearL 0.8 41.3 1. 1.
+# python3  ../ezRA/ezCon250302a.py  data/2025_061_00.rad.txt -ezConAntXTFreqBinsFracL 0 1  -ezConAntXTVTFreqBinsFracL 0 1  -ezConPlotRangeL 382 999  -ezConGalRaDecNearNearL 0.8 41.3 0.1 0.2
+
+# python3  ../ezRA/ezGal250301a.py  *RGal.npz -ezGalPlotRangeL 710 710
+# python3  ../ezRA/ezGal250301a.py  *RGal.npz -ezGalPlotRangeL 710 710  -ezGal710LimL -650 250 0.95 1.21
 

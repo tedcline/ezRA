@@ -1,11 +1,11 @@
-programName = 'ezCol240716a.py'
+programName = 'ezCol250313a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCol Data COLlector program,
 #   COLlect radio signals into integrated frequency spectrum data ezRA .txt files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2025, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,6 +27,10 @@ programRevision = programName
 # to improve graphic dashboard responsiveness, 221130 and 221202.
 
 
+# ezCol250313a, ring bell after errors
+# ezCol250228a, -ezColRefAction
+# ezCol250219a, -ezColSecMax
+# ezCol250212a, -ezColSecMax
 # ezCol240716a, helpful config comments for ezSerRelay.py
 # ezCol240715b, swapped locations of 'To File' and 'Off' RadioButtons
 # ezCol240715a, Python3.12+ SyntaxWarnings
@@ -264,6 +268,8 @@ def printUsage():
         'one sample)')
     print('              -ezColTextFontSize   11       (Size of text font)')
     print('              -ezColSampleMax      10       (last sample number before exit)')
+    print('              -ezColSecMax         3600.2   (maximum number of seconds before exit)')
+    print('              -ezColRefAction      1        (0/1/2 for initial Off/RefDiv/RefSub)')
     print('              -ezColYLimL      0.1  0.4     (Fraction of Y Auto Scale, Min and Max)')
     print()
     print(r'              -ezDefaultsFile ..\bigDish8.txt   (Additional file of default arguments)')
@@ -326,6 +332,8 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
     global ezColIntegQty                    # integer
     global ezColTextFontSize                # integer
     global ezColSampleMax                   # integer
+    global ezColSecMax                      # float
+    global ezColRefAction                   # integer
     global ezColYLim0                       # float
     global ezColYLim1                       # float
 
@@ -406,6 +414,12 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
             elif thisLine0Lower == '-ezColSampleMax'.lower():
                 ezColSampleMax = int(thisLineSplit[1])
 
+            elif thisLine0Lower == '-ezColSecMax'.lower():
+                ezColSecMax = float(thisLineSplit[1])
+
+            elif thisLine0Lower == '-ezColRefAction'.lower():
+                ezColRefAction = int(thisLineSplit[1])
+
 
             # float arguments
             elif thisLine0Lower == '-ezColCenterFreqAnt'.lower():
@@ -463,6 +477,7 @@ def ezColArgumentsFile(ezDefaultsFileNameInput):
                 print()
                 print()
                 print()
+                print('\a')     # ring bell
                 exit()
 
             else:
@@ -514,6 +529,8 @@ def ezColArgumentsCommandLine():
     global ezColIntegQty                    # integer
     global ezColTextFontSize                # integer
     global ezColSampleMax                   # integer
+    global ezColSecMax                      # float
+    global ezColRefAction                   # integer
     global ezColYLim0                       # float
     global ezColYLim1                       # float
 
@@ -622,6 +639,14 @@ def ezColArgumentsCommandLine():
                 cmdLineSplitIndex += 1      # point to first argument value
                 ezColSampleMax = int(cmdLineSplit[cmdLineSplitIndex])
 
+            elif cmdLineArgLower == '-ezColSecMax'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezColSecMax = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == '-ezColRefAction'.lower():
+                cmdLineSplitIndex += 1      # point to first argument value
+                ezColRefAction = int(cmdLineSplit[cmdLineSplitIndex])
+
 
             # float arguments:
             elif cmdLineArgLower == '-ezColCenterFreqAnt'.lower():
@@ -702,6 +727,7 @@ def ezColArgumentsCommandLine():
                 print()
                 print()
                 print()
+                print('\a')     # ring bell
                 exit()
 
         cmdLineSplitIndex += 1
@@ -746,7 +772,9 @@ def ezColArguments():
     global ezColIntegQty                    # integer       creation
     global ezColTextFontSize                # integer       creation
     global ezColSampleMax                   # integer       creation
+    global ezColSecMax                      # float         creation
 
+    global ezColRefAction                   # integer
     global ezColYLim0                       # float         creation
     global ezColYLim1                       # float         creation
 
@@ -802,10 +830,13 @@ def ezColArguments():
 
         ezColIntegQty = 31000       # number of samples to be integrated into one recorded sample
         ezColTextFontSize = 10
-        ezColSampleMax    = sys.maxsize     # last integer sample number before exit
 
-        ezColYLim0    = 0.0         # fraction of Y Auto Scale, Minimum
-        ezColYLim1    = 1.0         # fraction of Y Auto Scale, Maximum
+        ezColSampleMax = sys.maxsize         # last integer sample number before exit
+        ezColSecMax    = float(sys.maxsize)  # maximum number of seconds before exit
+
+        ezColRefAction = 0          # default is Off
+        ezColYLim0     = 0.0        # fraction of Y Auto Scale, Minimum
+        ezColYLim1     = 1.0        # fraction of Y Auto Scale, Maximum
 
     # Program argument priority:
     #    Start with the argument value defaults inside the programs.
@@ -836,6 +867,7 @@ def ezColArguments():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
     # now know coordType, assign coord0, and coord1
@@ -862,6 +894,7 @@ def ezColArguments():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
     if ezColAntBtwnRef < 1:
@@ -875,7 +908,39 @@ def ezColArguments():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
+
+    if ezColSecMax < 0.:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print(' ========== FATAL ERROR: ', ezColSecMax, 'is an invalid value for ezColSecMax')
+        print()
+        print()
+        print()
+        print()
+        print('\a')     # ring bell
+        exit()
+
+    if ezColRefAction not in [0, 1, 2]:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print(' ========== FATAL ERROR: ', ezColRefAction, 'is an unrecognized value for ezColRefAction')
+        print()
+        print()
+        print()
+        print()
+        print('\a')     # ring bell
+        exit()
+
+
+
 
     # fix silly arguments
     if not ezColFileNamePrefix:
@@ -915,8 +980,10 @@ def ezColArguments():
     print('   ezColUsbRelay =', ezColUsbRelay)
     print('   ezColIntegQty =', ezColIntegQty)
     print('   ezColTextFontSize =', ezColTextFontSize)
-    print('   ezColSampleMax    =', ezColSampleMax)
-    print('   ezColYLimL    = [', ezColYLim0, ',', ezColYLim1, ']')
+    print('   ezColSampleMax =', ezColSampleMax)
+    print('   ezColSecMax    =', ezColSecMax)
+    print('   ezColRefAction =', ezColRefAction)
+    print('   ezColYLimL     = [', ezColYLim0, ',', ezColYLim1, ']')
 
 
 
@@ -962,10 +1029,12 @@ def main():
     global programState                     # integer
     global refAction                        # integer
     global ezColIntegQty                    # integer
+    global ezColRefAction                   # integer
     global ezColYLim0                       # float
     global ezColYLim1                       # float
     global ezColTextFontSize                # integer
     global ezColSampleMax                   # integer
+    global ezColSecMax                      # float
 
     printHello()
 
@@ -1195,9 +1264,11 @@ def main():
                 refAction = 2           # plot last Ant spectrum after subtracting last REF spectrum
         #radio1_ax = plt.axes([0.92, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
         radio1_ax = plt.axes([0.865, 0.85, 0.05, 0.09], facecolor='lightgoldenrodyellow')
-        radio1 = RadioButtons(radio1_ax, ('Off', 'RefDiv', 'RefSub'))
+        #radio1 = RadioButtons(radio1_ax, ('Off', 'RefDiv', 'RefSub'))
+        radio1 = RadioButtons(radio1_ax, ('Off', 'RefDiv', 'RefSub'), active=ezColRefAction)
         radio1.on_clicked(refActionFunction)
-        refAction = 0                   # default Off
+        #refAction = 0                   # default Off
+        refAction = ezColRefAction
 
         ezColIntegQtyQueue = Queue()
         # dashboard 'ezColIntegQty' number entry, define number of readings per data sample
@@ -1275,19 +1346,11 @@ def main():
         '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '0',
         '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
         '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '0']
+    timeStampUtcSecRelThis = -1.    # force at least one loop below
     firstDraw = 1           # flag to draw the plot the first time without data
     ###mainLoop = 0
-    while 1:
+    while sampleNumber < ezColSampleMax and timeStampUtcSecRelThis < ezColSecMax:
         ###print(' =========== mainLoop =', mainLoop)
-
-        # exit ezCol ?
-        if ezColSampleMax <= sampleNumber:
-            programState = 2
-            programStateQueue.put(programState)
-            plt.close("all")
-            #sdrProcess.join()               # needed ????????????????????
-            print('\n\n\n\n\n =============== Try fully killing this program by repeating many Control-C on keyboard ? ....\n\n\n\n\n')
-            exit(0)
 
         #get the rmsSpectrum from the queue
         hasNewData = 1
@@ -1688,6 +1751,16 @@ def main():
         ###mainLoop += 1
 
         # go to top of while loop, to start next data sample
+
+    # exit ezCol
+    #if not sampleNumber < ezColSampleMax:
+    #if not timeStampUtcSecRelThis < ezColSecMax:
+    programState = 2
+    programStateQueue.put(programState)
+    plt.close("all")
+    #sdrProcess.join()               # needed ????????????????????
+    print('\n\n\n\n\n =============== Try fully killing this program by repeating many Control-C on keyboard ? ....\n\n\n\n\n')
+    exit(0)
 
 
 

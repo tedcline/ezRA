@@ -1,0 +1,301 @@
+@ECHO off
+
+ECHO ezCon087rotate.bat.txt    Ted Cline    250220
+REM makeRotImages.bat.txt      Ted Cline    250124
+
+REM To create the 63 rotated images using   ezCon087antRBTVTMsh.csv   and   RinearnGraph3DSetting.ini
+REM The   ezCon087antRBTVTMsh.csv   file was created using   ezCon.py   with the   -ezCon087Csv   keyword, like,
+REM   py  ..\ezRA\ezCon.py  data  -ezConAntXTVTSmooth 1  -ezConPlotRangeL 87 87  -ezCon087Csv 1
+
+REM For CAMERA_HORIZONTAL_ANGLE values 6.2 through 0.0 (in radians)
+REM   3.131 * 2 = 6.262, so 6.2 is about the same as 0.0 radians
+
+
+REM where is YOUR installed directory of   RinearnGraph3D_5.6.36.bat   ?
+SET graph3dPath=C:\Users\b\Downloads\rinearn_graph_3d_5_6_36b_en\rinearn_graph_3d_5_6_36b_en
+
+
+
+CALL :process 6.2
+CALL :process 6.1
+CALL :process 6.0
+CALL :process 5.9
+CALL :process 5.8
+CALL :process 5.7
+CALL :process 5.6
+CALL :process 5.5
+CALL :process 5.4
+CALL :process 5.3
+CALL :process 5.2
+CALL :process 5.1
+CALL :process 5.0
+CALL :process 4.9
+CALL :process 4.8
+CALL :process 4.7
+CALL :process 4.6
+CALL :process 4.5
+CALL :process 4.4
+CALL :process 4.3
+CALL :process 4.2
+CALL :process 4.1
+CALL :process 4.0
+CALL :process 3.9
+CALL :process 3.8
+CALL :process 3.7
+CALL :process 3.6
+CALL :process 3.5
+CALL :process 3.4
+CALL :process 3.3
+CALL :process 3.2
+CALL :process 3.1
+CALL :process 3.0
+CALL :process 2.9
+CALL :process 2.8
+CALL :process 2.7
+CALL :process 2.6
+CALL :process 2.5
+CALL :process 2.4
+CALL :process 2.3
+CALL :process 2.2
+CALL :process 2.1
+CALL :process 2.0
+CALL :process 1.9
+CALL :process 1.8
+CALL :process 1.7
+CALL :process 1.6
+CALL :process 1.5
+CALL :process 1.4
+CALL :process 1.3
+CALL :process 1.2
+CALL :process 1.1
+CALL :process 1.0
+CALL :process 0.9
+CALL :process 0.8
+CALL :process 0.7
+CALL :process 0.6
+CALL :process 0.5
+CALL :process 0.4
+CALL :process 0.3
+CALL :process 0.2
+CALL :process 0.1
+CALL :process 0.0
+
+REM  This stops this batch file, but leaves the window open
+CMD /K
+
+
+
+
+
+:process
+    REM  Print to the screen the first argument
+    ECHO %~1
+
+    TYPE RinearnGraph3DSetting.ini > rot.ini
+    ECHO. >> rot.ini
+    ECHO. CAMERA_VERTICAL_ANGLE=1.2 >> rot.ini
+    ECHO CAMERA_HORIZONTAL_ANGLE=%~1% >> rot.ini
+
+    SETLOCAL
+    CALL %graph3dPath%\bin\ring3d.bat  --config rot.ini  --overwrite  --saveimg rot%~1%.png  --quit  ezCon087antRBTVTMsh.csv
+
+REM  Providing an errorcode of zero, return back to wherever we came
+REM  from in the program
+EXIT /B 0
+
+
+
+
+The   RinearnGraph3DSetting.ini
+file that I used, follows between the vvvvvvvv and ^^^^^^^^ lines:
+
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+########################################
+#
+# RINEARN Graph 3D SETTING FILE
+#
+# - Copyright Free (CC0)
+#
+########################################
+
+VERSION=5.6
+LANGUAGE=ENGLISH
+
+####################
+# ASPECT RATIO
+####################
+
+RATIO_X=1.0
+RATIO_Y=1.0
+RATIO_Z=0.4
+
+# The priority of above parameters is higher than the priority of "X(or Y,Z)_LENGTH".
+# If you want to plot graphs of the same size as Ver.5.5.40 and earlier versions, please use the following parameters.
+#
+# X_LENGTH=0.6
+# Y_LENGTH=0.6
+# Z_LENGTH=0.30000000000000004
+
+####################
+# COLOR SETTINGS
+####################
+
+COLOR_SERIES_0=RED
+COLOR_SERIES_1=BLUE
+COLOR_SERIES_2=GREEN
+COLOR_SERIES_3=MAGENTA
+COLOR_SERIES_4=YELLOW
+COLOR_SERIES_5=CYAN
+COLOR_SERIES_6=PINK
+COLOR_SERIES_7=ORANGE
+
+####################
+# RANGE SETTINGS
+####################
+
+RANGE_AUTO_X=ON
+RANGE_AUTO_Y=OFF
+RANGE_MAX_Y=195.0
+RANGE_MIN_Y=60.0
+RANGE_AUTO_Z=OFF
+RANGE_MAX_Z=2.35935905
+RANGE_MIN_Z=1.1
+
+####################
+# LABEL SETTINGS
+####################
+
+LABEL_X=X
+LABEL_Y=Y
+LABEL_Z=Z
+
+####################
+# CAMERA SETTINGS
+####################
+
+CAMERA_HORIZONTAL_ANGLE=0.0
+CAMERA_VERTICAL_ANGLE=0.0
+CAMERA_ZENITH_AXIS=Z
+CAMERA_DISTANCE=6.0
+CAMERA_MAGNIFICATION=2400.0
+CAMERA_PERSPECTIVE=ON
+CAMERA_SCREEN_WIDTH=1586
+CAMERA_SCREEN_HEIGHT=936
+CAMERA_SCREEN_CENTER_OFFSET_X=50
+CAMERA_SCREEN_CENTER_OFFSET_Y=0
+CAMERA_HIGH_QUALITY=true
+
+
+####################
+# LIGHT SETTINGS
+####################
+
+LIGHT_AMBIENT=0.6862745098039216
+LIGHT_DIRECTIONAL=0.0
+LIGHT_DIFFRACTIONAL=0.4980392156862745
+LIGHT_SHININESS=0.4980392156862745
+LIGHT_SHINY_ANGLE=1.2990980392156863
+LIGHT_HORIZONTAL_ANGLE=0.0
+LIGHT_VERTICAL_ANGLE=-7.963267948964958E-4
+
+####################
+# FONT SETTINGS
+####################
+
+FONT_NAME_SCALE=Dialog
+FONT_NAME_LABEL=Dialog
+FONT_NAME_COMMENT=Dialog
+FONT_NAME_MARKER=Monospaced
+FONT_SIZE_SCALE=12
+FONT_SIZE_LABEL=18
+FONT_SIZE_COMMENT=12
+FONT_TYPE_SCALE=BOLD
+FONT_TYPE_LABEL=BOLD
+FONT_TYPE_COMMENT=BOLD
+
+####################
+# SCALE SETTINGS
+####################
+
+SCALE_FRAME_TYPE=BOX
+SCALE_N_X=4
+SCALE_N_Y=4
+SCALE_N_Z=4
+SCALE_N_COLOR_BAR=1
+SCALE_TICK_LENGTH=0.05
+SCALE_TICK_INNER=OFF
+SCALE_TICK_INNER_BACKWALL=OFF
+SCALE_NUMBER_MARGIN=0.05
+SCALE_FORMAT_AUTO_X=ON
+SCALE_FORMAT_AUTO_Y=ON
+SCALE_FORMAT_AUTO_Z=ON
+SCALE_FORMAT_WIDERANGE_X=0.0#E0
+SCALE_FORMAT_WIDERANGE_Y=0.0#E0
+SCALE_FORMAT_WIDERANGE_Z=0.0#E0
+SCALE_FORMAT_SHORTRANGE_X=0.00
+SCALE_FORMAT_SHORTRANGE_Y=0.00
+SCALE_FORMAT_SHORTRANGE_Z=0.00
+SCALE_VISIBLE_AUTO_X=ON
+SCALE_VISIBLE_AUTO_Y=ON
+SCALE_VISIBLE_AUTO_Z=ON
+SCALE_VISIBLE_X_0=ON
+SCALE_VISIBLE_X_1=ON
+SCALE_VISIBLE_X_2=ON
+SCALE_VISIBLE_X_3=ON
+SCALE_VISIBLE_Y_0=ON
+SCALE_VISIBLE_Y_1=ON
+SCALE_VISIBLE_Y_2=ON
+SCALE_VISIBLE_Y_3=ON
+SCALE_VISIBLE_Z_0=ON
+SCALE_VISIBLE_Z_1=ON
+SCALE_VISIBLE_Z_2=ON
+SCALE_VISIBLE_Z_3=ON
+SCALE_LINE_WIDTH=1.0
+
+####################
+# PLOT OPTIONS
+####################
+
+SCALE=OFF
+LABEL=ON
+FRAME=OFF
+FLAT=OFF
+LINE=OFF
+LINE_WIDTH=1.0
+POINT=OFF
+POINT_RADIUS=2.0
+MARKER=OFF
+MARKER_CHAR=œ,¡,£,¥,Z, ,¢,¤,ž,~
+MARKER_BOLD=OFF
+MARKER_SIZE=10.0
+MARKER_OFFSET_RATIO_Y=0.2
+DOT=OFF
+BALL=OFF
+MESH=OFF
+MEMBRANE=ON
+CONTOUR=ON
+CONTOUR_SECTION_N=10
+CONTOUR_LINE_WIDTH=1.0
+COMMENT=OFF
+BLACK_SCREEN=ON
+GRADATION=ON
+GRADATION_AXIS=Z
+GRADATION_COLOR_LIST=1.0,0.0,0.0,1.0;1.0,1.0,0.0,1.0;0.0,1.0,0.0,1.0;0.0,1.0,1.0,1.0;0.0,0.0,1.0,1.0;
+GRADATION_RANGE_AUTO=ON
+GRADATION_COLOR_MAP=ON
+GRADATION_FADE_IN=OFF
+GRADATION_FADE_OUT=OFF
+GRADATION_INTERPOLATION=ON
+ALPHA_COLOR=OFF
+GRID_LINE=ON
+TESSELLATION=OFF
+LOG_X=OFF
+LOG_Y=OFF
+LOG_Z=OFF
+REVERSE_X=OFF
+REVERSE_Y=OFF
+REVERSE_Z=OFF
+CUSTOM_OPTION=OFF
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,0 +1,116 @@
+@ECHO off
+
+ECHO makeStereoRotate.bat.txt        Ted Cline 250220
+REM  makeStereoIslandRot.bat.txt     Ted Cline 250124
+REM  stereoCon087Rotate250118b.bat.txt
+REM  zzz_stereo4dPlots250118b.bat.txt
+
+
+REM  For CAMERA_HORIZONTAL_ANGLE values 6.1 through 0.0 (in radians)
+
+REM  After creating 62 image files,   rot6.1.png   through   rot0.0.png,
+REM  maybe with   ezCon087rotate250220a.bat.txt   as a batch file,
+REM  now join neighboring pairs of those image files
+REM  into 62 cross-eyed stereo image files,
+REM  which can then be combined into one GIF animation file with
+REM    https://ezgif.com/maker
+REM  Or the stereo image files can be combined into one MP4 movie file with
+REM    Microsoft Clipchamp
+
+
+REM  The   stereoJoin.py   program below creates a   stereoOutput   directory
+REM  for the new 62 cross-eyed stereo image files.
+
+
+REM  Neighboring pairs of those input image files are rotated by 0.1 radians.
+REM  One full rotation is 360 degrees = 2 * 3.141 radians.
+REM  0.1 radians * ( 360 degrees / (2 * 3.141 radians) ) = about 5.7 degrees,
+REM  which is about the same angle as your 2 eyes from
+REM  a point on a computer screen at a distance of one extended arm.
+
+
+REM  To view these cross-eyed stereo images,
+REM  position your face about one extended arm from your computer screen,
+REM  and hold your thumb about 4.5 inches (110 mm) from your face.
+REM  Now focus both of your eyes on your thumb, and hopefully you will see
+REM  a focused central stereo image in the background.
+REM  Slowly move your thumb away to fully view the cross-eyed stereo image.
+
+REM  More about cross-eyed stereo images,
+REM    https://www.kula3d.com/how-to-use-the-cross-eyed-method
+REM    https://www.3dphoto.net/text/viewing/technique.html
+
+
+
+py ..\ezRA\stereoJoin.py rot0.0.png rot6.1.png
+py ..\ezRA\stereoJoin.py rot6.1.png rot6.0.png
+
+py ..\ezRA\stereoJoin.py rot6.0.png rot5.9.png
+py ..\ezRA\stereoJoin.py rot5.9.png rot5.8.png
+py ..\ezRA\stereoJoin.py rot5.8.png rot5.7.png
+py ..\ezRA\stereoJoin.py rot5.7.png rot5.6.png
+py ..\ezRA\stereoJoin.py rot5.6.png rot5.5.png
+py ..\ezRA\stereoJoin.py rot5.5.png rot5.4.png
+py ..\ezRA\stereoJoin.py rot5.4.png rot5.3.png
+py ..\ezRA\stereoJoin.py rot5.3.png rot5.2.png
+py ..\ezRA\stereoJoin.py rot5.2.png rot5.1.png
+py ..\ezRA\stereoJoin.py rot5.1.png rot5.0.png
+
+py ..\ezRA\stereoJoin.py rot5.0.png rot4.9.png
+py ..\ezRA\stereoJoin.py rot4.9.png rot4.8.png
+py ..\ezRA\stereoJoin.py rot4.8.png rot4.7.png
+py ..\ezRA\stereoJoin.py rot4.7.png rot4.6.png
+py ..\ezRA\stereoJoin.py rot4.6.png rot4.5.png
+py ..\ezRA\stereoJoin.py rot4.5.png rot4.4.png
+py ..\ezRA\stereoJoin.py rot4.4.png rot4.3.png
+py ..\ezRA\stereoJoin.py rot4.3.png rot4.2.png
+py ..\ezRA\stereoJoin.py rot4.2.png rot4.1.png
+py ..\ezRA\stereoJoin.py rot4.1.png rot4.0.png
+
+py ..\ezRA\stereoJoin.py rot4.0.png rot3.9.png
+py ..\ezRA\stereoJoin.py rot3.9.png rot3.8.png
+py ..\ezRA\stereoJoin.py rot3.8.png rot3.7.png
+py ..\ezRA\stereoJoin.py rot3.7.png rot3.6.png
+py ..\ezRA\stereoJoin.py rot3.6.png rot3.5.png
+py ..\ezRA\stereoJoin.py rot3.5.png rot3.4.png
+py ..\ezRA\stereoJoin.py rot3.4.png rot3.3.png
+py ..\ezRA\stereoJoin.py rot3.3.png rot3.2.png
+py ..\ezRA\stereoJoin.py rot3.2.png rot3.1.png
+py ..\ezRA\stereoJoin.py rot3.1.png rot3.0.png
+
+py ..\ezRA\stereoJoin.py rot3.0.png rot2.9.png
+py ..\ezRA\stereoJoin.py rot2.9.png rot2.8.png
+py ..\ezRA\stereoJoin.py rot2.8.png rot2.7.png
+py ..\ezRA\stereoJoin.py rot2.7.png rot2.6.png
+py ..\ezRA\stereoJoin.py rot2.6.png rot2.5.png
+py ..\ezRA\stereoJoin.py rot2.5.png rot2.4.png
+py ..\ezRA\stereoJoin.py rot2.4.png rot2.3.png
+py ..\ezRA\stereoJoin.py rot2.3.png rot2.2.png
+py ..\ezRA\stereoJoin.py rot2.2.png rot2.1.png
+py ..\ezRA\stereoJoin.py rot2.1.png rot2.0.png
+
+py ..\ezRA\stereoJoin.py rot2.0.png rot1.9.png
+py ..\ezRA\stereoJoin.py rot1.9.png rot1.8.png
+py ..\ezRA\stereoJoin.py rot1.8.png rot1.7.png
+py ..\ezRA\stereoJoin.py rot1.7.png rot1.6.png
+py ..\ezRA\stereoJoin.py rot1.6.png rot1.5.png
+py ..\ezRA\stereoJoin.py rot1.5.png rot1.4.png
+py ..\ezRA\stereoJoin.py rot1.4.png rot1.3.png
+py ..\ezRA\stereoJoin.py rot1.3.png rot1.2.png
+py ..\ezRA\stereoJoin.py rot1.2.png rot1.1.png
+py ..\ezRA\stereoJoin.py rot1.1.png rot1.0.png
+
+py ..\ezRA\stereoJoin.py rot1.0.png rot0.9.png
+py ..\ezRA\stereoJoin.py rot0.9.png rot0.8.png
+py ..\ezRA\stereoJoin.py rot0.8.png rot0.7.png
+py ..\ezRA\stereoJoin.py rot0.7.png rot0.6.png
+py ..\ezRA\stereoJoin.py rot0.6.png rot0.5.png
+py ..\ezRA\stereoJoin.py rot0.5.png rot0.4.png
+py ..\ezRA\stereoJoin.py rot0.4.png rot0.3.png
+py ..\ezRA\stereoJoin.py rot0.3.png rot0.2.png
+py ..\ezRA\stereoJoin.py rot0.2.png rot0.1.png
+py ..\ezRA\stereoJoin.py rot0.1.png rot0.0.png
+
+REM  This stops this batch file, but leaves the window open
+CMD /K
+
