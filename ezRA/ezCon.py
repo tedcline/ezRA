@@ -1,4 +1,4 @@
-programName = 'ezCon250312a.py'
+programName = 'ezCon250323a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
@@ -25,6 +25,8 @@ programRevision = programName
 # TTD:
 #       dataTimeUtcVlsr2000.mjd = 51544.0
 
+# ezCon250323a, Python 3.13 or new Astropy demands locBaseValid flag,
+#   dataTimeUtcThis typo in glatdeg
 # ezCon250312a, if ezCon087Csv is 2 then downsample antXTVTCsv before ifAvg format files
 # ezCon250303a, writeFileGalRaDecNear() remember gLon in RGal.npz,
 #   ring bell upon error exit (to alert operator during batch file runs)
@@ -1629,7 +1631,7 @@ def readDataDir():
     refQty  = 0
     feedRefOnThis = 0
     pointingLineSplitNew = False    # flag
-    locBase = 0.                    # flag as empty (for astropy)
+    locBaseValid = False            # flag locBase as empty (for astropy)
 
     if ezConRawSamplesUseL:
         # start with first pair of ezConRawSamplesUseL list elements
@@ -1950,15 +1952,16 @@ def readDataDir():
                                         #elif ezConAstroMath == 2:
                                         if 1:
                                             # use math from astropy
-                                            if not locBase:
-                                                print(' ========== not locBase =======================')
+                                            if not locBaseValid:
+                                                print(' ========== not locBaseValid =======================')
                                                 from astropy import units as u
                                                 from astropy.coordinates import EarthLocation
                                                 from astropy.coordinates import SkyCoord
 
                                                 locBase = EarthLocation(lat = ezRAObsLatFile*u.deg, lon = ezRAObsLonFile*u.deg,
                                                     height = ezRAObsAmslFile*u.m)
-
+                                                locBaseValid = True
+                                                
                                             # Coordinate of sky target at the UTC time from the data file
                                             # SkyCoord() wants time = Time('1991-06-06 12:00:00')
                                             pointingTelescope = SkyCoord(ra = dataRightAscensionH*u.hour, dec = dataDeclinationDeg*u.deg,
@@ -1996,10 +1999,20 @@ def readDataDir():
                                         #elif ezConAstroMath == 2:
                                         if 1:
                                             # use math from astropy
+                                            if not locBaseValid:
+                                                print(' ========== not locBaseValid =======================')
+                                                from astropy import units as u
+                                                from astropy.coordinates import EarthLocation
+                                                from astropy.coordinates import SkyCoord
+
+                                                locBase = EarthLocation(lat = ezRAObsLatFile*u.deg, lon = ezRAObsLonFile*u.deg,
+                                                    height = ezRAObsAmslFile*u.m)
+                                                locBaseValid = True
+
                                             # Coordinate of sky target at the UTC time from the data file
                                             # SkyCoord() wants time = Time('1991-06-06 12:00:00')
                                             pointingTelescope = SkyCoord(b = dataGLatDeg*u.deg, l = dataGLonDeg*u.deg,
-                                                obstime = dataTimeUtcStrThis, frame = 'galactic', location = locBase)
+                                                obstime = dataTimeUtcThis, frame = 'galactic', location = locBase)
                                             # extract AzEl coordinates
                                             dataAzimuthDeg = float(pointingTelescope.altaz.az.degree)
                                             #print(' raHThis =', raHThis, 'Hours')
