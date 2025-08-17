@@ -58,6 +58,7 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
 
 [https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
 
+  Introduction:<br>
   * [ezRA - Simple Overview  (13 minutes)](https://youtu.be/kHgwEbWKhzs)<br>
   * [ezRA - PZT Antenna Tests  (31 minutes)](https://youtu.be/VZrd2-VFiPE)
 
@@ -81,6 +82,7 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
   * [ezRA Analysis 8 - ezGal](https://youtu.be/YXuPDJVRbd0)
 <br>
 
+  Useage examples:<br>
   * [ezRA After Other Data Collectors (SARA Aug-2024),](https://www.youtube.com/watch?v=iMZScHktz70)<br>
     * [DSPIRA (GNU Radio)](https://www.youtube.com/watch?v=iMZScHktz70&t=151s)<br>
     * [Spectracyber](https://www.youtube.com/watch?v=iMZScHktz70&t=572s)<br>
