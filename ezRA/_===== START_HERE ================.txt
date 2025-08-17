@@ -1,0 +1,88 @@
+
+START HERE
+
+The   doc   directory has several PDF files to explore.
+
+
+
+For an Introduction and Tour of the ezRA programs, please explore
+      doc/ezRA_00_Introduction.pdf
+      doc/ezRA_01_Tour.pdf
+
+
+
+For installation on Windows, please explore
+      doc/ezRA_20b_Windows_Install.pdf
+If get “no module found pkg_resources” error,
+      https://github.com/ManimCommunity/manim/issues/3585
+suggests try
+      pip install setuptools
+
+For installation on Linux, please explore
+      doc/ezRA_20c_Linux_Install.pdf
+
+For installation on Raspberry Pi, please explore
+      doc/ezRA_20c_Linux_Install.pdf
+      https://github.com/tedcline/ezRA/issues/3
+
+
+
+For suggestions of how to use the ezRA programs, please explore
+      doc/ezRA_05_Demonstration.pdf
+
+      Assuming an   ezDefaults.txt   file in your current directory, similar to this,
+            # Little Thompson Observatory in Berthoud, Colorado, starkids.org/visit/
+            -ezRAObsName   LTO15             # 15-foot motored dish
+            -ezRAObsLat    40.299512         # Observatory Latitude  (degrees)
+            -ezRAObsLon    -105.084491       # Observatory Longitude (degrees)
+            -ezRAObsAmsl   1524              # Observatory Above Mean Sea Level (meters)
+      to define the Earth location of the antenna,
+      the simplest (Windows) command examples might be like this,
+
+            py  ..\ezRA\ezCol.py
+
+            py  ..\ezRA\ezCon.py  data
+
+            py  ..\ezRA\ezPlot.py  .
+
+            py  ..\ezRA\ezSky.py  .
+
+            py  ..\ezRA\ezGal.py  .
+
+            py  ..\ezRA\ezGLon.py  .
+
+            py  ..\ezRA\ezWhen.py  sun  Moon  R0P60  GP0P0  Gp80p10  R12.3P56.7
+
+            py  ..\ezRA\ezDec.py  A180P45  -2401170523  moon  sun
+
+      (Note that 4 of those command lines above end with a hard-to-see period !)
+
+
+
+For suggestions on hardware to use with the ezRA programs, please explore
+      doc/ezRA_10_Hardware_1.pdf
+      doc/ezRA_11_Hardware_2.pdf
+
+
+
+Many videos are available on
+      https://github.com/tedcline/ezRA
+
+
+
+Radio data is posted on the web,
+      SHOOS Amateur Data Sharing
+            https://youtu.be/rrraZdyZoJk
+            https://www.astronomy.me.uk/SHOOS/shoos.htm
+
+---
+
+For folks starting to explore radio astronomy,
+      ezRA - Easy Radio Astronomy
+      Free 1420 MHz Galactic hydrogen data collection and analysis
+      Open source
+      Windows and Linux
+      https://github.com/tedcline/ezRA
+        https://youtu.be/kHgwEbWKhzs (13 minute Simple Overview)
+
+--- 250817

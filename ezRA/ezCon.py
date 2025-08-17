@@ -1,4 +1,4 @@
-programName = 'ezCon250323a.py'
+programName = 'ezCon250711a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezCon Data CONdenser program,
@@ -23,8 +23,21 @@ programRevision = programName
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 # TTD:
-#       dataTimeUtcVlsr2000.mjd = 51544.0
+#   dataTimeUtcVlsr2000.mjd = 51544.0
+#   add antXTVTCmDop to ezCon191 ?
 
+# ezCon250711a, cmdLineSplit ezConGalCrossingGLonCenter can be float
+# ezCon250703a, dataFileIdx, plotEzCon201ZantFileIndex(), studyOutString improvements
+# ezCon250522a, ezConRawFreqBinHideLDo() hide with freqBin neighbor having lowest average,
+#   -ezDefaultsEnd, added 300 to ezConPlotAllL
+# ezCon250409a, corrected RaHThis and DecDegThis to raHThis and decDegThis
+# ezCon250329a, *Gal.npz file definition from here, ezCon's writeFileGal()
+# ezCon250326a, column 9 AntXTVTCmDop Center-of-Mass of the Doppler shift,
+#   code from old ezCon220823a,
+#   now officially defined in ezbMenu: AzimuthDeg, ElevationDeg, and AntXTVTCmDop as columns 7, 8, and 9
+#   plotEzCon198azimuth()   renamed plotEzCon107azimuth()      for azimuthDeg,
+#   plotEzCon199elevation() renamed plotEzCon108elevation()    for elevationDeg,
+#   new ........................... plotEzCon109antXTVTCmDop() for antXTVTCmDop
 # ezCon250323a, Python 3.13 or new Astropy demands locBaseValid flag,
 #   dataTimeUtcThis typo in glatdeg
 # ezCon250312a, if ezCon087Csv is 2 then downsample antXTVTCsv before ifAvg format files
@@ -492,6 +505,7 @@ def printUsage():
     print('         (plot antenna sample 1423 spectrum By FreqBin of signal 18 (of ezbMenu columns 10, 12, 14, 16, 18))')
     print()
     print('    -ezDefaultsFile ../bigDish8.txt     (additional file of ezRA arguments)')
+    print('    -ezDefaultsEnd                      (ignore the rest of this ezDefaults file')
     print()
     print('    -eXXXXXXXXXXXXXXzIgonoreThisWholeOneWord')
     print('         (any one word starting with -eX is ignored, handy for long command line editing)')
@@ -512,6 +526,26 @@ def printUsage():
     print()
     print('##############################################################################################')
     print()
+
+
+    exit()
+
+    # pip install requests
+    # py -m pip install requests
+    import requests
+    url = 'url goes here'
+    url = 'https://www.wunderground.com/dashboard/pws/KCOBERTH176/table/2025-07-3/2025-07-3/daily'
+    r = requests.get(url)
+    print(r.text)  
+
+    #with open('/path/to/file.txt', 'w', encoding='utf-8') as f:
+    #    f.write('r.text')
+    with open('file.txt', 'w', encoding='utf-8') as f:
+        f.write(r.text)
+
+
+
+
 
     exit()
 
@@ -837,6 +871,11 @@ def ezConArgumentsFile(ezDefaultsFileNameInput):
                 print('\a')     # ring bell
                 exit()
 
+            elif thisLine0Lower == '-ezDefaultsEnd'.lower():
+                # ignore the rest of this defaults file
+                fileDefaults.close()        #   then have processed all available lines in this defaults file
+                return
+
             else:
                 pass    # unrecognized first word, but no error, allows for other ezRA programs
 
@@ -1058,7 +1097,7 @@ def ezConArgumentsCommandLine():
 
             elif cmdLineArgLower == '-ezConGalCrossingGLonCenter'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
-                ezConGalCrossingGLonCenterL += [int(cmdLineSplit[cmdLineSplitIndex])]
+                ezConGalCrossingGLonCenterL += [float(cmdLineSplit[cmdLineSplitIndex])]
 
             elif cmdLineArgLower == '-ezConGalCrossingGLonCenterL'.lower():
                 cmdLineSplitIndex += 1      # point to first argument value
@@ -1490,9 +1529,9 @@ def ezConArguments():
 
     # create ezConPlotAllL list of all possible ezCon plot numbers
     ezConPlotAllL  = [0, 1, 2, 7, 17, 27, 37, 47, 57, 61, 67, 77, 81, 82, 87, 88, 97, 98]
-    ezConPlotAllL += [100, 101, 102, 103, 104, 105, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 191, 198, 199]
+    ezConPlotAllL += [100, 101, 102, 103, 104, 105, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 191]
     ezConPlotAllL += [200, 201, 202, 207, 217, 227, 237, 241, 247, 257, 261, 262, 267, 277, 281, 282, 287, 297]
-    ezConPlotAllL += [301, 302, 307, 317, 327, 337, 347, 357, 361, 367, 377, 381, 382, 383, 387, 388, 393, 397, 398, 399]
+    ezConPlotAllL += [300, 301, 302, 307, 317, 327, 337, 347, 357, 361, 367, 377, 381, 382, 383, 387, 388, 393, 397, 398, 399]
     ezConPlotAllL += [510, 519, 520, 529, 530, 541, 550]
     ezConPlotAllL += [690]
     ezConPlotAllL += [800]
@@ -1589,7 +1628,7 @@ def readDataDir():
     # Open each .txt radio file in each directory and read individual lines.
     # Creates ezRAObsLat, ezRAObsLon, ezRAObsAmsl, ezRAObsName,
     #   fileFreqMin, fileFreqMax, fileFreqBinQty,
-    #   azimuthDeg, elevationDeg, dataTimeUtc, raw, rawLen, fileNameLast
+    #   azimuthDeg, elevationDeg, dataFileIdx, dataTimeUtc, raw, rawLen, fileNameLast
 
     global cmdDirectoryS            # string
 
@@ -1608,14 +1647,14 @@ def readDataDir():
     global ezConRawSamplesUseL      # integer list
     global ezConRefMode             # integer
 
+    global dataFileIdx              # integer array                             creation
+    global dataTimeUtc              # 'astropy.time.core.Time' object array     creation
     global azimuthDeg               # float array                               creation
     global elevationDeg             # float array                               creation
-
     global ezConAzimuth             # float
     global ezConElevation           # float
     global ezConAddAzDeg            # float
     global ezConAddElDeg            # float
-    global dataTimeUtc              # 'astropy.time.core.Time' object array     creation
     global raw                      # float 2d array                            creation
     global rawLen                   # integer                                   creation
     global refQty                   # integer                                   creation
@@ -1630,6 +1669,7 @@ def readDataDir():
     rawLen  = 0
     refQty  = 0
     feedRefOnThis = 0
+    dataFileIdxThis = -1
     pointingLineSplitNew = False    # flag
     locBaseValid = False            # flag locBase as empty (for astropy)
 
@@ -1652,6 +1692,12 @@ def readDataDir():
     
     ezRAObsNameFile = ''
     studyOutString = '\n'
+    studyOutString += f'now = UTC time {datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")}\n'
+    studyOutString += f'programRevision = {programRevision}\n'
+    studyOutString += f'Python sys.version = {sys.version}\n'
+    studyOutString += f'matplotlib.__version__ = {matplotlib.__version__}\n\n'
+    # record the (complex?) ezCon command line
+    studyOutString += f'Python commandString = {commandString}\n\n'
     dataElevationRefDeg = np.array([999.9])             # silly value to mark as a REF sample
     for directoryCounter in range(directoryListLen):
         directory = directoryList[directoryCounter]
@@ -1668,7 +1714,6 @@ def readDataDir():
         fileListLen = len(fileList)
         for fileCounter in range(fileListLen):
             fileReadName = fileList[fileCounter]
-            print()
 
             if not fileReadName.lower().endswith('.txt'):
                 continue            # skip to next file
@@ -1678,7 +1723,7 @@ def readDataDir():
             else:
                 fileReadNameFull = directory + os.path.sep + fileReadName
             print()
-            print(fileReadNameFull)
+            print(' inspecting', fileReadNameFull)
             fileRead = open(fileReadNameFull, 'r')
             if fileRead.mode == 'r':
 
@@ -1729,7 +1774,13 @@ def readDataDir():
 
                 # now assume a valid ezCol .txt data file
 
-
+                dataFileIdxThis += 1
+                #studyOutString += f'file = {fileCounter:,} = ' \
+                #    + directory + os.path.sep + fileReadName + '\n'
+                studyOutStringThis = f'data file = {dataFileIdxThis:,} = ' \
+                    + directory + os.path.sep + fileReadName
+                print(' ' + studyOutStringThis)
+                studyOutString += studyOutStringThis + '\n'
 
                 # read line 2
                 ## lat 40.299512 long -105.084491 amsl 1524 name N0RQV8 ezb
@@ -2046,9 +2097,10 @@ def readDataDir():
                                 # create or append to numpys
                                 if rawLen:
                                     # append to numpys
-                                    dataTimeUtc      = np.concatenate([dataTimeUtc, np.array([dataTimeUtcThis])])
-                                    azimuthDeg       = np.concatenate([azimuthDeg , np.array([dataAzimuthDeg])])
-                                    raw              = np.concatenate([raw        , radData])
+                                    dataFileIdx = np.concatenate([dataFileIdx, np.array([dataFileIdxThis])])
+                                    dataTimeUtc = np.concatenate([dataTimeUtc, np.array([dataTimeUtcThis])])
+                                    azimuthDeg  = np.concatenate([azimuthDeg , np.array([dataAzimuthDeg])])
+                                    raw         = np.concatenate([raw        , radData])
                                     if feedRefOnThis:
                                         # mark as a REF sample
                                         elevationDeg = np.concatenate([elevationDeg, dataElevationRefDeg])
@@ -2057,6 +2109,7 @@ def readDataDir():
                                         elevationDeg = np.concatenate([elevationDeg, np.array([dataElevationDeg])])
                                 else:
                                     # create numpys
+                                    dataFileIdx = np.array([dataFileIdxThis])
                                     dataTimeUtc = np.array([dataTimeUtcThis])
                                     azimuthDeg  = np.array([dataAzimuthDeg])
                                     raw         = radData
@@ -2087,14 +2140,16 @@ def readDataDir():
 
                 #studyOutString += f'Local time = {time.asctime(time.localtime())}\n'
                 #studyOutString += f'UTC time = {datetime.now(timezone.utc).strftime("%Y%m%d")}\n'
-                studyOutString += f'UTC time = {datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")}\n'
-                studyOutString += f'Python sys.version = {sys.version}\n'
-                studyOutString += f'matplotlib.__version__ = {matplotlib.__version__}\n'
-                studyOutString += f'programRevision = {programRevision}\n\n'
-                # record the (complex?) ezCon command line
-                studyOutString += f'Python commandString = {commandString}\n\n'
-                studyOutString += f'file = {fileCounter:,} = ' \
-                    + directory + os.path.sep + fileReadName + f' ,  Total raw samples = {rawLen:,}\n'
+                ##studyOutString += f'UTC time = {datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")}\n'
+                ##studyOutString += f'Python sys.version = {sys.version}\n'
+                ##studyOutString += f'matplotlib.__version__ = {matplotlib.__version__}\n'
+                ##studyOutString += f'programRevision = {programRevision}\n\n'
+                ## # record the (complex?) ezCon command line
+                ##studyOutString += f'Python commandString = {commandString}\n\n'
+                ##studyOutString += f'file = {fileCounter:,} = ' \
+                ##    + directory + os.path.sep + fileReadName + f' ,  Total raw samples = {rawLen:,}\n'
+                studyOutString += '                                         ' \
+                    + f'Total raw samples = {rawLen:,}, fileRawLen = {fileRawLen:,}\n'
 
                 fileNameLast = fileReadName
 
@@ -2126,10 +2181,12 @@ def readDataDir():
     ###################################################################################
 
     print(f'                         Total           samples read   = {rawLen:,}')
-    print(f'                         Total reference samples read   = {refQty:,}')
+    print(f'                         Total Reference samples read   = {refQty:,}')
+    print(f'                         Total Antenna   samples read   = {rawLen - refQty:,}')
     print()
     studyOutString += f'\n Total           samples read   = {rawLen:,}'
-    studyOutString += f'\n Total reference samples read   = {refQty:,}\n'
+    studyOutString += f'\n Total Reference samples read   = {refQty:,}'
+    studyOutString += f'\n Total Antenna   samples read   = {rawLen - refQty:,}\n'
 
 
     # prepare to process data
@@ -2487,10 +2544,10 @@ def ezConRefAvgPluckQtyLDo():
 
 def ezConRefAvgPluckFracLDo():
 
-    global azimuthDeg               # float array
-    global elevationDeg             # float array
-    global dataTimeUtc              # 'astropy.time.core.Time' object array
-    global ant                      # float 2d array
+    #global azimuthDeg               # float array
+    #global elevationDeg             # float array
+    #global dataTimeUtc              # 'astropy.time.core.Time' object array
+    #global ant                      # float 2d array
     global ref                      # float 2d array
     #global rawIndex                 # integer array     may be thinned ??????????????????????????????????????
     #global antLen                   # integer
@@ -2577,8 +2634,9 @@ def ezConRefAvgPluckFracLDo():
 def ezConRawFreqBinHideLDo():
     # filter raw freq bins
 
-    global ezConRawFreqBinHideL  # integer list
-    global raw                   # float 2d array
+    global ezConRawFreqBinHideL     # integer list
+    global raw                      # float 2d array
+    global fileFreqBinQty           # integer
 
     print()
     print('   ezConRawFreqBinHideLDo ===============')
@@ -2592,9 +2650,27 @@ def ezConRawFreqBinHideLDo():
         # 110% increase a frequency bin, to raise as a freqBin marker
         #raw[ezConRawFreqBinHide, :] = 1.1 * raw[ezConRawFreqBinHide, :]
 
-        if ezConRawFreqBinHide:      # do not try to hide freqBin 0
-            print('   ezConRawFreqBinHideL[' + str(i) + '] = ' + str(ezConRawFreqBinHide))
+        # find averages of freqBin neighbors
+        # give non-existing freqBin neighbors very high averages, to ignore later
+        if ezConRawFreqBinHide <= 0:
+            freqBinLowerAvg  = 999999.
+        else:
+            freqBinLowerAvg  = np.mean(raw[ezConRawFreqBinHide - 1, :], axis=0)
+        if ezConRawFreqBinHide >= fileFreqBinQty - 1:
+            freqBinHigherAvg = 999999.
+        else:
+            freqBinHigherAvg = np.mean(raw[ezConRawFreqBinHide + 1, :], axis=0)
+
+        # hide with the freqBin neighbor having lowest average
+        if freqBinLowerAvg < freqBinHigherAvg:
+            #print('   ezConRawFreqBinHideL[' + str(i) + '] = ' + str(ezConRawFreqBinHide))
+            print(f'   ezConRawFreqBinHideL[{i:d}] = {ezConRawFreqBinHide:d}, using lower  freqBin neighbor')
             raw[ezConRawFreqBinHide, :] = raw[ezConRawFreqBinHide - 1, :]
+        else:
+            #print('   ezConRawFreqBinHideL[' + str(i) + '] = ' + str(ezConRawFreqBinHide))
+            print(f'   ezConRawFreqBinHideL[{i:d}] = {ezConRawFreqBinHide:d}, using higher freqBin neighbor')
+            raw[ezConRawFreqBinHide, :] = raw[ezConRawFreqBinHide + 1, :]
+
     if ezConRawFreqBinHideL:        # if just printed any in ezConRawFreqBinHideL
         print()
 
@@ -2603,7 +2679,7 @@ def ezConRawFreqBinHideLDo():
 def createRefNeg(ezConRefMode):
     # ezConRefMode < 0: ref = Nth ANT sample spectrum
     # Create maskRawAnt, maskRawRef, ant, ref, antLen, antLenM1 .
-    # Data arrays are already thinned to only ANT samples: azimuthDeg, elevationDeg, dataTimeUtc, raw .
+    # Data arrays are already thinned to only ANT samples: azimuthDeg, elevationDeg, dataFileIdx, dataTimeUtc, raw .
 
     global raw                      # float 2d array
     global ant                      # float 2d array    creation
@@ -2648,7 +2724,7 @@ def createRefNeg(ezConRefMode):
 def createRef00antSampleZero():
     # ezConRefMode == 0: no REF samples, ref = ANT sample spectrum zero
     # Create maskRawAnt, maskRawRef, ant, ref, antLen, antLenM1 .
-    # Data arrays are already thinned to only ANT samples: azimuthDeg, elevationDeg, dataTimeUtc, raw .
+    # Data arrays are already thinned to only ANT samples: azimuthDeg, elevationDeg, dataFileIdx, dataTimeUtc, raw .
 
     global raw                      # float 2d array
     global ant                      # float 2d array    creation
@@ -2690,7 +2766,7 @@ def createRef00antSampleZero():
 def createRef01refIsOne():
     # ezConRefMode == 1: no REF samples, ref = neutral ref spectrum, all ones
     # Create maskRawAnt, maskRawRef, ant, ref, antLen, antLenM1 .
-    # Data arrays are already thinned to only ANT samples: azimuthDeg, elevationDeg, dataTimeUtc, raw .
+    # Data arrays are already thinned to only ANT samples: azimuthDeg, elevationDeg, dataFileIdx, dataTimeUtc, raw .
 
     global raw                      # float 2d array
     global ant                      # float 2d array    creation
@@ -3035,10 +3111,11 @@ def createRef07minimumAntBAvgAnt():
 def createRef10lastRefMarkedInData():
     # ezConRefMode == 10: REF = last REF marked in data
     # Create maskRawAnt, maskRawRef, ant, ref, antLen, antLenM1 .
-    # Thin data arrays to only ANT samples: azimuthDeg, elevationDeg, dataTimeUtc, raw .
+    # Thin data arrays to only ANT samples: azimuthDeg, elevationDeg, dataFileIdx, dataTimeUtc, raw .
 
     global azimuthDeg               # float array
     global elevationDeg             # float array
+    global dataFileIdx              # integer array
     global dataTimeUtc              # 'astropy.time.core.Time' object array
 
     global raw                      # float 2d array
@@ -3108,8 +3185,8 @@ def createRef10lastRefMarkedInData():
         # thin most data arrays to only refAvgKeepMask samples
         azimuthDeg   = azimuthDeg  [refAvgKeepMask]
         elevationDeg = elevationDeg[refAvgKeepMask]
+        dataFileIdx  = dataFileIdx [refAvgKeepMask]
         dataTimeUtc  = dataTimeUtc [refAvgKeepMask]
-        rawIndex     = rawIndex    [refAvgKeepMask]
         maskRawAnt   = maskRawAnt  [refAvgKeepMask]
         maskRawRef   = maskRawRef  [refAvgKeepMask]
         raw          = raw      [:, refAvgKeepMask]
@@ -3152,6 +3229,7 @@ def createRef10lastRefMarkedInData():
     # done with raw data, thin most data arrays to only ANT samples
     azimuthDeg   = azimuthDeg  [maskRawAnt]
     elevationDeg = elevationDeg[maskRawAnt]
+    dataFileIdx  = dataFileIdx [maskRawAnt]
     dataTimeUtc  = dataTimeUtc [maskRawAnt]
     rawIndex     = rawIndex    [maskRawAnt]
     ant          = raw     [:,  maskRawAnt]           # creation
@@ -3168,6 +3246,7 @@ def createRef20refPulser():
 
     global azimuthDeg               # float array
     global elevationDeg             # float array
+    global dataFileIdx              # integer array
     global dataTimeUtc              # 'astropy.time.core.Time' object array
     global raw                      # float 2d array
     global ant                      # float 2d array    creation
@@ -3629,6 +3708,7 @@ def createRef20refPulser():
     # done with raw data, thin most data arrays to only ANT samples
     azimuthDeg   = azimuthDeg  [maskRawAnt]
     elevationDeg = elevationDeg[maskRawAnt]
+    dataFileIdx  = dataFileIdx [maskRawAnt]
     dataTimeUtc  = dataTimeUtc [maskRawAnt]
     rawIndex     = rawIndex    [maskRawAnt]
     ant          = raw     [:,  maskRawAnt]           # creation
@@ -3716,6 +3796,7 @@ def ezConAntAvgPluckQtyLDo():
 
     global azimuthDeg               # float array
     global elevationDeg             # float array
+    global dataFileIdx              # integer array
     global dataTimeUtc              # 'astropy.time.core.Time' object array
     global ant                      # float 2d array
     global ref                      # float 2d array
@@ -3769,6 +3850,7 @@ def ezConAntAvgPluckQtyLDo():
     # thin most data arrays to keep only antAvgPluckNumKeepMask samples
     azimuthDeg   = azimuthDeg  [antAvgPluckNumKeepMask]
     elevationDeg = elevationDeg[antAvgPluckNumKeepMask]
+    dataFileIdx  = dataFileIdx [antAvgPluckNumKeepMask]
     dataTimeUtc  = dataTimeUtc [antAvgPluckNumKeepMask]
     #rawIndex     = rawIndex    [antAvgPluckNumKeepMask]
     ant          = ant      [:, antAvgPluckNumKeepMask]
@@ -3787,6 +3869,7 @@ def ezConAntAvgPluckFracLDo():
 
     global azimuthDeg               # float array
     global elevationDeg             # float array
+    global dataFileIdx              # integer array
     global dataTimeUtc              # 'astropy.time.core.Time' object array
     global ant                      # float 2d array
     global ref                      # float 2d array
@@ -3845,6 +3928,7 @@ def ezConAntAvgPluckFracLDo():
     # thin most data arrays to keep only antAvgPluckFracKeepMask samples
     azimuthDeg   = azimuthDeg  [antAvgPluckFracKeepMask]
     elevationDeg = elevationDeg[antAvgPluckFracKeepMask]
+    dataFileIdx  = dataFileIdx [antAvgPluckFracKeepMask]
     dataTimeUtc  = dataTimeUtc [antAvgPluckFracKeepMask]
     #rawIndex     = rawIndex    [antAvgPluckFracKeepMask]
     ant          = ant      [:, antAvgPluckFracKeepMask]
@@ -3933,6 +4017,7 @@ def ezConAntSamplesUseLDo():
 
     global azimuthDeg               # float array
     global elevationDeg             # float array
+    global dataFileIdx              # integer array
     global dataTimeUtc              # 'astropy.time.core.Time' object array
     global ant                      # float 2d array
     global ref                      # float 2d array
@@ -3979,6 +4064,7 @@ def ezConAntSamplesUseLDo():
     # thin most data arrays to only antAvgKeepMask samples
     azimuthDeg   = azimuthDeg  [useSamplesAntMask]
     elevationDeg = elevationDeg[useSamplesAntMask]
+    dataFileIdx  = dataFileIdx [useSamplesAntMask]
     dataTimeUtc  = dataTimeUtc [useSamplesAntMask]
     #rawIndex     = rawIndex    [useSamplesAntMask]
     ant          = ant      [:, useSamplesAntMask]
@@ -3998,6 +4084,7 @@ def ezConAntPluckLDo():
 
     global azimuthDeg               # float array
     global elevationDeg             # float array
+    global dataFileIdx              # integer array
     global dataTimeUtc              # 'astropy.time.core.Time' object array
     global ant                      # float 2d array
     global ref                      # float 2d array
@@ -4057,6 +4144,7 @@ def ezConAntPluckLDo():
     # thin most data arrays to only antPluckKeepMask samples
     azimuthDeg   = azimuthDeg  [antPluckKeepMask]
     elevationDeg = elevationDeg[antPluckKeepMask]
+    dataFileIdx  = dataFileIdx [antPluckKeepMask]
     dataTimeUtc  = dataTimeUtc [antPluckKeepMask]
     #rawIndex     = rawIndex    [antPluckKeepMask]
     ant          = ant      [:, antPluckKeepMask]
@@ -4379,8 +4467,8 @@ def createEzConOutEzb():
     # creates antXTV, and ezConOut[n, 20]
     # deletes antAvg, antMax,   refAvg, refMax,   antBAvg, antBMax,   antRBAvg, antRBMax
 
-    # ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  Spare1  Spare2  Spare3
-    #          0           1    2       3        4        5     6      7       8       9
+    # ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  AzimuthDeg  ElevationDeg  AntXTVTCmDop
+    #          0           1    2       3        4        5     6      7           8             9
     #   AntAvg  AntMax    RefAvg  RefMax
     #   10      11        12      13
     #   AntBAvg  AntBMax    AntRBAvg  AntRBMax    AntXTVTAvg  AntXTVTMax
@@ -4994,8 +5082,8 @@ def createEzConOutEzb():
 
 
         # store in ezConOut[n, column] coordinate columns (0.0 for unfinished antXTVLdDop and antXTVUdDop)
-        # ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  Spare1  Spare2  Spare3
-        #          0           1    2       3        4        5     6      7       8       9
+        # ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  AzimuthDeg  ElevationDeg  AntXTVTCmDop
+        #          0           1    2       3        4        5     6      7           8             9
         #   AntAvg  AntMax    RefAvg  RefMax
         #   10      11        12      13
         #   AntBAvg  AntBMax    AntRBAvg  AntRBMax    AntXTVTAvg  AntXTVTMax
@@ -5104,8 +5192,8 @@ def writeFileSdre():
         '%0.5e %0.5e %0.5e %0.5e ' + \
         '%0.3e %0.3e %0.3e'
 
-    # ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  Spare1  Spare2  Spare3
-    #          0           1    2       3        4        5     6      7       8       9
+    # ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  AzimuthDeg  ElevationDeg  AntXTVTCmDop
+    #          0           1    2       3        4        5     6      7           8             9
     #   AntAvg  AntMax    RefAvg  RefMax
     #   10      11        12      13
     #   AntBAvg  AntBMax    AntRBAvg  AntRBMax    AntXTVTAvg  AntXTVTMax
@@ -5166,12 +5254,12 @@ def writeFileEzb():
     fileWriteEzb.write(f'lat {ezRAObsLat} long {ezRAObsLon} amsl {ezRAObsAmsl} name {ezRAObsName}\n')
     fileWriteEzb.write(f'freqMin {fileFreqMin} freqMax {fileFreqMax} freqBinQty {fileFreqBinQty}\n')
     fileWriteEzb.write( \
-        'ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  Spare1  Spare2  AntXCMDop' \
+        'ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  AzimuthDeg  ElevationDeg  AntXTVTCmDop' \
         + '    AntAvg  AntMax    RefAvg  RefMax' \
         + '    AntBAvg  AntBMax    AntRBAvg  AntRBMax    '+antXNameL[1]+'TVTAvg  '+antXNameL[1]+'TVTMax\n')
     #    + '    AntBAvg  AntBMax    AntRBAvg  AntRBMax    AntXTVTAvg  AntXTVTMax\n')
     fileWriteEzb.write( \
-        '#        0           1    2       3        4        5     6      7       8       9        ' \
+        '#        0           1    2       3        4        5     6      7           8             9           ' \
         + '    10      11        12      13    ' \
         + '    14       15         16        17          18           19\n')
 
@@ -5195,31 +5283,31 @@ def writeFileStudy():
     global antXNameL                # list of strings
 
     fileWriteStudy.write( \
-        '\n============================================================================ ant\n\n\n\n\n')
+        '\n\n\n============================================================================ ant\n\n\n')
     fileWriteStudy.write(studyTime(10, 'AntAvg'))
     fileWriteStudy.write(studyTime(11, 'AntMax'))
 
     fileWriteStudy.write( \
-        '\n============================================================================ ref\n\n\n\n\n')
+        '\n\n\n============================================================================ ref\n\n\n')
     fileWriteStudy.write(studyTime(12, 'RefAvg'))
     fileWriteStudy.write(studyTime(13, 'RefMax'))
     
     fileWriteStudy.write( \
-        '\n============================================================================ antB\n\n\n\n\n')
+        '\n\n\n============================================================================ antB\n\n\n')
     fileWriteStudy.write(studyTime(14, 'AntBAvg'))
     fileWriteStudy.write(studyTime(15, 'AntBMax'))
     
     fileWriteStudy.write( \
-        '\n============================================================================ antRB\n\n\n\n\n')
+        '\n\n\n============================================================================ antRB\n\n\n')
     fileWriteStudy.write(studyTime(16, 'AntRBAvg'))
     fileWriteStudy.write(studyTime(17, 'AntRBMax'))
 
     fileWriteStudy.write( \
-        '\n============================================================================ antXTVT\n\n\n\n\n')
+        '\n\n\n============================================================================ antXTVT\n\n\n')
     fileWriteStudy.write(studyTime(18, antXNameL[1] + 'TVTAvg'))
     fileWriteStudy.write(studyTime(19, antXNameL[1] + 'TVTMax'))
     fileWriteStudy.write( \
-        '\n============================================================================\n')
+        '\n\n\n============================================================================\n')
 
 
 
@@ -5311,7 +5399,21 @@ def writeFileGal():
                 #    + f'P{ezConGalCrossingGLatCenter:02d}Gal.npz'
             #fileGalWriteName = fileNameLast.split(os.path.sep)[-1][:-8] \
             #    + 'GalC.npz'   # ezGal combines .npz
-            print('   ezRAObsName = ', ezRAObsName)
+            #print('   ezRAObsName = ', ezRAObsName)
+
+            # *Gal.npz file definition from here, ezCon's writeFileGal()
+            #   np.savez_compressed(fileGalWriteName,           # filename
+            #       fileObsName=np.array(ezRAObsName),          # string
+            #       fileFreqMin=np.array(fileFreqMin),          # float
+            #       fileFreqMax=np.array(fileFreqMax),          # float
+            #       fileFreqBinQty=np.array(fileFreqBinQty),    # float
+            #       velGLonP180=velGLonP180,                    # float: fileFreqBinQty by 0thru360 gLonP180
+            #       velGLonP180Count=velGLonP180Count,          # int:                     0thru360 gLonP180
+            #       galDecP90GLonP180Count=galDecP90GLonP180Count,  # int: 0thru180 decP90 by 0thru360 gLonP180
+            #       antXTVTName=antXNameL[1]+'TVT',                         # string
+            #       ezConGalCrossingGLatCenter=ezConGalCrossingGLatCenter,  # float
+            #       ezConGalCrossingGLatNear=ezConGalCrossingGLatNear)      # float
+
             np.savez_compressed(fileGalWriteName,
                 fileObsName=np.array(ezRAObsName),
                 fileFreqMin=np.array(fileFreqMin), 
@@ -5399,12 +5501,12 @@ def writeFileGalRaDecNear():
     spanDecDegMax = ezConGalRaDecNearNearL[1] + ezConGalRaDecNearNearL[3]
 
     for n in range(antLen):
-        RaHThis    = ezConOut[n, 1]         # RaH is 0. thru 24.
-        DecDegThis = ezConOut[n, 2]         # DecDeg is -90. thru +90.
+        raHThis    = ezConOut[n, 1]         # RaH is 0. thru 24.
+        decDegThis = ezConOut[n, 2]         # DecDeg is -90. thru +90.
 
         # if n is within RaDec span, use spectrum
-        if spanRaHMin <= RaHThis and RaHThis <= spanRaHMax \
-            and spanDecDegMin <= DecDegThis and DecDegThis <= spanDecDegMax:
+        if spanRaHMin <= raHThis and raHThis <= spanRaHMax \
+            and spanDecDegMin <= decDegThis and decDegThis <= spanDecDegMax:
                 gLonP180 = int(ezConOut[n, 4]) + 180            # gLonP180 is RtoL from 0 thru 360
                 #gLonP180 = 0        # wasteful, but RGal.npz file size is only 6.0K
 
@@ -5460,7 +5562,7 @@ def writeFileGalRaDecNear():
             + f'_{ezConGalRaDecNearNearL[0]:02.1f}_{ezConGalRaDecNearNearL[1]:02.1f}' \
             + f'_{ezConGalRaDecNearNearL[2]:02.1f}_{ezConGalRaDecNearNearL[3]:02.1f}RGal.npz'
 
-        print('   ezRAObsName = ', ezRAObsName)
+        #print('   ezRAObsName = ', ezRAObsName)
         ezConGalCrossingGLatCenter = 999.   # silly flag for ezConGalRaDecNear
         ezConGalCrossingGLatNear   = 0.
         np.savez_compressed(fileGalWriteName,
@@ -5580,7 +5682,7 @@ def writeFileGLon():
                 # output filenames *PxxxGLon.npz (P for Positive)
                 #fileGLonWriteName = fileNameLast.split(os.path.sep)[-1][:-4] \
                 #    + f'P{ezConGalCrossingGLonCenter:03d}GLon.npz'
-            print('   ezRAObsName = ', ezRAObsName)
+            #print('   ezRAObsName = ', ezRAObsName)
             np.savez_compressed(fileGLonWriteName,
                 fileObsName=np.array(ezRAObsName),
                 fileFreqMin=np.array(fileFreqMin), 
@@ -5776,11 +5878,11 @@ def printGoodbye(startTime):
     stopTimeS = time.ctime()
     #OutString = f'\n rawLen = {rawLen:,}\n'
     OutString = f'\n rawLen = {rawLen:,}\n'
-    OutString += f' antLen = {antLen:,}\n'
     #OutString += f' refLen = {refLen}\n'
     OutString += f' refQty = {refQty:,}\n'
-    OutString += '\n That Python command\n'
-    OutString += f'  {commandString}\n'
+    OutString += f' antLen = {antLen:,}\n'
+    OutString += f'\n That Python command,\n'
+    OutString += f'   {commandString}\n'
     OutString += f' took {int(stopTime-startTime)} seconds = {(stopTime-startTime)/60.:1.1f} minutes\n'
     OutString += f' Now = {stopTimeS[:-5]}\n'
     OutString += f'\n programRevision = {programRevision}\n'
@@ -8087,21 +8189,22 @@ def plotEzCon191sigProg():
 
 
 
-def plotEzCon198azimuth():
+#def plotEzCon198azimuth():
+def plotEzCon107azimuth():
 
     global fileNameLast                         # string
     global plotCountdown                        # integer
     #global ezConPlotRangeL                      # integer list
     global ezConPlotRequestedL                  # integer list
 
-    global azimuthDeg                              # float array
+    global azimuthDeg                           # float array
 
-    plotName = 'ezCon198azimuth.png'
+    plotName = 'ezCon107azimuth.png'
 
     plotCountdown -= 1
 
     #if 198 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 198:
-    if 198 not in ezConPlotRequestedL:
+    if 107 not in ezConPlotRequestedL:
         # free azimuthDeg memory
         azimuthDeg = []
         azimuthDeg = None
@@ -8125,7 +8228,8 @@ def plotEzCon198azimuth():
 
 
 
-def plotEzCon199elevation():
+#def plotEzCon199elevation():
+def plotEzCon108elevation():
 
     global fileNameLast                         # string
     global plotCountdown                        # integer
@@ -8134,12 +8238,12 @@ def plotEzCon199elevation():
 
     global elevationDeg                         # float array
 
-    plotName = 'ezCon199elevation.png'
+    plotName = 'ezCon108elevation.png'
 
     plotCountdown -= 1
 
     #if 199 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 199:
-    if 199 not in ezConPlotRequestedL:
+    if 108 not in ezConPlotRequestedL:
         # free elevationDeg memory
         elevationDeg = []
         elevationDeg = None
@@ -8160,6 +8264,36 @@ def plotEzCon199elevation():
     elevationDeg = []
     elevationDeg = None
     del elevationDeg
+
+
+
+def plotEzCon109antXTVTCmDop():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    #global ezConPlotRangeL                      # integer list
+    global ezConPlotRequestedL                  # integer list
+
+    global ezConOut                             # float and int 2d array
+
+    plotName = 'ezCon109antXTVTCmDop.png'
+
+    plotCountdown -= 1
+
+    if 109 not in ezConPlotRequestedL:
+        return(1)
+
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    antXTVTCmDop = ezConOut[:, 9]
+
+    print('                         antXTVTCmDopMax =', antXTVTCmDop.max())
+    print('                         antXTVTCmDopAvg =', np.mean(antXTVTCmDop))
+    print('                         antXTVTCmDopMin =', antXTVTCmDop.min())
+
+    plotEzCon1dSamplesAnt(plotName, antXTVTCmDop, [], 'green',
+        'AntXTVT Center of Mass of Doppler (MHz)')
 
 
 
@@ -8688,6 +8822,37 @@ def plotEzCon201JtimeUtcMjdDBetweenRefRaw():
 
 
 
+def plotEzCon201ZantFileIndex():
+
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    #global ezConPlotRangeL                      # integer list
+    global ezConPlotRequestedL                  # integer list
+
+    global dataFileIdx                          # integer array
+
+    plotName = 'ezCon201ZantFileIndex.png'
+
+    plotCountdown -= 1
+
+    #if 201 < ezConPlotRangeL[0] or ezConPlotRangeL[1] < 201:
+    if 201 not in ezConPlotRequestedL:
+        return(1)
+
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    #print('                         dataFileIdx =', dataFileIdx.tolist())
+    #print()
+    print('                         dataFileIdxMax =', dataFileIdx.max())
+    print('                         dataFileIdxMin =', dataFileIdx.min())
+    #print('                         len(dataFileIdx) =', len(dataFileIdx))
+
+    plotEzCon1dSamplesAnt(plotName, dataFileIdx, [], 'blue',
+        'Ant Antenna Data File Index')
+
+
+
 def plotEzCon202antRawAvg():
 
     global fileNameLast                         # string
@@ -9202,7 +9367,7 @@ def plotEzCon282antXTVAvg():
 
 
 def plotEzCon287antXTVTAvg():
-    # creates antXTVTAvg into ezConOut[:, 18]
+    # creates antXTVTAvg into ezConOut[:, 18], antXTVTCmDop into ezConOut[:, 9]
 
     global fileNameLast                         # string
     global plotCountdown                        # integer
@@ -9211,6 +9376,10 @@ def plotEzCon287antXTVTAvg():
 
     global antXNameL                            # list of strings
     global antXTVT                              # float 2d array
+    global antLen                               # integer
+    global freqStep                             # float
+    global dopplerSpanD2                        # float
+
     global ezConAntXTVTLevelL                   # float list
     global ezConOut                             # float and int 2d array
 
@@ -9219,6 +9388,17 @@ def plotEzCon287antXTVTAvg():
 
     # creation of antXTVTAvg into ezConOut[:, 18]
     ezConOut[:, 18] = ezConAntXTVTLevelL[0] * np.mean(antXTVT, axis=0) + ezConAntXTVTLevelL[1]
+
+    # creation of antXTVTCmDop into ezConOut[:, 9]
+    for n in range(antLen):
+        # calculate Center of Mass of AntXTVT spectrum
+        # https://en.wikipedia.org/wiki/Center_of_mass#Definition
+        ######antXTVTCmFreqBinFloat = sum([freqBin * antXTVT[freqBin, n] for freqBin in range(fileFreqBinQty)]) \
+        ######    / antXTVTSum
+        antXTVTThis = antXTVT[:, n] 
+        antXTVTCmFreqBinFloatThis = sum(antXTVTThis * range(fileFreqBinQty)) / antXTVTThis.sum()
+        antXTVTCmDopThis = antXTVTCmFreqBinFloatThis * freqStep - dopplerSpanD2
+        ezConOut[n, 9] = antXTVTCmDopThis
 
     plotCountdown -= 1
 
@@ -11195,8 +11375,8 @@ def main():
     #    vlsr                               105
     #
     #    count                             (106)
-    #    spare1                            (107)
-    #    spare2                            (108)
+    #    azimuth                            107
+    #    elevationDeg                       108
     #    spare3                            (109)
     #
     #
@@ -11232,9 +11412,6 @@ def main():
     #    antXTVTMax                (097)    119[=297]  297
     #
     #    sigProg                            191
-    #
-    #    azimuth                            198
-    #    elevationDeg                       199
     #
     #    velGLon                                                        410
     #    velGLonCount                                                   411
@@ -11342,7 +11519,7 @@ def main():
 
     readDataDir()   # creates ezRAObsLat, ezRAObsLon, ezRAObsAmsl, ezRAObsName
                     #   fileFreqMin, fileFreqMax, fileFreqBinQty, 
-                    #   azimuthDeg, elevationDeg, dataTimeUtc, raw, rawLen, fileNameLast
+                    #   azimuthDeg, elevationDeg, dataFileIdx, dataTimeUtc, raw, rawLen, fileNameLast
 
     #openFileSdre()          # In case it will eventually error.  Creates fileWriteNameSdre, fileWriteSdre
     openFileEzb()           # In case it will eventually error.  Creates fileWriteNameEzb, fileWriteEzb
@@ -11422,6 +11599,8 @@ def main():
 
     if ezConAntPluckL:
         ezConAntPluckLDo()
+
+    plotEzCon201ZantFileIndex()
 
     plotEzCon007ant()
     plotEzCon207antAvg()                # creates antAvg
@@ -11584,8 +11763,8 @@ def main():
     plotEzCon382antXTByFreqBinAvgRfi()
 
     # now need VLSR, so create partial ezConOut in .ezb format
-    # ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  Spare1  Spare2  Spare3
-    #          0           1    2       3        4        5     6      7       8       9
+    # ezbMenu: TimeUtcMjd  RaH  DecDeg  GLatDeg  GLonDeg  VLSR  Count  AzimuthDeg  ElevationDeg  AntXTVTCmDop
+    #          0           1    2       3        4        5     6      7           8             9
     #   AntAvg  AntMax    RefAvg  RefMax
     #   10      11        12      13
     #   AntBAvg  AntBMax    AntRBAvg  AntRBMax    AntXTVTAvg  AntXTVTMax
@@ -11620,7 +11799,7 @@ def main():
 
     plotEzCon087antXTVT()
     plotEzCon088antBTVTByFreqBinAvgFall()
-    plotEzCon287antXTVTAvg()            # creates antXTVTAvg into ezConOut[:, 18]
+    plotEzCon287antXTVTAvg()    # creates antXTVTAvg into ezConOut[:, 18], antXTVTCmDop into ezConOut[:, 9]
     plotEzCon387antXTVTByFreqBinAvg()
     plotEzCon388antBTVTByFreqBinAvgAll()
     plotEzCon397antBTVTByFreqBinMax()
@@ -11648,6 +11827,9 @@ def main():
     plotEzCon104gLonDeg()
     plotEzCon105vlsr()
     #plotEzCon106count()
+    plotEzCon107azimuth()               # deletes azimuthDeg
+    plotEzCon108elevation()             # deletes elevationDeg
+    plotEzCon109antXTVTCmDop()
 
     plotEzCon110antAvg()
     plotEzCon111antMax()
@@ -11668,8 +11850,9 @@ def main():
     plotEzCon191sigProg()               # deletes antRawAvg, antBaseline, refRawAvg, antRAAvg, antRABaseline,
                                         #    and antXTVAvg
 
-    plotEzCon198azimuth()               # deletes azimuthDeg
-    plotEzCon199elevation()             # deletes elevationDeg
+    #plotEzCon198azimuth()               # deletes azimuthDeg
+    #plotEzCon199elevation()             # deletes elevationDeg
+
 
 
     # Global arrays remaining: dataTimeUtc, antXTV, ezConOut
@@ -11756,4 +11939,8 @@ if __name__== '__main__':
 
 # python3  ../ezRA/ezGal250301a.py  *RGal.npz -ezGalPlotRangeL 710 710
 # python3  ../ezRA/ezGal250301a.py  *RGal.npz -ezGalPlotRangeL 710 710  -ezGal710LimL -650 250 0.95 1.21
+
+
+# S:\D5\C\Users\B\Documents\Astronomy\Astronomy Radio\SARA\SARA ezRA\_ezRABase\N0RQV-8>
+# py  ..\ezRA\ezCon250326a.py  data\N0RQV-8230209_00.txt  -ezConRawFreqBinHide 128  -ezConAntXTVTFreqBinsFracL 0.35 0.65  -ezConAntXTVTSmooth 2  -ezConPlotRangeL 87 109
 

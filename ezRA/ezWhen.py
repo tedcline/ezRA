@@ -1,4 +1,4 @@
-programName = 'ezWhen240308a.py'
+programName = 'ezWhen250811a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezWhen sky object visibility projection program,
@@ -7,7 +7,7 @@ programRevision = programName
 #   To answer, WHEN is that sky object visible ?
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2025, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,6 +23,7 @@ programRevision = programName
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+# ezWhen250811a, P for Positive parameter and N for Negative parameter
 # ezWhen240308a, "skyCoordinate" to "skyObject", -ezWhenSkyObjectL, dusted imports,
 #   'No sky objects found'
 # ezWhen240307b, moon and Sun pointings work ?
@@ -103,22 +104,22 @@ def printUsage():
     print('         Sun')
     print('         Moon')
     print()
-    print('     Below uses "P" for Plus, and "M" for Minus.')
+    print('     Below uses "P" for Positive, and "N" for Negative.')
     print()
     print('     Galactic coordinates:')
     print('         GPx.xPx.x       where x.x are GLatitude (degrees) and GLongitude (degrees) float numbers')
     print('         GP0P0           Galactic center')
     print('         GP12.3P145.6    GLat=+12.3 and GLon=+145.6')
-    print('         GM12.3M145.6    GLat=-12.3 and GLon=-145.6')
-    print('         GM12M145        GLat=-12   and GLon=-145')
+    print('         GN12.3N145.6    GLat=-12.3 and GLon=-145.6')
+    print('         GN12N145        GLat=-12   and GLon=-145')
     print()
     print('     RaDec coordinates:')
     print('         Rx.xPx.x        where x.x are RightAscension (hours) and Declination (degrees) float numbers')
     print('         R2.53P89.26     Polaris star')
-    print('         R17.76M29       Galactic center')
+    print('         R17.76N29       Galactic center')
     print('         R12.3P56.7      RA=12.3 and Dec=+56.7')
-    print('         R12.3M56.7      RA=12.3 and Dec=-56.7')
-    print('         R12M56          RA=12   and Dec=-56')
+    print('         R12.3N56.7      RA=12.3 and Dec=-56.7')
+    print('         R12N56          RA=12   and Dec=-56')
     print()
     print('     -ezWhenSkyObjectL   rest of the ezDefaults.txt line is a list of sky objects (without comments)')
     print()
@@ -136,7 +137,7 @@ def printUsage():
     print('         (any one word starting with -eX is ignored, handy for long command line editing)')
     print()
     print()
-    print('EXAMPLE:  py  ../ezRA/ezWhen.py  sun  Moon  R0P60  GP0P0  Gm10p80  -240117')
+    print(r'EXAMPLE:  py  ..\ezRA\ezWhen.py  sun  Moon  R0P60  GP0P0  Gn10p80  -240117')
     print()
     print(' programRevision =', programRevision)
     print()
@@ -581,7 +582,11 @@ def ezWhenPlotPrep():
             if 'p' in skyObjectSThis[3:]:
                 gLonIndexSign = 3 + skyObjectSThis[3:].index('p')
                 gLonDegThis = float(skyObjectSThis[gLonIndexSign + 1:])
-            elif 'm' in skyObjectSThis[3:]:
+            #elif 'm' in skyObjectSThis[3:]:
+            elif 'n' in skyObjectSThis[3:]:
+                gLonIndexSign = 3 + skyObjectSThis[3:].index('n')
+                gLonDegThis = -float(skyObjectSThis[gLonIndexSign + 1:])
+            elif 'm' in skyObjectSThis[3:]:     # old syntax
                 gLonIndexSign = 3 + skyObjectSThis[3:].index('m')
                 gLonDegThis = -float(skyObjectSThis[gLonIndexSign + 1:])
             else:
@@ -597,10 +602,11 @@ def ezWhenPlotPrep():
                 print()
                 print()
                 exit()
-            # parse GLat, starts at 1 with p or m, ends before gLonIndexSign
+            # parse GLat, starts at 1 with p or n or m, ends before gLonIndexSign
             if skyObjectSThis[1] == 'p':
                 gLatDegThis = float(skyObjectSThis[2:gLonIndexSign])
-            elif skyObjectSThis[1] == 'm':
+            #elif skyObjectSThis[1] == 'm':     # old syntax
+            elif skyObjectSThis[1] == 'n' or skyObjectSThis[1] == 'm':
                 gLatDegThis = -float(skyObjectSThis[2:gLonIndexSign])
             else:
                 print()
@@ -626,7 +632,10 @@ def ezWhenPlotPrep():
             if 'p' in skyObjectSThis[2:]:
                 decIndexSign = 2 + skyObjectSThis[2:].index('p')
                 decDegThis = float(skyObjectSThis[decIndexSign + 1:])
-            elif 'm' in skyObjectSThis[2:]:
+            elif 'n' in skyObjectSThis[2:]:
+                decIndexSign = 2 + skyObjectSThis[2:].index('n')
+                decDegThis = -float(skyObjectSThis[decIndexSign + 1:])
+            elif 'm' in skyObjectSThis[2:]:     # old syntax
                 decIndexSign = 2 + skyObjectSThis[2:].index('m')
                 decDegThis = -float(skyObjectSThis[decIndexSign + 1:])
             else:

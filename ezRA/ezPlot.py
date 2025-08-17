@@ -1,11 +1,11 @@
-programName = 'ezPlot241106a.py'
+programName = 'ezPlot250328a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezPlot data Plotter program,
 #   PLOT analysis from one or more .ezb data files.
 # https://github.com/tedcline/ezRA
 
-# Copyright (c) 2024, Ted Cline   TedClineGit@gmail.com
+# Copyright (c) 2025, Ted Cline   TedClineGit@gmail.com
 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,6 +29,8 @@ programRevision = programName
 #   -ezPlotAntSamplesUseL   25   102  (first Ant Sample number    last Ant Sample number),
 #   colors by signal
 
+# ezPlot250328a, ezPlot070azimuthDeg, ezPlot080elevationDeg, ezPlot090antXTVTCmDop,
+#   for ezPlot8?0 plotEzPlot1dSamplesSlope() replace each slopeDivisor's zero with a tiny number
 # ezPlot241106a, improved comments on ezPlot481's xSnapStart and xSnapLast (for Sun transits),
 #   some element of ezPlot481's ezPlot481count might be zero, which caused
 #       "RuntimeWarning: invalid value encountered in true_divide" warning
@@ -564,7 +566,7 @@ def ezPlotArguments():
 
     ezPlotPlotRangeL = [0, 9999]        # save this range of plots to file
 
-    plotCountdown = 91                  # number of plots still to print
+    plotCountdown = 94                  # number of plots still to print
 
     # Program argument priority:
     #    Start with the argument value defaults inside the programs.
@@ -1644,6 +1646,78 @@ def plotEzPlot050vLSR():
 
     plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 5], '', [], 'green',
         'Velocity from Local Standard of Rest (km/s)')
+
+
+
+def plotEzPlot070azimuthDeg():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+    global ezPlotIn                             # float 2d array
+
+    if 70 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 70:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot070azimuthDeg.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    print('                         azimuthDegMax =', ezPlotIn[:, 7].max())
+    print('                         azimuthDegAvg =', np.mean(ezPlotIn[:, 7]))
+    print('                         azimuthDegMin =', ezPlotIn[:, 7].min())
+
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 7], '', [], 'green',
+        'Azimuth (Degrees)')
+
+
+
+def plotEzPlot080elevationDeg():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+    global ezPlotIn                             # float 2d array
+
+    if 80 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 80:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot080elevationDeg.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    print('                         elevationDegMax =', ezPlotIn[:, 8].max())
+    print('                         elevationDegAvg =', np.mean(ezPlotIn[:, 8]))
+    print('                         elevationDegMin =', ezPlotIn[:, 8].min())
+
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 8], '', [], 'green',
+        'Elevation (Degrees)')
+
+
+
+def plotEzPlot090antXTVTCmDop():
+    global fileNameLast                         # string
+    global plotCountdown                        # integer
+    global ezPlotPlotRangeL                     # integer list
+    global ezPlotIn                             # float 2d array
+
+    if 90 < ezPlotPlotRangeL[0] or ezPlotPlotRangeL[1] < 90:
+        plotCountdown -= 1
+        return(1)
+
+    plotName = 'ezPlot090antXTVTCmDop.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plotCountdown -= 1
+
+    print('                         antXTVTCmDopMax =', ezPlotIn[:, 9].max())
+    print('                         antXTVTCmDopAvg =', np.mean(ezPlotIn[:, 9]))
+    print('                         antXTVTCmDopMin =', ezPlotIn[:, 9].min())
+
+    plotEzPlot1dSamplesAnt(plotName, ezPlotIn[:, 9], '', [], 'green',
+        'AntXTVT Center of Mass of Doppler (MHz)')
 
 
 
@@ -4049,7 +4123,10 @@ def plotEzPlot1dSamplesSlope(plotName, ezPlotInColumn, plotYLabel):
 
     # find slope to sample value vs time: (this sample value - last sample value) / (this MJD time - last MJD time)
     #plt.plot(np.sort(ezPlotIn[:, ezPlotInColumn]))       # sorted by value
-    plt.plot((ezPlotIn[1:, ezPlotInColumn] - ezPlotIn[:-1, ezPlotInColumn]) / (ezPlotIn[1:, 0] - ezPlotIn[:-1, 0]))
+    #plt.plot((ezPlotIn[1:, ezPlotInColumn] - ezPlotIn[:-1, ezPlotInColumn]) / (ezPlotIn[1:, 0] - ezPlotIn[:-1, 0]))
+    slopeDivisor = ezPlotIn[1:, 0] - ezPlotIn[:-1, 0]
+    slopeDivisor = np.where(slopeDivisor == 0., 1e-14, slopeDivisor)    # replace each zero with a tiny number
+    plt.plot((ezPlotIn[1:, ezPlotInColumn] - ezPlotIn[:-1, ezPlotInColumn]) / slopeDivisor)
 
     plt.title(titleS)
     plt.grid(ezPlotDispGrid)
@@ -4414,6 +4491,9 @@ def main():
     plotEzPlot030gLatDeg()
     plotEzPlot040gLonDeg()
     plotEzPlot050vLSR()
+    plotEzPlot070azimuthDeg()
+    plotEzPlot080elevationDeg()
+    plotEzPlot090antXTVTCmDop()
 
     plotEzPlot100ant()
     plotEzPlot110antMax()

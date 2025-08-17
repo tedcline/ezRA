@@ -1,4 +1,4 @@
-programName = 'ezGal250218e.py'
+programName = 'ezGal250808a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGal GALaxy explorer program,
@@ -26,6 +26,12 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGal250808a, plt.close(fig)
+#   do not plot minimums of ezGal516 and ezGal517,
+#   do     plot zeros    of ezGal519
+# ezGal250718a, draw longer white vertical lines in plotEzGal61XgLonSpectraCascade(),
+#   the ezGal570 plt.savefig line gives
+#       "<__array_function__ internals>:5: UserWarning: Warning: converting a masked element to nan."
 # ezGal250218e, dusting
 # ezGal250218d, -ezGal510Csv
 # ezGal250218c, -ezGal510Csv
@@ -915,6 +921,7 @@ def plotEzGal510velGLon():
         if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
             os.remove(pltNameS)
         plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        plt.close(fig)
 
 
         #if ezCon087Csv:
@@ -1008,7 +1015,11 @@ def plotEzGal519velGLonCount():
         print('  ' + str(plotCountdown) + ' plotting ' + pltNameS + ' ================================')
 
         plt.clf()
-        plt.plot(np.arange(-180, +181, 1), velGLonP180Count)
+        #plt.plot(np.arange(-180, +181, 1), velGLonP180Count)
+        plt.vlines(np.arange(-180, +181, 1), velGLonP180Count, \
+            0, colors='blue', linestyles='solid')
+        # draw bottom line
+        plt.hlines(0., -180, 180, colors='blue', linestyles='solid')
 
         plt.title(titleS)
         #plt.grid(ezGalDispGrid)
@@ -1132,7 +1143,21 @@ def plotEzGal516velGLonAvg():
         # Ooops!, was plotting the simple processed antXTVT frequency values
         # receding velocity = (fileFreqBin doppler MHz) * (299792458. m/s / 1420.406 MHz) / 1000. = km/s
         # velocity = (fileFreqBin doppler MHz) * 211.061103656 = km/s
-        plt.plot(np.arange(-180, +181, 1), np.mean(velGLonP180, axis=0) * 211.061103656)
+        #plt.plot(np.arange(-180, +181, 1), np.mean(velGLonP180, axis=0) * 211.061103656)
+
+        #velGLonP180Min = np.min(velGLonP180)
+        #velGLonP180ToPlot = velGLonP180 + 0.0
+        #velGLonP180ToPlot[velGLonP180 <= velGLonP180Min] = np.nan
+        #plt.plot(np.arange(-180, +181, 1), np.mean(velGLonP180ToPlot, axis=0) * 211.061103656)
+
+        # do not plot those with minimum value
+        velGLonP180Mean = np.mean(velGLonP180, axis=0)
+        velGLonP180MeanMin = np.min(velGLonP180Mean)
+        velGLonP180Mean[velGLonP180Mean <= velGLonP180MeanMin] = np.nan
+        #plt.plot(np.arange(-180, +181, 1), velGLonP180Mean * 211.061103656)
+        plt.vlines(np.arange(-180, +181, 1), velGLonP180Mean * 211.061103656, \
+            velGLonP180MeanMin, colors='blue', linestyles='solid')
+
 
         plt.title(titleS)
         #plt.grid(ezGalDispGrid)
@@ -1185,7 +1210,15 @@ def plotEzGal517velGLonMax():
         # Ooops!, was plotting the simple processed antXTVT frequency values
         # receding velocity = (fileFreqBin doppler MHz) * (299792458. m/s / 1420.406 MHz) / 1000. = km/s
         # velocity = (fileFreqBin doppler MHz) * 211.061103656 = km/s
-        plt.plot(np.arange(-180, +181, 1), np.amax(velGLonP180, axis=0) * 211.061103656)
+        #plt.plot(np.arange(-180, +181, 1), np.amax(velGLonP180, axis=0) * 211.061103656)
+
+        # do not plot those with minimum value
+        velGLonP180Max = np.nanmax(velGLonP180, axis=0)
+        velGLonP180MaxMin = np.nanmin(velGLonP180Max)
+        velGLonP180Max[velGLonP180Max <= velGLonP180MaxMin] = np.nan
+        #plt.plot(np.arange(-180, +181, 1), velGLonP180Max * 211.061103656)
+        plt.vlines(np.arange(-180, +181, 1), velGLonP180Max * 211.061103656, \
+            velGLonP180MaxMin, colors='blue', linestyles='solid')
 
         plt.title(titleS)
         #plt.grid(ezGalDispGrid)
@@ -1272,6 +1305,7 @@ def plotEzGal520velGLonPolarI():
         if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
             os.remove(pltNameS)
         plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        plt.close(fig)
 
 
 
@@ -1336,6 +1370,7 @@ def plotEzGal521velGLonPolarD():
         if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
             os.remove(pltNameS)
         plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        plt.close(fig)
 
 
 
@@ -1404,6 +1439,7 @@ def plotEzGal529velGLonPolarCount():
         if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
             os.remove(pltNameS)
         plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        plt.close(fig)
 
 
 
@@ -1480,6 +1516,7 @@ def plotEzGal530galDecGLon():
         if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
             os.remove(pltNameS)
         plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        plt.close(fig)
 
 
 
@@ -1857,6 +1894,7 @@ def plotEzGal540velGLonEdgesB():
     if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
         os.remove(pltNameS)
     plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+    plt.close(fig)
 
 
 
@@ -2399,7 +2437,10 @@ def plotEzGal570galArmsSun():
 
         if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
             os.remove(pltNameS)
+        # ???? this plt.savefig line gives
+        #   "<__array_function__ internals>:5: UserWarning: Warning: converting a masked element to nan."
         plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        plt.close(fig)
 
 
 
@@ -2578,6 +2619,7 @@ def plotEzGal580galArmsGC():
         if os.path.exists(pltNameS):    # to force plot file date update, if file exists, delete it
             os.remove(pltNameS)
         plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        plt.close(fig)
 
 
 
@@ -2689,6 +2731,7 @@ def plotEzGal60XgLonSpectra():
             if os.path.exists(pltNameS): # to force plot file date update, if file exists, delete it
                 os.remove(pltNameS)
             plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+            plt.close(fig)
 
 
 
@@ -2790,6 +2833,7 @@ def plotEzGal605gLonSpectraCompare():
         if os.path.exists(pltNameS): # to force plot file date update, if file exists, delete it
             os.remove(pltNameS)
         plt.savefig(pltNameS, dpi=300, bbox_inches='tight')
+        plt.close(fig)
 
 
 
@@ -2891,7 +2935,8 @@ def plotEzGal61XgLonSpectraCascade():
                     ax.plot(velocityBin, y, 'black', linewidth=0.5, zorder=i+i)
                 
                     # draw a vertical thin white line below every velocity spectra data point
-                    ax.fill_between(velocityBin, y, y-gain, facecolor='white', linewidth=0, zorder=i+i+1)
+                    #ax.fill_between(velocityBin, y, y-gain, facecolor='white', linewidth=0, zorder=i+i+1)
+                    ax.fill_between(velocityBin, y, y-gain-gain-gain, facecolor='white', linewidth=0, zorder=i+i+1)
                 else:
                     # do not plot velocity spectra with unchanging (missing?) velocity
                     yMaxThis = y.max()
@@ -2924,6 +2969,7 @@ def plotEzGal61XgLonSpectraCascade():
             if os.path.exists(pltNameS): # to force plot file date update, if file exists, delete it
                 os.remove(pltNameS)
             plt.savefig(pltNameS, dpi=300, bbox_inches='tight', facecolor=fig.get_facecolor(), transparent=True)
+            plt.close(fig)
 
 
 
@@ -3008,8 +3054,11 @@ def plotEzGal710gLonDegP180_nnnByFreqBinAvg():
 
 def printGoodbye(startTime):
 
-    global programRevision          # string
-    global commandString            # string
+    global programRevision                  # string
+    global commandString                    # string
+
+    global ezGalVelGLonEdgeLevelL           # float list
+    global ezGalPlotRangeL                  # integer list
 
     # print status
     if 0:
@@ -3026,6 +3075,11 @@ def printGoodbye(startTime):
             print('   ezGalDispGrid            =', ezGalDispGrid)
             print('   ezGalDispFreqBin         =', ezGalDispFreqBin)
             #print('   ezGalDetectLevel         =', ezGalDetectLevel)
+
+
+    print()
+    print(' ezGalVelGLonEdgeLevelL =', ezGalVelGLonEdgeLevelL)
+    print(' ezGalPlotRangeL =', ezGalPlotRangeL)
 
     stopTime = time.time()
     stopTimeS = time.ctime()

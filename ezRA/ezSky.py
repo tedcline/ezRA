@@ -1,4 +1,4 @@
-programName = 'ezSky250105c.py'
+programName = 'ezSky250808a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezSky Sky Mapper program,
@@ -28,6 +28,19 @@ programRevision = programName
 #       Now sorry I did not include Az and El as .ezb columns 1 and 2
 #       Now sorry I ordered gLat before gLon
 
+# ezSky250808a, ezSky307 ylabel to "Pointings Tall", ezSky021decDegHoriz, ezSky504GMP,
+#   many plt.close(fig), ezSky410 is confused
+# ezSky250805a, ezSky307 short pointings to ezSky306, ezSky307 for tall pointings
+# ezSky250727a, ezSky090fileIndex,
+#   renamed ezSky307RBTU  to ezSky307RBP,
+#   renamed ezSky308RBTCS to ezSky308RBCS,
+#   renamed ezSky309RBTC  to ezSky309RBCT
+# ezSky250724a, ezSky201 prints with decreasing DecDeg and RaH
+# ezSky250713a, added -ezSkyRAH and -ezSkyDecDeg
+# ezSky250708a, ring bell after error
+# ezSky250424a, ezSky410 mostly for GMN coverage
+# ezSky250409b, ezSky307 and ezSky308
+# ezSky250409a, -ezSkyRaDecNearNearL
 # ezSky250105c, mesh .csv file for -ezSkyBallCsv and ezSky400
 # ezSky250105b, mesh .csv file for -ezSkyBallCsv and ezSky500
 # ezSky250105a, mesh .csv file study
@@ -274,6 +287,8 @@ def printUsage():
     print()
     print('    -ezSkyInput          18        (choose input .ezb data column)')
     print()
+    print("    -ezSkyRAH            2.4       (force Right Ascension (hours))")
+    print("    -ezSkyDecDeg         14.3      (force Declination     (degrees))")
     print("    -ezSkyAddRAH         9.4       (add to data file's Right Ascension (hours))")
     print("    -ezSkyAddDecDeg      -2.6      (add to data file's Declination     (degrees))")
     print()
@@ -307,6 +322,9 @@ def printUsage():
     print('         (defines center of Galactic crossing  in Galactic Longitude degrees)')
     print('    -ezSkyGalCrossingGLonNear     2.0')
     print('         (defines "close to Galactic crossing" in Galactic Longitude degrees)')
+    print()
+    print('    -ezSkyRaDecNearNearL       0.8  41.3  0.1  0.2')
+    print('         (filter to only RaDec span 0.8 +/-0.1 hours, 41.3 +/-0.2 degrees)')
     print()
     print('    -ezSkyPlotRangeL     0  300    (save only this range of ezSky plots to file, to save time)')
     print()
@@ -359,6 +377,17 @@ def printUsage():
     print('##############################################################################################')
     print()
 
+
+
+    for i in range(5):
+        print(i)
+    print()
+    for i in reversed(range(5)):
+        print(i)
+    print()
+    
+
+
     exit()
 
 
@@ -389,6 +418,8 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
 
     global ezRAObsName                      # string
 
+    global ezSkyRAH                         # float
+    global ezSkyDecDeg                      # float
     global ezSkyAddRAH                      # float
     global ezSkyAddDecDeg                   # float
 
@@ -405,6 +436,7 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
     global ezSkyGalCrossingGLatNear         # float
     global ezSkyGalCrossingGLonCenter       # float
     global ezSkyGalCrossingGLonNear         # float
+    global ezSkyRaDecNearNearL              # list of floats
 
     global ezSkyMaskOutL                    # list of string and floats
     global ezSkyMaskInL                     # list of strings
@@ -448,6 +480,12 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
                 #ezRAObsName = str.encode(fileLineSplit[1])
 
             # ezSky arguments:
+            elif fileLineSplit0Lower == '-ezSkyRAH'.lower():
+                ezSkyRAH = float(fileLineSplit[1])
+
+            elif fileLineSplit0Lower == '-ezSkyDecDeg'.lower():
+                ezSkyDecDeg = float(fileLineSplit[1])
+
             elif fileLineSplit0Lower == '-ezSkyAddRAH'.lower():
                 ezSkyAddRAH = float(fileLineSplit[1])
 
@@ -489,6 +527,12 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
             elif fileLineSplit0Lower == '-ezSkyGalCrossingGLonNear'.lower():
                 ezSkyGalCrossingGLonNear = float(fileLineSplit[1])
 
+            elif fileLineSplit0Lower == '-ezSkyRaDecNearNearL'.lower():
+                ezSkyRaDecNearNearL = []
+                ezSkyRaDecNearNearL.append(float(fileLineSplit[1]))
+                ezSkyRaDecNearNearL.append(float(fileLineSplit[2]))
+                ezSkyRaDecNearNearL.append(float(fileLineSplit[3]))
+                ezSkyRaDecNearNearL.append(float(fileLineSplit[4]))
 
             elif fileLineSplit0Lower == '-ezSkyHalfTallDec'.lower():
                 ezSkyHalfTallDec = int(fileLineSplit[1])
@@ -533,6 +577,7 @@ def ezSkyArgumentsFile(ezDefaultsFileNameInput):
                 print()
                 print()
                 print()
+                print('\a')     # ring bell
                 exit()
 
 
@@ -564,6 +609,8 @@ def ezSkyArgumentsCommandLine():
 
     global ezRAObsName                      # string
 
+    global ezSkyRAH                         # float
+    global ezSkyDecDeg                      # float
     global ezSkyAddRAH                      # float
     global ezSkyAddDecDeg                   # float
 
@@ -580,6 +627,7 @@ def ezSkyArgumentsCommandLine():
     global ezSkyGalCrossingGLatNear         # float
     global ezSkyGalCrossingGLonCenter       # float
     global ezSkyGalCrossingGLonNear         # float
+    global ezSkyRaDecNearNearL              # list of floats
 
     global ezSkyMaskOutL                    # list of string and floats
     global ezSkyMaskInL                     # list of strings
@@ -648,6 +696,12 @@ def ezSkyArgumentsCommandLine():
             
 
             # ezSky arguments:
+            elif cmdLineArgLower == 'ezSkyRAH'.lower():
+                ezSkyRAH = float(cmdLineSplit[cmdLineSplitIndex])
+
+            elif cmdLineArgLower == 'ezSkyDecDeg'.lower():
+                ezSkyDecDeg = float(cmdLineSplit[cmdLineSplitIndex])
+
             elif cmdLineArgLower == 'ezSkyAddRAH'.lower():
                 ezSkyAddRAH = float(cmdLineSplit[cmdLineSplitIndex])
 
@@ -689,6 +743,15 @@ def ezSkyArgumentsCommandLine():
             elif cmdLineArgLower == 'ezSkyGalCrossingGLonNear'.lower():
                 ezSkyGalCrossingGLonNear = float(cmdLineSplit[cmdLineSplitIndex])
 
+            elif cmdLineArgLower == 'ezSkyRaDecNearNearL'.lower():
+                ezSkyRaDecNearNearL = []
+                ezSkyRaDecNearNearL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezSkyRaDecNearNearL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezSkyRaDecNearNearL.append(float(cmdLineSplit[cmdLineSplitIndex]))
+                cmdLineSplitIndex += 1
+                ezSkyRaDecNearNearL.append(float(cmdLineSplit[cmdLineSplitIndex]))
 
             elif cmdLineArgLower == 'ezSkyHalfTallDec'.lower():
                 ezSkyHalfTallDec = int(cmdLineSplit[cmdLineSplitIndex])
@@ -757,6 +820,7 @@ def ezSkyArgumentsCommandLine():
                 print()
                 print()
                 print()
+                print('\a')     # ring bell
                 exit()
                 
         cmdLineSplitIndex += 1
@@ -771,6 +835,8 @@ def ezSkyArguments():
 
     global ezRAObsName                      # string
 
+    global ezSkyRAH                         # float
+    global ezSkyDecDeg                      # float
     global ezSkyAddRAH                      # float
     global ezSkyAddDecDeg                   # float
 
@@ -789,6 +855,7 @@ def ezSkyArguments():
     global ezSkyGalCrossingGLatNear         # float
     global ezSkyGalCrossingGLonCenter       # float
     global ezSkyGalCrossingGLonNear         # float
+    global ezSkyRaDecNearNearL              # list of floats
 
     global ezSkyMaskOutL                    # list of string and floats
     global ezSkyMaskInL                     # list of strings
@@ -808,6 +875,8 @@ def ezSkyArguments():
     #ezRAObsName = 'LebanonKS'
     ezRAObsName = ''                        # silly name
 
+    ezSkyRAH       = -999.      # to disable
+    ezSkyDecDeg    = -999.      # to disable
     ezSkyAddRAH    = 0.
     ezSkyAddDecDeg = 0.
 
@@ -828,7 +897,8 @@ def ezSkyArguments():
     ezSkyGalCrossingGLatNear   = 0.
     ezSkyGalCrossingGLonCenter = 0.
     ezSkyGalCrossingGLonNear   = 0.
-    
+    ezSkyRaDecNearNearL = []                # to disable
+
     ezSkyMaskOutL    = []
     ezSkyMaskInL     = []
     ezSkyMaskValue   = -999.                # flag for nan
@@ -841,7 +911,7 @@ def ezSkyArguments():
 
     ezSkyPlotRangeL = [0, 9999]             # save this range of plots to file
 
-    plotCountdown = 26                      # number of possible plots still to print + 1
+    plotCountdown = 31                      # number of possible plots still to print + 1
 
     # process arguments from ezDefaults.txt file in the same directory as this ezCon program
     ezSkyArgumentsFile(os.path.dirname(__file__) + os.path.sep + 'ezDefaults.txt')
@@ -862,6 +932,7 @@ def ezSkyArguments():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
     
     #ezSkyMaskFileLong = '.' + os.path.sep + ezSkyMaskFile
@@ -882,6 +953,8 @@ def ezSkyArguments():
     print()
     print('   ezRAObsName =', ezRAObsName)
     print()
+    print('   ezSkyRAH       =', ezSkyRAH)
+    print('   ezSkyDecDeg    =', ezSkyDecDeg)
     print('   ezSkyAddRAH    =', ezSkyAddRAH)
     print('   ezSkyAddDecDeg =', ezSkyAddDecDeg)
     print()
@@ -899,6 +972,7 @@ def ezSkyArguments():
     print('   ezSkyGalCrossingGLatNear   =', ezSkyGalCrossingGLatNear)
     print('   ezSkyGalCrossingGLonCenter =', ezSkyGalCrossingGLonCenter)
     print('   ezSkyGalCrossingGLonNear   =', ezSkyGalCrossingGLonNear)
+    print('   ezSkyRaDecNearNearL        =', ezSkyRaDecNearNearL)
     print()
     print('   ezSkyMaskInL     =', ezSkyMaskInL)
     print('   ezSkyMaskOutL    =', ezSkyMaskOutL)
@@ -917,6 +991,7 @@ def ezSkyArguments():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
 
@@ -932,8 +1007,11 @@ def readDataDir():
     global ezSkyInputS              # string                                    create
     global fileNameLast             # string                                    create
 
+    global ezSkyRAH                 # float
+    global ezSkyDecDeg              # float
     global ezSkyAddRAH              # float
     global ezSkyAddDecDeg           # float
+    global ezSkyRaDecNearNearL      # list of floats
 
     global raH                      # float 1d array                            create
     global decDeg                   # float 1d array                            create
@@ -942,22 +1020,35 @@ def readDataDir():
     global azDeg                    # float 1d array                            create
     global elDeg                    # float 1d array                            create
     global power                    # float 1d array                            create
+    global fileIndex                # integer 1d array                          create
     global antLen                   # integer                                   create
 
     print()
     print('   readDataDir ===============')
 
     # initialize numpys
-    raH     = np.array([])
-    decDeg  = np.array([])
-    gLatDeg = np.array([])
-    gLonDeg = np.array([])
-    azDeg   = np.array([])
-    elDeg   = np.array([])
-    power   = np.array([])          # from selected .ezb column
+    raH       = np.array([])
+    decDeg    = np.array([])
+    gLatDeg   = np.array([])
+    gLonDeg   = np.array([])
+    azDeg     = np.array([])
+    elDeg     = np.array([])
+    power     = np.array([])          # from selected .ezb column
+    fileIndex = np.array([])
+    fileIndexThis = -1
 
     ezbQty = 0       # number of .ezb files
     antLen = 0       # number of samples in all .ezb files
+
+    if ezSkyRaDecNearNearL:
+        # define RaDec span
+        spanRaHMin    = ezSkyRaDecNearNearL[0] - ezSkyRaDecNearNearL[2]
+        spanRaHMax    = ezSkyRaDecNearNearL[0] + ezSkyRaDecNearNearL[2]
+        spanDecDegMin = ezSkyRaDecNearNearL[1] - ezSkyRaDecNearNearL[3]
+        spanDecDegMax = ezSkyRaDecNearNearL[1] + ezSkyRaDecNearNearL[3]
+        ezSkyRaDecNearNearLValid = True
+    else:
+        ezSkyRaDecNearNearLValid = False
 
     directoryList = cmdDirectoryS.split()
     directoryListLen = len(directoryList)
@@ -975,8 +1066,8 @@ def readDataDir():
         else:
             fileList = sorted(os.listdir(directory))        # each directory sorted alphabetically
         fileListLen = len(fileList)
-        for fileCounter in range(fileListLen):
-            fileReadName = fileList[fileCounter]
+        for fileCount in range(fileListLen):
+            fileReadName = fileList[fileCount]
 
             if not fileReadName.lower().endswith('.ezb'):
                 continue            # skip to next file
@@ -987,10 +1078,12 @@ def readDataDir():
                 fileReadNameFull = directory + os.path.sep + fileReadName
 
             # allow append to line
-            print(f'\r file = {fileCounter + 1:,} of {fileListLen:,} in dir {directoryCounter + 1}' \
+            print(f'\r file = {fileCount + 1:,} of {fileListLen:,} in dir {directoryCounter + 1}' \
                 + f' of {directoryListLen} = ' + directory + os.path.sep + fileReadName, end='')
             fileRead = open(fileReadNameFull, 'r')
             if fileRead.mode == 'r':
+
+                fileIndexThis += 1
 
                 # read line 1
                 # find next non-End-Of-File non-blank non-comment line of .ezb file
@@ -1072,14 +1165,18 @@ def readDataDir():
                 # read data lines of this .ezb file
                 # ignore blank and comment lines
 
+                raHThis    = ezSkyRAH
+                decDegThis = ezSkyDecDeg
+
                 # collect as lists, later convert to more compact numpys
-                raHL     = []
-                decDegL  = []
-                gLatDegL = []
-                gLonDegL = []
-                azDegL   = []
-                elDegL   = []
-                powerL   = []    # from selected .ezb column
+                raHL       = []
+                decDegL    = []
+                gLatDegL   = []
+                gLonDegL   = []
+                azDegL     = []
+                elDegL     = []
+                powerL     = []    # from selected .ezb column
+                fileIndexL = []
                 while 1:
                     # find next non-End-Of-File non-blank non-comment line of .ezb file
                     fileLine = fileRead.readline()
@@ -1091,18 +1188,32 @@ def readDataDir():
                     if not fileLine:                        # if end of file
                         break                               #   drop out of while loop
 
-                    raHThis = float(fileLineSplit[1]) + ezSkyAddRAH
+                    #raHThis = float(fileLineSplit[1]) + ezSkyAddRAH
+                    if ezSkyRAH == -999.:    	# if ezSkyRAH is disabled
+                        raHThis = float(fileLineSplit[1]) + ezSkyAddRAH
                     if raHThis < 0.:
                         raHThis += 24.
                     elif 24. <= raHThis:
                         raHThis -= 24.
+
+                    #decDegThis = float(fileLineSplit[2]) + ezSkyAddDecDeg
+                    if ezSkyDecDeg == -999.:	# if ezSkyDecDeg is disabled
+                        decDegThis = float(fileLineSplit[2]) + ezSkyAddDecDeg
+
+                    # if not within RaDec span, skip this sample
+                    if ezSkyRaDecNearNearLValid and (raHThis < spanRaHMin or spanRaHMax < raHThis \
+                        or decDegThis < spanDecDegMin or spanDecDegMax < decDegThis):
+                            continue    # skip this sample
+
                     raHL.append(raHThis)
-                    decDegL.append(float(fileLineSplit[2]) + ezSkyAddDecDeg)
+                    #decDegL.append(float(fileLineSplit[2]) + ezSkyAddDecDeg)
+                    decDegL.append(decDegThis)
                     gLatDegL.append(float(fileLineSplit[3]))
                     gLonDegL.append(float(fileLineSplit[4]))
                     azDegL.append(float(fileLineSplit[7]))
                     elDegL.append(float(fileLineSplit[8]))
                     powerL.append(float(fileLineSplit[ezSkyInput])) # from selected .ezb column
+                    fileIndexL.append(fileIndexThis)
 
                     antLen += 1
                     
@@ -1112,20 +1223,22 @@ def readDataDir():
                 print(f'       Last sample = {antLen - 1:,}                                      ')
 
                 # to save memory, collect lists into more more compact numpys
-                raH      = np.concatenate([raH,     np.array(raHL    )])
-                raHL     = []
-                decDeg   = np.concatenate([decDeg,  np.array(decDegL )])
-                decDegL  = []
-                gLatDeg  = np.concatenate([gLatDeg, np.array(gLatDegL)])
-                gLatDegL = []
-                gLonDeg  = np.concatenate([gLonDeg, np.array(gLonDegL)])
-                gLonDegL = []
-                azDeg    = np.concatenate([azDeg, np.array(azDegL)])
-                azDegL   = []
-                elDeg    = np.concatenate([elDeg, np.array(elDegL)])
-                elDegL   = []
-                power    = np.concatenate([power,   np.array(powerL  )])    # from selected .ezb column
-                powerL   = []
+                raH        = np.concatenate([raH,       np.array(raHL)])
+                raHL       = []
+                decDeg     = np.concatenate([decDeg,    np.array(decDegL)])
+                decDegL    = []
+                gLatDeg    = np.concatenate([gLatDeg,   np.array(gLatDegL)])
+                gLatDegL   = []
+                gLonDeg    = np.concatenate([gLonDeg,   np.array(gLonDegL)])
+                gLonDegL   = []
+                azDeg      = np.concatenate([azDeg,     np.array(azDegL)])
+                azDegL     = []
+                elDeg      = np.concatenate([elDeg,     np.array(elDegL)])
+                elDegL     = []
+                power      = np.concatenate([power,     np.array(powerL)])    # from selected .ezb column
+                powerL     = []
+                fileIndex  = np.concatenate([fileIndex, np.array(fileIndexL)])    # from selected .ezb column
+                fileIndexL = []
 
                 #if(fileName.lower().endswith('.ezb')):
             # have processed that file
@@ -1150,6 +1263,7 @@ def readDataDir():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
     print(f' Total number of valid .ezb files = {ezbQty:,}')
@@ -1191,7 +1305,7 @@ def plotPrep():
     
 
 
-def plotEzSky1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColorS, plotYLabel):
+def plotEzSky1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColorS, plotYLabel, horizLines):
 
     # plotName                                  # string
     # plotData1d                                # float 1d array
@@ -1220,6 +1334,9 @@ def plotEzSky1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColor
         plt.plot(plotData1d, plotColorS)
         plt.xlabel(f'Sample Number (last={antLenM1:,})')
 
+    if horizLines:
+        plt.hlines(plotData1d, 0, antLenM1, colors='red', linestyles='solid')
+
     plt.title(titleS)
     plt.grid(ezSkyDispGrid)
 
@@ -1243,6 +1360,7 @@ def plotEzSky1dSamplesAnt(plotName, plotData1d, plotXLabel, plotYLimL, plotColor
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    #plt.close(fig)
 
 
 
@@ -1271,7 +1389,7 @@ def plotEzSky010raH():
     print('                         raHMin =', raH.min())
 
     plotEzSky1dSamplesAnt(plotName, raH, '', [0., 24.], 'green',
-        'Right Ascension (hours)')
+        'Right Ascension (hours)', False)
 
 
 
@@ -1298,7 +1416,34 @@ def plotEzSky020decDeg():
     print('                         decDegMin =', decDeg.min())
 
     plotEzSky1dSamplesAnt(plotName, decDeg, '', [-90., 90.], 'green',
-        'Declination (degrees)')
+        'Declination (degrees)', False)
+
+
+
+def plotEzSky021decDegHoriz():
+
+    global decDeg                           # float 1d array
+
+    global ezSkyPlotRangeL                  # integer list
+    global plotCountdown                    # integer
+    global fileNameLast                     # string
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 21 or 21 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky021decDegHoriz.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    print('                         decDegMax =', decDeg.max())
+    print('                         decDegAvg =', np.mean(decDeg))
+    print('                         decDegMin =', decDeg.min())
+
+    plotEzSky1dSamplesAnt(plotName, decDeg, '', [-90., 90.], 'green',
+        'Declination (degrees)', True)
 
 
 
@@ -1325,7 +1470,7 @@ def plotEzSky030gLatDeg():
     print('                         gLatDegMin =', gLatDeg.min())
 
     plotEzSky1dSamplesAnt(plotName, gLatDeg, '', [-90., 90.], 'green',
-        'Galactic Latitude (degrees)')
+        'Galactic Latitude (degrees)', False)
 
 
 
@@ -1353,7 +1498,7 @@ def plotEzSky031gLatDegSorted():
     print('                         gLatDegMin =', gLatDeg.min())
 
     plotEzSky1dSamplesAnt(plotName, np.sort(gLatDeg), f'{antLen:,} Samples Sorted by Value', [-90., 90.], 'green',
-        'Sorted Galactic Latitude (degrees)')
+        'Sorted Galactic Latitude (degrees)', False)
 
 
 
@@ -1393,7 +1538,7 @@ def plotEzSky032gLatDegSortedCross():
     #    'Sorted Galactic Latitude (degrees)')
     ylabelText = f'Sorted Galactic Latitude (degrees)\nezSkyGalCrossingGLatNear = {ezSkyGalCrossingGLatNear}'
     plotEzSky1dSamplesAnt(plotName, plotData1d, f'{np.count_nonzero(~np.isnan(plotData1d)):,} Galactic Crossing Samples Sorted by Value', [-90., 90.], 'green',
-        ylabelText)
+        ylabelText, False)
 
 
 
@@ -1420,7 +1565,7 @@ def plotEzSky040gLonDeg():
     print('                         gLonDegMin =', gLonDeg.min())
 
     plotEzSky1dSamplesAnt(plotName, gLonDeg, '', [-180., 180.], 'green',
-        'Galactic Longitude (degrees)')
+        'Galactic Longitude (degrees)', False)
 
 
 
@@ -1450,7 +1595,7 @@ def plotEzSky041gLonDegSorted():
     #plotEzSky1dSamplesAnt(plotName, gLonDeg, '', [-180., 180.], 'green',
     #    'Galactic Longitude (degrees)')
     plotEzSky1dSamplesAnt(plotName, np.sort(gLonDeg), f'{antLen:,} Samples Sorted by Value', [-180., 180.], 'green',
-        'Sorted Galactic Longitude (degrees)')
+        'Sorted Galactic Longitude (degrees)', False)
 
 
 
@@ -1490,7 +1635,7 @@ def plotEzSky043gLonDegSortedCross():
     #    'Sorted Galactic Longitude (degrees)')
     ylabelText = f'Sorted Galactic Longitude (degrees)\nezSkyGalCrossingGLonNear = {ezSkyGalCrossingGLonNear}'
     plotEzSky1dSamplesAnt(plotName, plotData1d, f'{np.count_nonzero(~np.isnan(plotData1d)):,} Galactic Crossing Samples Sorted by Value', [-90., 90.], 'green',
-        ylabelText)
+        ylabelText, False)
 
 
 
@@ -1517,7 +1662,7 @@ def plotEzSky070azDeg():
     print('                         azDegMin =', azDeg.min())
 
     plotEzSky1dSamplesAnt(plotName, azDeg, '', [0., 360.], 'green',
-        'Azimuth (degrees)')
+        'Azimuth (degrees)', False)
 
 
 
@@ -1544,7 +1689,33 @@ def plotEzSky080elDeg():
     print('                         elDegMin =', elDeg.min())
 
     plotEzSky1dSamplesAnt(plotName, elDeg, '', [-95., 195.], 'green',
-        'Elevation (degrees)')
+        'Elevation (degrees)', False)
+
+
+
+def plotEzSky090fileIndex():
+
+    global fileIndex                        # integer 1d array
+
+    global ezSkyPlotRangeL                  # integer list
+    global plotCountdown                    # integer
+    global fileNameLast                     # string
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 90 or 90 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky090fileIndex.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+
+    print('                         fileIndexMax =', fileIndex.max())
+    print('                         fileIndexMin =', fileIndex.min())
+
+    plotEzSky1dSamplesAnt(plotName, fileIndex, '', [], 'blue',
+        'Data File Index', False)
 
 
 
@@ -1572,7 +1743,7 @@ def plotEzSky100input():
     print(f'                         {ezSkyInputS[2:]}Min = {power.min()}')
 
     #plotEzSky1dSamplesAnt(plotName, power, '', [], 'green', ezSkyInputS[2:])
-    plotEzSky1dSamplesAnt(plotName, power, '', [], ezbColumnColor[ezSkyInput], ezSkyInputS[2:])
+    plotEzSky1dSamplesAnt(plotName, power, '', [], ezbColumnColor[ezSkyInput], ezSkyInputS[2:], False)
 
 
 
@@ -1941,7 +2112,7 @@ def plotEzSky200RBVO():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
 
 
@@ -2076,13 +2247,14 @@ def plotEzSky201RBMax():
 
 
     # For each declination, find and plot dots on MaxRight and on MaxLeft data indexes
-    decHalfDegLast = -9999                     # silly low value
+    decHalfDegLast = 9999                           # silly high value
     nMaxRight = -1                                  # silly value
     nMaxLeft  = -1                                  # silly value
     radecPowerMaxRight = -9999                      # silly low value
     radecPowerMaxLeft  = -9999                      # silly low value
     # walk through data, already sorted as increasing RaH then increasing Dec 
-    for n in range(len(decHalfDegScaled)):
+    #for n in range(len(decHalfDegScaled)):
+    for n in reversed(range(len(decHalfDegScaled))):
         #print(f'          n = {n}',
         #    f'  decHalfDeg = {decHalfDeg[n]}',
         #    f'  raHalfDeg = {raHalfDeg[n]}',
@@ -2092,33 +2264,12 @@ def plotEzSky201RBMax():
 
         #if decHalfDegLast != decHalfDeg[n]:   # if new Dec
         # if definately new Dec (allow for ezConAstroMath=2 calculation noise of 1 HalfDeg)
-        if decHalfDegLast + 1 < decHalfDeg[n]:
+        #if decHalfDegLast + 1 < decHalfDeg[n]:
+        if decHalfDeg[n] < decHalfDegLast - 1:
             decHalfDegLast = decHalfDeg[n]
             #print(f'       decHalfDeg jumped')
-            if nMaxRight + 1:                       # if not silly value, plot MaxRight
-                # if have Galactic plane galRaHDegRight054304 data for this declination
-                if 54 <= decHalfDeg[nMaxRight] and decHalfDeg[nMaxRight] < 304:
-                    # Right Ascension (hours) difference from Galactic Plane data
-                    #print(f'\n          nMaxRight at decHalfDeg = {decHalfDeg[nMaxRight]}',
-                    #    f'  raHalfDeg = {raHalfDeg[nMaxRight]}')
-                    # print the offset, of nMaxRight vs Right side of Galactic Plane
-                    # galRaHDegRight054304[] has RaHDeg halfDeg data for Right side of Galactic Plane,
-                    #   for only 54 through 304 decHalfDeg
-                    # (30 halfDeg per Right Ascension hour)
-                    #print('============== nMaxRight =', nMaxRight)
-                    #print('============== raHalfDeg[nMaxRight] =', raHalfDeg[nMaxRight])
-                    #print('============== decHalfDeg[nMaxRight] =', decHalfDeg[nMaxRight])
-                    #print('============== galRaHDegRight054304[decHalfDeg[nMaxRight] - 54] =', galRaHDegRight054304[decHalfDeg[nMaxRight] - 54])
-                    raHDiff = (raHalfDeg[nMaxRight] \
-                        - galRaHDegRight054304[decHalfDeg[nMaxRight] - 54]) / 30.
-                    print(f'\n          DecDeg = {decHalfDeg[nMaxRight] / 2. - 90.}',
-                        f'  RaH = {raHalfDeg[nMaxRight] / 30.:.1f}        Right raHDiff = {raHDiff:.1f}')
-
-                plt.scatter(raHalfDegScaled[nMaxRight], decHalfDegScaled[nMaxRight],
-                    s=100, marker='.', c='green')
-                nMaxRight = -1                      # reset to silly value
-            radecPowerMaxRight = -9999              # reset to silly low value
-
+            if nMaxLeft + 1 or nMaxRight + 1:       # if not silly values
+                print()
             if nMaxLeft + 1:                        # if not silly value, plot MaxLeft
                 # if have Galactic plane galRaHDegLeft054304 data for this declination
                 if 54 <= decHalfDeg[nMaxLeft] and decHalfDeg[nMaxLeft] < 304:
@@ -2138,6 +2289,30 @@ def plotEzSky201RBMax():
                     s=100, marker='.', c='green')
                 nMaxLeft = -1                       # reset to silly value
             radecPowerMaxLeft = -9999               # reset to silly low value
+
+            if nMaxRight + 1:                       # if not silly value, plot MaxRight
+                # if have Galactic plane galRaHDegRight054304 data for this declination
+                if 54 <= decHalfDeg[nMaxRight] and decHalfDeg[nMaxRight] < 304:
+                    # Right Ascension (hours) difference from Galactic Plane data
+                    #print(f'\n          nMaxRight at decHalfDeg = {decHalfDeg[nMaxRight]}',
+                    #    f'  raHalfDeg = {raHalfDeg[nMaxRight]}')
+                    # print the offset, of nMaxRight vs Right side of Galactic Plane
+                    # galRaHDegRight054304[] has RaHDeg halfDeg data for Right side of Galactic Plane,
+                    #   for only 54 through 304 decHalfDeg
+                    # (30 halfDeg per Right Ascension hour)
+                    #print('============== nMaxRight =', nMaxRight)
+                    #print('============== raHalfDeg[nMaxRight] =', raHalfDeg[nMaxRight])
+                    #print('============== decHalfDeg[nMaxRight] =', decHalfDeg[nMaxRight])
+                    #print('============== galRaHDegRight054304[decHalfDeg[nMaxRight] - 54] =', galRaHDegRight054304[decHalfDeg[nMaxRight] - 54])
+                    raHDiff = (raHalfDeg[nMaxRight] \
+                        - galRaHDegRight054304[decHalfDeg[nMaxRight] - 54]) / 30.
+                    print(f'          DecDeg = {decHalfDeg[nMaxRight] / 2. - 90.}',
+                        f'  RaH = {raHalfDeg[nMaxRight] / 30.:.1f}        Right raHDiff = {raHDiff:.1f}')
+
+                plt.scatter(raHalfDegScaled[nMaxRight], decHalfDegScaled[nMaxRight],
+                    s=100, marker='.', c='green')
+                nMaxRight = -1                      # reset to silly value
+            radecPowerMaxRight = -9999              # reset to silly low value
 
             #print()
             #print(f'                 {n}:{nMaxLeft}:{nMaxRight}')
@@ -2206,7 +2381,7 @@ def plotEzSky201RBMax():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
 
 
@@ -2291,7 +2466,7 @@ def plotEzSky300RB():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
 
 
@@ -2450,11 +2625,421 @@ def plotEzSky301RBT():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
 
 
-def plotEzSky309RBTC():
+def plotEzSky306RBP():
+    # radio Sky Radec map with Background, Pointings
+    
+    global radecPower               # float   1d array
+    global radecCount               # float   1d array
+    global raHalfDeg                # integer 1d array
+    global decHalfDeg               # integer 1d array
+    global ezSkyHalfTallDec         # integer
+
+    global ezSkyPlotRangeL          # integer list
+    global plotCountdown            # integer
+    global fileNameLast             # string
+    global titleS                   # string
+    #global ezSkyDispGrid           # integer
+
+    global ezSkyBackground1         # string
+    global ezSkyBackground1XMax     # integer
+    global ezSkyBackground1YMax     # integer
+
+    global ezSkyMaskValue           # float
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 307 or 307 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky306RBP.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plt.clf()
+
+    if not len(radecPower):
+        # fill radecPower, create radecCount, raHalfDeg, decHalfDeg
+        ezSkyGridRadec()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # plot RaDec background
+    backImg = plt.imread(ezSkyBackground1)    # Reeve map
+
+    imgaxes = fig.add_axes(ax.get_position(), label='image', xticks=[], yticks=[])
+    #print(ax.get_position())
+
+    imgaxes.set_xlim(0, ezSkyBackground1XMax)
+    imgaxes.set_ylim(0, ezSkyBackground1YMax)
+
+    plt.gca().invert_yaxis()
+
+    # comment next line to remove background
+    img = imgaxes.imshow(backImg, aspect='auto')
+
+    ax.set_axis_off()
+
+    # map radec to background image
+    imgaxesRatioX = ezSkyBackground1XMax / 720
+    imgaxesRatioY = ezSkyBackground1YMax / 360
+
+    print()
+    print('                         radecCount.max() =', radecCount.max())
+    print('                         radecCount.min() =', radecCount.min())
+
+    raHalfDegScaledAll  = np.array([])
+    decHalfDegScaledAll = np.array([])
+    radecCountAll       = np.array([])
+    maskValues          = np.array([])
+    if ezSkyMaskValue == -999.:
+        # comment next line to remove background
+        img = imgaxes.imshow(backImg, aspect='auto')
+    else:
+        # plot mask on all sky as 360 horizontal scaled decHalfDeg lines
+        if ezSkyMaskValue == -998.:
+            maskValues = np.full(720, np.min(radecCount))
+        else:
+            maskValues = np.full(720, ezSkyMaskValue)
+        #print('                         maskValues =', maskValues)
+        raHalfDegScaled  = np.array(range(720)) * imgaxesRatioX
+        for decHalfDegThis in range(360):
+            decHalfDegScaled = np.full(720, decHalfDegThis * imgaxesRatioY)
+            raHalfDegScaledAll  = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+            decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+            radecCountAll       = np.concatenate([radecCountAll, maskValues])
+
+    raHalfDegScaled  = (720 - raHalfDeg ) * imgaxesRatioX
+    decHalfDegScaled = (360 - decHalfDeg) * imgaxesRatioY
+
+    raHalfDegScaledAll = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+    decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+    radecCountAll = np.concatenate([radecCountAll, radecCount])
+
+    if 0:
+        # to make tall, plot low scaled offset, then plot high scaled offset, from outside to inside
+        for reachTallDec in range(ezSkyHalfTallDec, 0, -1):
+            reachTallDecHalfDegScaled = reachTallDec * imgaxesRatioY
+            # plot each radecCount value as a dot with a radecCount color
+            raHalfDegScaledAll = np.concatenate([raHalfDegScaledAll,
+                raHalfDegScaled, raHalfDegScaled])
+            decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll,
+                decHalfDegScaled-reachTallDecHalfDegScaled,
+                decHalfDegScaled+reachTallDecHalfDegScaled])
+            radecCountAll = np.concatenate([radecCountAll,
+                radecCount, radecCount])
+
+    # plot center, without offset
+    pts = plt.scatter(raHalfDegScaledAll, decHalfDegScaledAll,
+        s=1, marker='|', c=radecCountAll, cmap=plt.get_cmap('gnuplot'))
+    pts2 = plt.scatter(raHalfDegScaledAll, decHalfDegScaledAll,
+        s=1, marker='|', c='green')
+    # free memory
+    raHalfDegScaledAll  = []
+    decHalfDegScaledAll = []
+    radecCountAll       = []
+
+    cbar = plt.colorbar(pts, orientation='horizontal', shrink=0.3, pad=0.06)
+    cbar.ax.tick_params(labelsize=6)
+
+    plt.title(titleS)
+    ###plt.grid(ezSkyDispGrid)
+
+    plt.xticks([i * imgaxesRatioX for i in range(720, -1, -60)],
+        ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24'])
+
+    plt.ylabel('Pointings in RaDec Coordinates')
+    plt.yticks([i * imgaxesRatioY for i in range(360, -1, -30)],
+        ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
+    imgaxes.tick_params(axis='both', labelsize=6)
+
+    plt.subplots_adjust(left=0.4, right=0.5, bottom=0.4, top=0.5)
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+
+
+
+def plotEzSky307RBPT():
+    # radio Sky Radec map with Background, Pointings Tall
+
+    global radecPower               # float   1d array
+    global radecCount               # float   1d array
+    global raHalfDeg                # integer 1d array
+    global decHalfDeg               # integer 1d array
+    global ezSkyHalfTallDec         # integer
+
+    global ezSkyPlotRangeL          # integer list
+    global plotCountdown            # integer
+    global fileNameLast             # string
+    global titleS                   # string
+    #global ezSkyDispGrid           # integer
+
+    global ezSkyBackground1         # string
+    global ezSkyBackground1XMax     # integer
+    global ezSkyBackground1YMax     # integer
+
+    global ezSkyMaskValue           # float
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 307 or 307 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky307RBPT.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plt.clf()
+
+    if not len(radecPower):
+        # fill radecPower, create radecCount, raHalfDeg, decHalfDeg
+        ezSkyGridRadec()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # plot RaDec background
+    backImg = plt.imread(ezSkyBackground1)    # Reeve map
+
+    imgaxes = fig.add_axes(ax.get_position(), label='image', xticks=[], yticks=[])
+    #print(ax.get_position())
+
+    imgaxes.set_xlim(0, ezSkyBackground1XMax)
+    imgaxes.set_ylim(0, ezSkyBackground1YMax)
+
+    plt.gca().invert_yaxis()
+
+    # comment next line to remove background
+    img = imgaxes.imshow(backImg, aspect='auto')
+
+    ax.set_axis_off()
+
+    # map radec to background image
+    imgaxesRatioX = ezSkyBackground1XMax / 720
+    imgaxesRatioY = ezSkyBackground1YMax / 360
+
+    print()
+    print('                         radecCount.max() =', radecCount.max())
+    print('                         radecCount.min() =', radecCount.min())
+
+    raHalfDegScaledAll  = np.array([])
+    decHalfDegScaledAll = np.array([])
+    radecCountAll       = np.array([])
+    maskValues          = np.array([])
+    if ezSkyMaskValue == -999.:
+        # comment next line to remove background
+        img = imgaxes.imshow(backImg, aspect='auto')
+    else:
+        # plot mask on all sky as 360 horizontal scaled decHalfDeg lines
+        if ezSkyMaskValue == -998.:
+            maskValues = np.full(720, np.min(radecCount))
+        else:
+            maskValues = np.full(720, ezSkyMaskValue)
+        #print('                         maskValues =', maskValues)
+        raHalfDegScaled  = np.array(range(720)) * imgaxesRatioX
+        for decHalfDegThis in range(360):
+            decHalfDegScaled = np.full(720, decHalfDegThis * imgaxesRatioY)
+            raHalfDegScaledAll  = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+            decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+            radecCountAll       = np.concatenate([radecCountAll, maskValues])
+
+    raHalfDegScaled  = (720 - raHalfDeg ) * imgaxesRatioX
+    decHalfDegScaled = (360 - decHalfDeg) * imgaxesRatioY
+
+    raHalfDegScaledAll = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+    decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+    radecCountAll = np.concatenate([radecCountAll, radecCount])
+
+    if 1:
+        # to make tall, plot low scaled offset, then plot high scaled offset, from outside to inside
+        for reachTallDec in range(ezSkyHalfTallDec, 0, -1):
+            reachTallDecHalfDegScaled = reachTallDec * imgaxesRatioY
+            # plot each radecCount value as a dot with a radecCount color
+            raHalfDegScaledAll = np.concatenate([raHalfDegScaledAll,
+                raHalfDegScaled, raHalfDegScaled])
+            decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll,
+                decHalfDegScaled-reachTallDecHalfDegScaled,
+                decHalfDegScaled+reachTallDecHalfDegScaled])
+            radecCountAll = np.concatenate([radecCountAll,
+                radecCount, radecCount])
+
+    # plot center, without offset
+    pts = plt.scatter(raHalfDegScaledAll, decHalfDegScaledAll,
+        s=1, marker='|', c=radecCountAll, cmap=plt.get_cmap('gnuplot'))
+    pts2 = plt.scatter(raHalfDegScaledAll, decHalfDegScaledAll,
+        s=1, marker='|', c='green')
+    # free memory
+    raHalfDegScaledAll  = []
+    decHalfDegScaledAll = []
+    radecCountAll       = []
+
+    cbar = plt.colorbar(pts, orientation='horizontal', shrink=0.3, pad=0.06)
+    cbar.ax.tick_params(labelsize=6)
+
+    plt.title(titleS)
+    ###plt.grid(ezSkyDispGrid)
+
+    plt.xticks([i * imgaxesRatioX for i in range(720, -1, -60)],
+        ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24'])
+
+    plt.ylabel('Pointings Tall in RaDec Coordinates')
+    plt.yticks([i * imgaxesRatioY for i in range(360, -1, -30)],
+        ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
+    imgaxes.tick_params(axis='both', labelsize=6)
+
+    plt.subplots_adjust(left=0.4, right=0.5, bottom=0.4, top=0.5)
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+
+
+
+def plotEzSky308RBCS():
+    # radio Sky Radec map with Background, Count Short
+
+    global radecPower               # float   1d array
+    global radecCount               # float   1d array
+    global raHalfDeg                # integer 1d array
+    global decHalfDeg               # integer 1d array
+    global ezSkyHalfTallDec         # integer
+
+    global ezSkyPlotRangeL          # integer list
+    global plotCountdown            # integer
+    global fileNameLast             # string
+    global titleS                   # string
+    #global ezSkyDispGrid           # integer
+
+    global ezSkyBackground1         # string
+    global ezSkyBackground1XMax     # integer
+    global ezSkyBackground1YMax     # integer
+
+    global ezSkyMaskValue           # float
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 308 or 308 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky308RBCS.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plt.clf()
+
+    if not len(radecPower):
+        # fill radecPower, create radecCount, raHalfDeg, decHalfDeg
+        ezSkyGridRadec()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # plot RaDec background
+    backImg = plt.imread(ezSkyBackground1)    # Reeve map
+
+    imgaxes = fig.add_axes(ax.get_position(), label='image', xticks=[], yticks=[])
+    #print(ax.get_position())
+
+    imgaxes.set_xlim(0, ezSkyBackground1XMax)
+    imgaxes.set_ylim(0, ezSkyBackground1YMax)
+
+    plt.gca().invert_yaxis()
+
+    # comment next line to remove background
+    img = imgaxes.imshow(backImg, aspect='auto')
+
+    ax.set_axis_off()
+
+    # map radec to background image
+    imgaxesRatioX = ezSkyBackground1XMax / 720
+    imgaxesRatioY = ezSkyBackground1YMax / 360
+
+    print()
+    print('                         radecCount.max() =', radecCount.max())
+    print('                         radecCount.min() =', radecCount.min())
+
+    raHalfDegScaledAll  = np.array([])
+    decHalfDegScaledAll = np.array([])
+    radecCountAll       = np.array([])
+    maskValues          = np.array([])
+    if ezSkyMaskValue == -999.:
+        # comment next line to remove background
+        img = imgaxes.imshow(backImg, aspect='auto')
+    else:
+        # plot mask on all sky as 360 horizontal scaled decHalfDeg lines
+        if ezSkyMaskValue == -998.:
+            maskValues = np.full(720, np.min(radecCount))
+        else:
+            maskValues = np.full(720, ezSkyMaskValue)
+        #print('                         maskValues =', maskValues)
+        raHalfDegScaled  = np.array(range(720)) * imgaxesRatioX
+        for decHalfDegThis in range(360):
+            decHalfDegScaled = np.full(720, decHalfDegThis * imgaxesRatioY)
+            raHalfDegScaledAll  = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+            decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+            radecCountAll       = np.concatenate([radecCountAll, maskValues])
+
+    raHalfDegScaled  = (720 - raHalfDeg ) * imgaxesRatioX
+    decHalfDegScaled = (360 - decHalfDeg) * imgaxesRatioY
+
+    raHalfDegScaledAll = np.concatenate([raHalfDegScaledAll, raHalfDegScaled])
+    decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll, decHalfDegScaled])
+    radecCountAll = np.concatenate([radecCountAll, radecCount])
+
+    # to make short
+    if 0:
+        # to make tall, plot low scaled offset, then plot high scaled offset, from outside to inside
+        for reachTallDec in range(ezSkyHalfTallDec, 0, -1):
+            reachTallDecHalfDegScaled = reachTallDec * imgaxesRatioY
+            # plot each radecCount value as a dot with a radecCount color
+            raHalfDegScaledAll = np.concatenate([raHalfDegScaledAll,
+                raHalfDegScaled, raHalfDegScaled])
+            decHalfDegScaledAll = np.concatenate([decHalfDegScaledAll,
+                decHalfDegScaled-reachTallDecHalfDegScaled,
+                decHalfDegScaled+reachTallDecHalfDegScaled])
+            radecCountAll = np.concatenate([radecCountAll,
+                radecCount, radecCount])
+
+    # plot center, without offset
+    pts = plt.scatter(raHalfDegScaledAll, decHalfDegScaledAll,
+        s=1, marker='|', c=radecCountAll, cmap=plt.get_cmap('gnuplot'))
+    # free memory
+    raHalfDegScaledAll  = []
+    decHalfDegScaledAll = []
+    radecCountAll       = []
+
+    cbar = plt.colorbar(pts, orientation='horizontal', shrink=0.3, pad=0.06)
+    cbar.ax.tick_params(labelsize=6)
+
+    plt.title(titleS)
+    ###plt.grid(ezSkyDispGrid)
+
+    plt.xticks([i * imgaxesRatioX for i in range(720, -1, -60)],
+        ['0', '2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24'])
+
+    plt.ylabel('Count Color Short in RaDec Coordinates')
+    plt.yticks([i * imgaxesRatioY for i in range(360, -1, -30)],
+        ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
+    imgaxes.tick_params(axis='both', labelsize=6)
+
+    plt.subplots_adjust(left=0.4, right=0.5, bottom=0.4, top=0.5)
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+
+
+
+def plotEzSky309RBCT():
     # radio Sky Radec map with Background, Count Tall
 
     global radecPower               # float   1d array
@@ -2481,7 +3066,7 @@ def plotEzSky309RBTC():
     if ezSkyPlotRangeL[1] < 309 or 309 < ezSkyPlotRangeL[0]:
         return(1)
 
-    plotName = 'ezSky309RBTC.png'
+    plotName = 'ezSky309RBCT.png'
     print()
     print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
     plt.clf()
@@ -2582,7 +3167,8 @@ def plotEzSky309RBTC():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
+
 
 
 def plotEzSky400RI():
@@ -2737,6 +3323,7 @@ def plotEzSky400RI():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
 
     if ezSky400Csv:
         plotNameCsv = plotName[:-3] + 'csv'
@@ -2847,6 +3434,7 @@ def plotEzSky400RI():
             print()
             print()
             print()
+            print('\a')     # ring bell
             exit()
 
         '''
@@ -3024,6 +3612,7 @@ def plotEzSky405RIL():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
 
 
 
@@ -3300,6 +3889,208 @@ def plotEzSky406RILC():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+
+
+
+def plotEzSky410RSI():
+    # radio Sky Radec Sinusoidal projection map of Interpolated power
+
+    global radecPower               # float   1d array
+    global raHalfDeg                # integer 1d array
+    global decHalfDeg               # integer 1d array
+    global ezSkyInputS              # string
+
+    global ezSkyPlotRangeL          # integer list
+    global plotCountdown            # integer
+    global fileNameLast             # string
+    global titleS                   # string
+    #global ezSkyDispGrid           # integer
+    global ezSkyBallCsv             # float
+
+    global ezSkyMaskValue           # float
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 410 or 410 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky410RI_' + ezSkyInputS + '.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plt.clf()
+
+    if not len(radecPower):
+        # fill radecPower, create radecCount, raHalfDeg, decHalfDeg
+        ezSkyGridRadec()
+
+    raHalfDegMin = raHalfDeg.min()
+    print('                         raHalfDegMin  =', raHalfDegMin)
+    raHalfDegMax = raHalfDeg.max()
+    print('                         raHalfDegMax  =', raHalfDegMax)
+
+    decHalfDegMin = decHalfDeg.min()
+    print('                         decHalfDegMin =', decHalfDegMin)
+    decHalfDegMax = decHalfDeg.max()
+    print('                         decHalfDegMax =', decHalfDegMax)
+
+
+    if raHalfDegMin == raHalfDegMax:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print('============= WARNING: Can not create the ' + plotName + ' plot.')
+        print('              All this data has only one Right Ascension value.')
+        print()
+        print('              raHalfDegMin == raHalfDegMax')
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+
+        #radecPower = None           # free memory
+        #del radecPower
+
+        #raHalfDeg = None       # free memory
+        #del raHalfDeg
+
+        #decHalfDeg = None      # free memory
+        #del decHalfDeg
+
+        return(2)
+
+    if decHalfDegMin == decHalfDegMax:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print('============= WARNING: Can not create the ' + plotName + ' plot.')
+        print('              All this data has only one Declination value.')
+        print()
+        print('              decHalfDegMin == decHalfDegMax')
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+
+        #radecPower = None           # free memory
+        #del radecPower
+
+        #raHalfDeg = None       # free memory
+        #del raHalfDeg
+
+        #decHalfDeg = None      # free memory
+        #del decHalfDeg
+
+        return(3)
+
+    xi = np.arange(0.,  721., 1.)         # in   0 to 360 degrees in half-degrees
+    yi = np.arange(-180.,  181., 1.)        # in -90 to +90 degrees in half-degrees
+    xi, yi = np.meshgrid(xi, yi)
+
+    zi = griddata((raHalfDeg, decHalfDeg-180.), radecPower, (xi, yi), method='linear')
+    #print('                         zi[0, 0] =', zi[0, 0])
+    #print('                         zi[0, 1] =', zi[0, 1])
+    #print('                         zi[1, 0] =', zi[1, 0])
+
+    print()
+    print('                         before filter np.nanmin(zi) =', np.nanmin(zi))
+    print('                         before filter np.nanmin(zi) =', np.nanmin(zi))
+
+    ###zi = gaussian_filter(zi, 9.)
+
+    if ezSkyMaskValue == -999.:
+        pass
+    elif ezSkyMaskValue == -998.:
+        zi[np.isnan(zi)] = np.nanmin(zi)        # nan replaced with np.nanmin(zi)
+    else:
+        zi[np.isnan(zi)] = ezSkyMaskValue       # nan replaced with ezSkyMaskValue
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+
+
+
+
+    # Warp that (xi, yi) rectangular grid according to the Sinusoidal projection.
+    # Accounting for 360 offset, reduce the bottom south half's xi by sin(yi), mirror for the top north half
+    for decHalfDegIndex in range(0, 180):         # in half-degrees
+        decHalfDegSin = math.sin(math.radians(decHalfDegIndex / 2.))
+        for raHalfDegIndex in range(0, 721):     # in half-degrees
+            xi[    decHalfDegIndex, raHalfDegIndex] = \
+                (xi[    decHalfDegIndex, raHalfDegIndex] - 360.) * decHalfDegSin + 360.
+            xi[360-decHalfDegIndex, raHalfDegIndex] = \
+                (xi[360-decHalfDegIndex, raHalfDegIndex] - 360.) * decHalfDegSin + 360.
+
+
+
+
+
+    # plot contour lines and contour fills
+    plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
+
+    plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
+
+    if 0:
+        # draw small black dots where data was sampled
+        ax.scatter(raHalfDeg, decHalfDeg-180., marker='.', s=0.5,
+            color='black', linewidths=0)
+
+    # Draw thin black lines of true data paths.
+    # Likewise, after accounting for offsets,
+    #   reduce each galacticGLonHalfDeg[i] by cos(galacticGLatHalfDeg[i])
+    #galacticGLonHalfDegSinusoidal = np.empty_like(galacticGLonHalfDeg)
+    raHalfDegSinusoidal = np.empty_like(raHalfDeg)
+    for raHalfDegIndex in range(len(raHalfDeg)):
+        raHalfDegSinusoidal[raHalfDegIndex] = (raHalfDeg[raHalfDegIndex] - 360.) \
+            * math.cos(math.radians(abs(decHalfDeg[raHalfDegIndex] - 180.)) / 2.) + 360.
+    ax.scatter(raHalfDegSinusoidal, decHalfDeg, marker='.', s=0.5,
+        color='black', linewidths=0)
+
+    # Draw thin black lines of borders.
+    # Likewise, after accounting for offsets,
+    #   reduce each galacticGLonHalfDeg[i] by cos(galacticGLatHalfDeg[i])
+    #galacticGLonHalfDegSinusoidal = np.empty_like(galacticGLonHalfDeg)
+    decHalfDegSinusoidal = np.arange(360)
+    raHalfDegSinusoidal = np.empty(360)
+    for decHalfDegIndex in range(360):
+        raHalfDegSinusoidal[decHalfDegIndex] = \
+            math.cos(math.radians(decHalfDegIndex - 180.)) / 2. + 360.
+    ax.scatter(raHalfDegSinusoidal, decHalfDegSinusoidal, marker='.', s=0.5,
+        color='black', linewidths=0)
+
+    plt.title(titleS)
+    ###plt.grid(ezSkyDispGrid)
+
+    plt.xlim(600, 480)      # inverts x axis
+    plt.xticks([ 0.,    60., 120., 180., 240., 300., 360., 420., 480., 540., 600., 660., 720.],
+               [' 0  ', '2', '4',  '6',  '8',  '10', '12', '14', '16', '18', '20', '22', '24'])
+
+    plt.ylabel(f'{ezSkyInputS[2:]} Interpolated in Sinusoidal RaDec Coordinates')
+    plt.ylim(-180, 180)
+    plt.yticks( \
+        [-180., -150., -120., -90.,  -60.,  -30.,  0.,  30.,  60.,  90.,  120., 150., 180.],
+        ['-90', '-75', '-60', '-45', '-30', '-15', '0', '15', '30', '45', '60', '75', '90'])
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
 
 
 
@@ -3783,6 +4574,7 @@ def plotEzSky450RIR():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
 
 
 
@@ -4251,7 +5043,7 @@ def plotEzSky500GMI():
     plt.contour(xi, yi, zi, 20, linewidths=0.2, colors='black')
     plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
 
-    # optional thin black lines of true data
+    # thin black lines of true data
     ax.scatter(galacticGLonHalfDeg, galacticGLatHalfDeg, marker='.', s=0.5, color='black', linewidths=0)
 
     plt.title(titleS)
@@ -4271,7 +5063,7 @@ def plotEzSky500GMI():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
     if ezSky500Csv:
         plotNameCsv = plotName[:-3] + 'csv'
@@ -4382,6 +5174,7 @@ def plotEzSky500GMI():
             print()
             print()
             print()
+            print('\a')     # ring bell
             exit()
 
         '''
@@ -4406,6 +5199,165 @@ def plotEzSky500GMI():
         ziCsv = None     # free memory
         del ziCsv
         #'''
+
+
+
+def plotEzSky504GMP():
+    # radio Sky Galactic Mercator projection map of Pointings
+
+    global galacticPower                    # float   1d array
+    global galacticGLatHalfDeg              # integer 1d array
+    global galacticGLonHalfDeg              # integer 1d array
+
+    global maskGalactic                     # integer 2d array
+    global ezSkyMaskValue                   # float
+    global ezSky500Csv                      # integer
+    global ezSkyBallCsv                     # float
+
+    #global ezSkyGalCrossingGLatCenter       # float
+    #global ezSkyGalCrossingGLatNear         # float
+    #global ezSkyGalCrossingGLonCenter       # float
+    #global ezSkyGalCrossingGLonNear         # float
+
+    global ezSkyInputS                      # string
+
+    global ezSkyPlotRangeL                  # integer list
+    global plotCountdown                    # integer
+    global fileNameLast                     # string
+    global titleS                           # string
+    #global ezSkyDispGrid                   # integer
+
+    plotCountdown -= 1
+
+    # if plot not wanted, then return
+    if ezSkyPlotRangeL[1] < 504 or 504 < ezSkyPlotRangeL[0]:
+        return(1)
+
+    plotName = 'ezSky504GMP.png'
+    print()
+    print(f'  {fileNameLast}  {plotCountdown} plotting {plotName} ================================')
+    plt.clf()
+
+    if not len(galacticPower):
+        # fill galacticPower, create galacticGLatHalfDeg, galacticGLonHalfDeg, maskGalactic
+        ezSkyGridGalactic()
+
+    galacticGLatHalfDegMin = galacticGLatHalfDeg.min()
+    print('                         galacticGLatHalfDegMin =', galacticGLatHalfDegMin)
+    galacticGLatHalfDegMax = galacticGLatHalfDeg.max()
+    print('                         galacticGLatHalfDegMax =', galacticGLatHalfDegMax)
+
+    galacticGLonHalfDegMin = galacticGLonHalfDeg.min()
+    print('                         galacticGLonHalfDegMin =', galacticGLonHalfDegMin)
+    galacticGLonHalfDegMax = galacticGLonHalfDeg.max()
+    print('                         galacticGLonHalfDegMax =', galacticGLonHalfDegMax)
+
+    if galacticGLatHalfDegMin == galacticGLatHalfDegMax:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print('============= WARNING: Can not create the ' + plotName + ' plot.')
+        print('              All this data has only one Galactic Latitude value.')
+        print()
+        print('              galacticGLatHalfDegMin == galacticGLatHalfDegMax')
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        return(2)
+
+    if galacticGLonHalfDegMin == galacticGLonHalfDegMax:
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print('============= WARNING: Can not create the ' + plotName + ' plot.')
+        print('              All this data has only one Galactic Longitude  value.')
+        print()
+        print('              galacticGLonHalfDegMin == galacticGLonHalfDegMax')
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        print()
+        return(3)
+
+    xi = np.arange(0., 720.5, 1.)       # represents -180 through +180 degrees, in half-degrees
+    yi = np.arange(0., 360.5, 1.)       # represents  -90 through  +90 degrees, in half-degrees
+    xi, yi = np.meshgrid(xi, yi)
+
+    # interpolate galacticPower values onto (xi, yi) meshgrid
+    zi = griddata((galacticGLonHalfDeg, galacticGLatHalfDeg), galacticPower, (xi, yi), method='nearest')
+    #print(np.shape(zi))     # says (361, 721)
+
+    ziBeforeMax = np.nanmax(zi)
+    ziBeforeMin = np.nanmin(zi)
+    print()
+    print('                         before filter zi.max() =', ziBeforeMax)
+    print('                         before filter zi.min() =', ziBeforeMin)
+
+    zi = gaussian_filter(zi, 9.)
+
+    ziAfterMax = np.nanmax(zi)
+    ziAfterMin = np.nanmin(zi)
+    print()
+    print('                         after filter zi.max() =', ziAfterMax)
+    print('                         after filter zi.min() =', ziAfterMin)
+
+    if len(maskGalactic):                           # if maskGalactic available
+        # a mask needs to be boolean
+        #zi[maskGalactic != 0] = np.nan              # True gets np.nan
+        if ezSkyMaskValue == -999.:
+            zi[maskGalactic != 0] = np.nan          # True gets np.nan
+        elif ezSkyMaskValue == -998.:
+            #zi[maskGalactic != 0] = np.nanmin(zi)   # True gets np.nanmin(zi)
+            zi[maskGalactic != 0] = ziAfterMin      # True gets ziAfterMin
+        else:
+            zi[maskGalactic != 0] = ezSkyMaskValue  # True gets ezSkyMaskValue
+
+    #zi[np.isnan(zi)] = galacticPower.min()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # plot contour lines and contour fills
+    #plt.contour(xi, yi, zi, 20, linewidths=0.2, colors='black')
+    #plt.contourf(xi, yi, zi, 100, cmap=plt.get_cmap('gnuplot'))
+
+    # thin black lines of true data
+    #ax.scatter(galacticGLonHalfDeg, galacticGLatHalfDeg, marker='.', s=0.5, color='black', linewidths=0)
+    ax.scatter(galacticGLonHalfDeg, galacticGLatHalfDeg, marker='.', s=2.0, color='red', linewidths=0)
+
+    plt.title(titleS)
+    ###plt.grid(ezSkyDispGrid)
+
+    # 0 through 720 represents -180 through +180 degrees, in half-degrees
+    plt.xlim(720, 0)        # in half-degrees, inverted x axis
+    plt.xticks([ 720.,  660.,  600.,  540., 480., 420., 360., 300.,  240.,  180.,  120.,   60.,    0.],
+               [ '180', '150', '120', '90', '60', '30', '0',  '-30', '-60', '-90', '-120', '-150', '-180'])
+
+    plt.ylabel('Pointings in Mercator Galactic Coordinates')
+    # 0 through 360 represents -90 through +90 degrees, in half-degrees
+    plt.ylim(0, 360)        # in half-degrees
+    plt.yticks([0.,    30.,   60.,   90.,   120.,  150.,  180., 210., 240., 270., 300., 330., 360.],
+               ['-90', '-75', '-60', '-45', '-30', '-15', '0',  '15', '30', '45', '60', '75', '90'])
+
+    if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
+        os.remove(plotName)
+    plt.savefig(plotName, dpi=300, bbox_inches='tight')
+    plt.close(fig)
 
 
 
@@ -4574,7 +5526,7 @@ def plotEzSky505GMIL():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
 
 
@@ -4748,7 +5700,7 @@ def plotEzSky510GSI():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
 
 
@@ -5098,7 +6050,7 @@ def plotEzSkyMollweide(plotNumber):
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
 
 
@@ -5173,7 +6125,7 @@ def plotEzSky600azEl():
     if os.path.exists(plotName):    # to force plot file date update, if file exists, delete it
         os.remove(plotName)
     plt.savefig(plotName, dpi=300, bbox_inches='tight')
-    #plt.close(fig)
+    plt.close(fig)
 
 
 
@@ -5261,6 +6213,7 @@ def main():
     # plot the input data
     plotEzSky010raH()
     plotEzSky020decDeg()
+    plotEzSky021decDegHoriz()
     plotEzSky030gLatDeg()
     plotEzSky031gLatDegSorted()
     plotEzSky032gLatDegSortedCross()
@@ -5269,6 +6222,7 @@ def main():
     plotEzSky043gLonDegSortedCross()
     plotEzSky070azDeg()
     plotEzSky080elDeg()
+    plotEzSky090fileIndex()
 
     plotEzSky100input()
 
@@ -5290,11 +6244,15 @@ def main():
 
     plotEzSky300RB()    # radio Sky Radec map with Background, power color
     plotEzSky301RBT()   # radio Sky Radec map with Background, power color Tall
-    plotEzSky309RBTC()  # radio Sky Radec map with Background, Count Tall
+    plotEzSky306RBP()   # radio Sky Radec map with Background, Pointings
+    plotEzSky307RBPT()  # radio Sky Radec map with Background, Pointings Tall
+    plotEzSky308RBCS()  # radio Sky Radec map with Background, Count Short
+    plotEzSky309RBCT()  # radio Sky Radec map with Background, Count Tall
 
     plotEzSky400RI()    # radio Sky Radec map Interpolated
     plotEzSky405RIL()   # radio Sky Radec map Interpolated with XYLimits
     #plotEzSky406RILC()  # radio Sky Radec map Interpolated with XYLimits using Cygrid module
+    plotEzSky410RSI()    # radio Sky Radec Sinusoidal projection map of Interpolated power
     plotEzSky450RIR()   # radio Sky Radec map Interpolated, Grote Reber 1944
 
     # free radec memory
@@ -5312,6 +6270,7 @@ def main():
     #plotEzSkyMercator(500)
     #plotEzSkyMercator(502)
     #plotEzSkyMercator(503)
+    plotEzSky504GMP()
     plotEzSky505GMIL()   # radio Sky Galactic Mercator  projection map of Interpolated power with XYLimits
     plotEzSky510GSI()   # radio Sky Galactic Sinusoidal projection map of Interpolated power
     #plotEzSkySinusoidal(510)
@@ -5365,7 +6324,12 @@ if __name__== '__main__':
 # python3 ../../ezRA/ezSky250102a.py -ezSkyInput 14  ..  -ezRAObsName LTO16h  -ezSkyMaskIn ../../ezRA/ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 500 500   -ezSkyMaskValue -998.  -ezSkyBallCsv 0
 # ring3d  ezSky500GMI_14AntBAvgBall.csv 
 
-
 # py ..\..\ezRA\ezSky250105a.py -ezSkyInput 14  ..  -ezRAObsName LTO16h  -ezSkyMaskIn ..\..\ezRA\ezSkyMaskLtoNot_46.5_-49.7.npz -ezSkyPlotRangeL 500 500   -ezSkyMaskValue -998.  -ezSkyBallCsv 0
 
+# a@u22-221222a:~/ezRABase/lto16h$
+# With 2 DecDeg, RaH is 15 degrees per hour, so same degrees would be 2 * (Hour/15degrees) = 0.133 hours
+# python3  ../ezRA/ezSky250409b.py  -ezRAObsName LTO16hM31  -ezSkyRaDecNearNearL 0.71230555555 41.2691666667 0.133 2  250408m31/2022_103_00.rad.ezb
+
+# a@u22-221222a:~/ezRABase/M31$
+# python3  ../ezRA/ezSky250409b.py  -ezRAObsName LTO15m31  -ezSkyRaDecNearNearL 0.71230555555 41.2691666667 0.133 2  2025_061_00.rad.ezb
 

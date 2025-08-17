@@ -1,4 +1,4 @@
-programName = 'ezGLon241207a.py'
+programName = 'ezGLon250708a.py'
 programRevision = programName
 
 # ezRA - Easy Radio Astronomy ezGLon single Galactic LONgitude explorer program,
@@ -26,6 +26,8 @@ programRevision = programName
 #       remove many global in main() ?????????
 #       plotCountdown, 'plotting' lines only if plotting
 
+# ezGLon250708a, ring bell after errors,
+#   removed minus sign from plotnames
 # ezGLon241207a, 2 ezGLon580 X,Y,Z extremes to control X,Y,Z autoscaling to value 0.0
 # ezGLon241118a, in ezGLon570 and ezGLon571 moved plt.colorbar() to later in case no data to plot
 # ezGLon241024a, -ezGLon580CsvFrac
@@ -398,6 +400,7 @@ def ezGLonArgumentsFile(ezDefaultsFileNameInput):
                 print()
                 print()
                 print()
+                print('\a')     # ring bell
                 exit()
 
 
@@ -569,6 +572,7 @@ def ezGLonArgumentsCommandLine():
                 print()
                 print()
                 print()
+                print('\a')     # ring bell
                 exit()
                 
         cmdLineSplitIndex += 1
@@ -627,6 +631,7 @@ def ezGLonArguments():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
     # print status
@@ -804,6 +809,7 @@ def readDataDir():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
 
@@ -834,6 +840,7 @@ def readDataDir():
         print()
         print()
         print()
+        print('\a')     # ring bell
         exit()
 
 
@@ -937,11 +944,11 @@ def plotEzGLon510velGLat():
         if 0 <= ezGLonGalCrossingGLonCenter:
             plotName = f'ezGLon510velGLatP{ezGLonGalCrossingGLonCenter:05.1f}'
         else:
-            plotName = f'ezGLon510velGLatN{ezGLonGalCrossingGLonCenter:05.1f}'
+            plotName = f'ezGLon510velGLatN{-ezGLonGalCrossingGLonCenter:05.1f}'
         if 0 <= ezGLonGalCrossingGLonNear:
             plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
         else:
-            plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+            plotName += f'N{-ezGLonGalCrossingGLonNear:05.1f}.png'
         print()
         print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
@@ -1045,11 +1052,11 @@ def plotEzGLon511velGLatCount():
         if 0 <= ezGLonGalCrossingGLonCenter:
             plotName = f'ezGLon511velGLatCountP{ezGLonGalCrossingGLonCenter:05.1f}'
         else:
-            plotName = f'ezGLon511velGLatCountN{ezGLonGalCrossingGLonCenter:05.1f}'
+            plotName = f'ezGLon511velGLatCountN{-ezGLonGalCrossingGLonCenter:05.1f}'
         if 0 <= ezGLonGalCrossingGLonNear:
             plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
         else:
-            plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+            plotName += f'N{-ezGLonGalCrossingGLonNear:05.1f}.png'
         print()
         print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
@@ -1097,6 +1104,7 @@ def plotEzGLon511velGLatCount():
                 print()
                 print()
                 print()
+                print('\a')     # ring bell
                 exit()
 
 
@@ -1182,11 +1190,11 @@ def plotEzGlon570galArmsSun():
     if 0 <= ezGLonGalCrossingGLonCenter:
         plotName = f'ezGLon570galArmsSunP{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        plotName = f'ezGLon570galArmsSunN{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon570galArmsSunN{-ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
         plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{-ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
     print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
@@ -1347,11 +1355,11 @@ def plotEzGlon571galArmsSunMag5():
     if 0 <= ezGLonGalCrossingGLonCenter:
         plotName = f'ezGLon571galArmsSunMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        plotName = f'ezGLon571galArmsSunMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon571galArmsSunMag5N{-ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
         plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{-ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
     print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
@@ -1530,11 +1538,11 @@ def plotEzGLon580galArmsSunI():
     if 0 <= ezGLonGalCrossingGLonCenter:
         plotName = f'ezGLon580galArmsSunIP{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        plotName = f'ezGLon580galArmsSunIN{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon580galArmsSunIN{-ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
         plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{-ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
     print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
@@ -1856,11 +1864,11 @@ def plotEzGLon581galArmsSunIMag5():
     if 0 <= ezGLonGalCrossingGLonCenter:
         plotName = f'ezGLon581galArmsSunIMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        plotName = f'ezGLon581galArmsSunIMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon581galArmsSunIMag5N{-ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
         plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{-ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
     print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 
@@ -2106,11 +2114,11 @@ def plotEzGLon582galArmsSunRIMag5():
     if 0 <= ezGLonGalCrossingGLonCenter:
         plotName = f'ezGLon582galArmsSunRIMag5P{ezGLonGalCrossingGLonCenter:05.1f}'
     else:
-        plotName = f'ezGLon582galArmsSunRIMag5N{ezGLonGalCrossingGLonCenter:05.1f}'
+        plotName = f'ezGLon582galArmsSunRIMag5N{-ezGLonGalCrossingGLonCenter:05.1f}'
     if 0 <= ezGLonGalCrossingGLonNear:
         plotName += f'P{ezGLonGalCrossingGLonNear:05.1f}.png'
     else:
-        plotName += f'N{ezGLonGalCrossingGLonNear:05.1f}.png'
+        plotName += f'N{-ezGLonGalCrossingGLonNear:05.1f}.png'
     print()
     print('  ' + str(plotCountdown) + ' plotting ' + plotName + ' ================================')
 

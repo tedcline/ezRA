@@ -39,7 +39,7 @@ Or perhaps start with these 2 introductory videos (from the longer list of video
 
 * ezCol - COLlect radio signals into integrated frequency spectrum ezRA .txt data files.
 
-  * Or convert previous radio data with ezColBAA, ezColDSPIRA, ezColHay, ezColIFAvg, ezColSc, etc.
+  * Or translate previous radio data with ezColBAA, ezColDSPIRA, ezColHay, ezColIFAvg, ezColSc, etc.
 
   * ezFix - remove or separate samples, combine, edit, and split frequency spectrum ezRA .txt data files.
 
@@ -63,12 +63,14 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
 
 <br>
 
+  Installation on Windows:<br>
   * [Pablo 1 - ezRA Installation on Windows](https://www.youtube.com/watch?v=2DbS5A42OJQ)<br>
   * [Pablo 2 - ezCol with USB Relay Control of LNA Resistor](https://www.youtube.com/watch?v=N1TRyJ9w0As)<br>
   * [Pablo 3 - ezCon Plot Tour](https://www.youtube.com/watch?v=8EUmCQAIBLg)<br>
   * [Pablo 4 - ezCol Data Collecting Software in Action](https://www.youtube.com/watch?v=15Q6_OCDTs0)
 <br>
 
+  How ezRA works:<br>
   * [ezRA Analysis 1 - Introduction, Data Collectors](https://youtu.be/2TWXiAUpgCc)<br>
   * [ezRA Analysis 2 - Spreadsheet Analysis](https://youtu.be/9vKaob-jweM)<br>
   * [ezRA Analysis 3 - Signal Progression](https://youtu.be/7c-0rbNOOV4)<br>
@@ -161,7 +163,7 @@ Did ezRA work for you ?<br>
 Email me your news.
 
 <p align="center">
-  <img src="/ezRA/doc/ezRA_users241207.png?raw=true" alt="ezRA_users241207"/>
+  <img src="/ezRA/doc/ezRA_users250731.png?raw=true" alt="ezRA_users250731"/>
 </p>
 
 Comments are encouraged !
@@ -172,7 +174,7 @@ Help improve ezRA.
 
 TedClineGit@gmail.com
 <br>
-Apr-2-2025
+Aug-17-2025
 
 (World Map by juicy_fish on Freepik.com)
 
