@@ -107,7 +107,7 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
   * [Cross-eyed Stereo Movie - Island Rotation](https://youtu.be/QgsPwkhn-_c)
 <br>
 
-Society of Amateur Radio Astronomers (SARA)   [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
+Society of Amateur Radio Astronomers (SARA) &nbsp; [https://www.youtube.com/@radio-astronomy](https://www.youtube.com/@radio-astronomy)<br>
 
 ## SHOOS Amateur Data Sharing:
 
