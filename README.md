@@ -56,7 +56,7 @@ Velocity vs Galactic Longitude, Galaxy arm plots).
 
 ## Videos:
 
-[https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br>
+[https://www.youtube.com/@TedCline/videos](https://www.youtube.com/@TedCline/videos)<br><br>
 
   Introduction:<br>
   * [ezRA - Simple Overview  (13 minutes)](https://youtu.be/kHgwEbWKhzs)<br>
